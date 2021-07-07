@@ -51,10 +51,10 @@ class Experiment(object):
         data = next(iter(loader))
         X = data["input_ids"].cpu().numpy()
         K = 2
-        kmeans = KMeans(K)
         score = float("-inf")
         t_score = self.classifier._score(loader, [i for i in range(X.shape[1])], -1)
         while t_score != score:
+            kmeans = KMeans(K)
             indices = kmeans.fit_predict(X.T)
             Z, indices = torch.tensor(X.T), torch.tensor(indices)
             clusters = {i: Z[indices==i] for i in range(K)}
