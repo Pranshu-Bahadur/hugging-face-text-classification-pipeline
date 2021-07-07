@@ -3,6 +3,7 @@ from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoConfig, AutoTokenizer
 from sklearn.metrics import f1_score
+import numpy as np
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
@@ -93,10 +94,9 @@ class NLPClassifier(object):
         with torch.no_grad():                
             for batch in loader:
                 self.optimizer.zero_grad()
-                x_ids = batch['input_ids'].cuda()
-                x = batch['attention_mask'].cuda()
+                x = batch['input_ids'].cuda()
                 y = batch['labels'].cuda()
-                outputs = self.model(x_ids,attention_mask=x, labels=y)[1]
+                outputs = self.model.forward(x).logits
                 loss = self.criterion(outputs, y)
                 training_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
@@ -108,11 +108,30 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
-    def _get_jacobian(self, loader):
+    def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
-        x = data["input_ids"].cuda()
-        self.model.zero_grad()
-        J = torch.autograd.functional.jacobian(lambda x_: self.model(x_.long())[0], x.float()).cuda()
-        return J
+        x = data["attention_mask"].float().cuda()
+        x.requires_grad = True
+        h = self.model(data["input_ids"][:,indices==i if i is not -1 else indices].cuda(), attention_mask=x[:, indices==i if i is not -1 else indices]).logits
+        m = torch.zeros((x.size(0), self.nc))
+        m[:, 0] = 1
+        h.backward(m.cuda())
+        return x.grad
+
+    def _score(self, loader, indices, k):
+        def eval_score_perclass(jacob, labels):
+            K = 1e-5
+            per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
+            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy())+K))) for k,v in list(per_class.items())}
+            return np.sum(np.absolute(list(ind_corr_matrix_score.values())))
+        result = 0
+        J = self._get_jacobian(loader, indices, k)
+        for batch in loader:
+            y = batch['labels'].cuda()
+            try:
+                result += eval_score_perclass(J, y)
+            except:
+                continue
+        return result
 
 
