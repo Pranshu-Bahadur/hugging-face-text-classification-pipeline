@@ -68,12 +68,12 @@ class NLPClassifier(object):
         self.model.train()
         print(indices)
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        indices = indices[indices==k]
+        indices = indices[indices==k].long()
         for _, batch in enumerate(loader):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
             y = batch['labels'].cuda()
-            outputs = self.model.forward(x[:,indices]).logits
+            outputs = self.model.forward(x[:,indices],  attention_mask=batch["attention_mask"][:, indices].float().cuda()).logits
             loss = self.criterion(outputs, y)
             loss.backward()
             self.optimizer.step()
