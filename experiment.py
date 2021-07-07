@@ -62,6 +62,7 @@ class Experiment(object):
             l = list(map(lambda idx: self.classifier._score(loader, indices, idx), clusters))
             i, score = torch.max(torch.tensor(l))
             K += 2
+            print(K)
             if(t_score < score):
                 print(t_score, score, K, i)
         return score, i, indices
