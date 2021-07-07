@@ -53,19 +53,20 @@ class Experiment(object):
         K = 2
         score = float("-inf")
         t_score = self.classifier._score(loader, [i for i in range(X.shape[1])], -1)
+        Z = torch.tensor(X.T)
         while t_score != score:
+            t_score = score
             kmeans = KMeans(K)
             indices = kmeans.fit_predict(X.T)
-            Z, indices = torch.tensor(X.T), torch.tensor(indices)
+            indices = torch.tensor(indices)
             clusters = {i: Z[indices==i] for i in range(K)}
             big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
-            t_score = score
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
-            l_= max(list(map(lambda l_: l_[1],l)))
-            print(l_)
-            l = list(filter(lambda a_: a_[1] == l_,l))
-            i, score = l[0]
+            print(l)
+            score = max(list(map(lambda l_: l_[1],l)))
+            l = list(filter(lambda a_: a_[1] == score,l))
+            i = l[0]
             K += 2
             if(t_score < score):
                 print(t_score, score, K, i)
