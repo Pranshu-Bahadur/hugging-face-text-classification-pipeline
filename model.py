@@ -19,7 +19,7 @@ class NLPClassifier(object):
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
-        self.name = "{}-{}-{}".format(config["model_name"], config["batch_size"], config["learning_rate"])
+        self.name = "{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"])
         self.bs = config["batch_size"]
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
@@ -77,10 +77,9 @@ class NLPClassifier(object):
             self.optimizer.zero_grad()
             batch = {k: v.cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
-            outputs = self.model(**batch)
-            loss = outputs.loss#self.criterion(outputs, y)
+            outputs = self.model(**batch).logits
+            loss = self.criterion(outputs, batch["labels"])
             loss.backward()
-            outputs = outputs.logits
             self.optimizer.step()
             self.scheduler.step()
             running_loss += loss.item()
@@ -101,9 +100,8 @@ class NLPClassifier(object):
             for _, batch in enumerate(loader):
                 batch = {k: v.cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
-                outputs = self.model(**batch)
-                loss = outputs.loss#self.criterion(outputs, y)
-                outputs = outputs.logits
+                outputs = self.model(**batch).logits
+                loss = self.criterion(outputs, batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
