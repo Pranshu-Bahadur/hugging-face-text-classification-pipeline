@@ -68,16 +68,17 @@ class NLPClassifier(object):
         self.model.train()
         print(indices)
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
+        indices = indices[indices==k]
         for _, batch in enumerate(loader):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
             y = batch['labels'].cuda()
-            outputs = self.model.forward(x).logits
+            outputs = self.model.forward(x[:,indices]).logits
             loss = self.criterion(outputs, y)
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
-            training_loss += loss.item()
+            running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
             correct += (y_.cpu()==y.cpu()).sum().item()
             f1 += f1_score(y.cpu(), y_.cpu(), average='micro')
@@ -89,7 +90,7 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        #self.model.eval()
+    #self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
@@ -97,7 +98,7 @@ class NLPClassifier(object):
                 y = batch['labels'].cuda()
                 outputs = self.model.forward(x[:,indices==k]).logits
                 loss = self.criterion(outputs, y)
-                training_loss += loss.item()
+                running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==y.cpu()).sum().item()
                 f1 += f1_score(y.cpu(), y_.cpu(), average='micro')
