@@ -4,6 +4,8 @@ import argparse
 from experiment import Experiment
 from torch.utils.data import DataLoader as Loader
 from torchvision import transforms as transforms
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def _model_config(args):
     config = {
