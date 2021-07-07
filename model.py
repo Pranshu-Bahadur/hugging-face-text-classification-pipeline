@@ -17,7 +17,7 @@ class NLPClassifier(object):
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
-        self.name = "{}-{}-{}-{}".format(config["model_name"], config["tokenizer_name"], config["batch_size"], config["learning_rate"])
+        self.name = "{}-{}-{}".format(config["model_name"].split("/")[1], config["batch_size"], config["learning_rate"])
         self.bs = config["batch_size"]
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
@@ -67,7 +67,7 @@ class NLPClassifier(object):
     def _train(self, loader, indices, k):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        for _, batch in enumerate(loader):
+        for idx, batch in enumerate(loader):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
             am = batch["attention_mask"].float().cuda()
@@ -86,7 +86,7 @@ class NLPClassifier(object):
             iterations += 1
             del x, y
             torch.cuda.empty_cache()
-            print(float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
+            print(idx, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
 
@@ -98,7 +98,7 @@ class NLPClassifier(object):
                 x = batch['input_ids'].cuda()
                 y = batch['labels'].cuda()
                 am = batch["attention_mask"].float().cuda()
-                am[:, indices!=k] = 0
+                #am[:, indices!=k] = 0
                 outputs = self.model.forward(x, attention_mask=am).logits
                 loss = self.criterion(outputs, y)
                 running_loss += loss.item()
