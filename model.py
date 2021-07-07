@@ -79,8 +79,9 @@ class NLPClassifier(object):
             am[:, indices!=k] = 0
             y = batch['labels'].cuda()
             outputs = self.model.forward(x,  attention_mask=am).logits
-            #loss = self.criterion(outputs, y)
-            #loss.backward()
+            loss = self.criterion(outputs, y)
+            loss.backward()
+            """
             if True:
                 def closure():
                     self.optimizer.zero_grad()
@@ -90,7 +91,8 @@ class NLPClassifier(object):
                     return loss
                 self.optimizer.zero_grad()
                 loss = self.optimizer.step(closure)
-            #self.optimizer.step()
+            """
+            self.optimizer.step()
             self.scheduler.step()
             running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
