@@ -130,13 +130,14 @@ class NLPClassifier(object):
 
     def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
-        x = data["attention_mask"].float().cuda()
-        x.requires_grad = True
-        h = self.model.forward(data["input_ids"][:,indices==i if i != -1 else indices].cuda(), attention_mask=x[:, indices==i if i != -1 else indices]).logits
-        m = torch.zeros((x.size(0), self.nc))
+        data = {k: v.cuda() for k, v in data.items()}
+        data["attention_mask"] = data["attention_mask"].float()
+        data["attention_mask"].requires_grad = True
+        h = self.model(**data).logits
+        m = torch.zeros((h.size()))
         m[:, 0] = 1
         h.backward(m.cuda())
-        return x.grad
+        return data["attention_mask"].grad
 
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
