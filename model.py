@@ -114,10 +114,11 @@ class NLPClassifier(object):
     def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
         data = {k: v.cuda() for k, v in data.items()}
+        data["attention_mask"][:, indices!=k] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(**data).logits
-        m = torch.zeros((h.size()))
+        m = torch.zeros((data["attention_mask"].size(0), self.nc))
         m[:, 0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
