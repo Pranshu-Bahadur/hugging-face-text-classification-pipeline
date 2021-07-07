@@ -61,9 +61,9 @@ class Experiment(object):
             big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             t_score = score
-            l = list(map(lambda idx: self.classifier._score(loader, indices, idx), clusters))
-            print(torch.tensor(l))
-            i, score = torch.max(l)
+            l = list(map(lambda idx: torch.tensor([idx, self.classifier._score(loader, indices, idx)]), clusters))
+            #print(torch.tensor(l))
+            i, score = torch.max(torch.tensor(l), dim=0)
             K += 2
             print(K)
             if(t_score < score):
