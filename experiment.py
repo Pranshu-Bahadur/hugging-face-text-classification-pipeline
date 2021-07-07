@@ -15,10 +15,10 @@ class Experiment(object):
         split = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
-        score, i, indices = self._features_selection(loaders[0])
-
+        score, k, indices = self._features_selection(loaders[0])
+        print(k, score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            f1_train, f1_val, train_acc, train_loss, val_acc, val_loss = self.classifier._run_epoch(loaders)
+            f1_train, f1_val, train_acc, train_loss, val_acc, val_loss = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch: {} | Training Accuracy: {} | Training Loss: {} | Validation Accuracy: {} | Validation Loss: {} | f1 Train: {} | f1 Val  {}".format(self.classifier.curr_epoch, train_acc, train_loss, val_acc, val_loss, f1_train, f1_val))
             self.classifier.writer.add_scalar("Training Accuracy", train_acc, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",val_acc, self.classifier.curr_epoch)
@@ -64,7 +64,7 @@ class Experiment(object):
             l = list(map(lambda idx: torch.tensor([idx, self.classifier._score(loader, indices, idx)]), clusters))
             print(torch.stack(l))
             i = torch.argmax(torch.stack(l))
-            i, score = l[i][0], l[i][1]
+            i, score = tuple(l[i])
             K += 2
             print(K)
             if(t_score < score):
