@@ -79,7 +79,10 @@ class NLPClassifier(object):
             am = batch["attention_mask"].float().cuda()
             am[:, indices!=k] = 0
             y = batch['labels'].cuda()
-            outputs = self.model(x,  attention_mask=am, labels=y)
+            try:
+                outputs = self.model(x,  attention_mask=am, labels=y)
+            except:
+                continue
             loss = outputs.loss#self.criterion(outputs, y)
             loss.backward()
             outputs = outputs.logits
@@ -117,7 +120,10 @@ class NLPClassifier(object):
                 y = batch['labels'].cuda()
                 am = batch["attention_mask"].float().cuda()
                 am[:, indices!=k] = 0
-                outputs = self.model(x,  attention_mask=am, labels=y)
+                try:
+                    outputs = self.model(x,  attention_mask=am, labels=y)
+                except:
+                    continue
                 loss = outputs.loss#self.criterion(outputs, y)
                 outputs = outputs.logits
                 running_loss += loss.item()
