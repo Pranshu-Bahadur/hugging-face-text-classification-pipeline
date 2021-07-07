@@ -79,9 +79,10 @@ class NLPClassifier(object):
             am = batch["attention_mask"].float().cuda()
             am[:, indices!=k] = 0
             y = batch['labels'].cuda()
-            outputs = self.model(x,  attention_mask=am).logits
-            loss = self.criterion(outputs, y)
+            outputs = self.model(x,  attention_mask=am)
+            loss = outputs.loss#self.criterion(outputs, y)
             loss.backward()
+            outputs = outputs.logits
             """
             if True:
                 def closure():
@@ -116,8 +117,9 @@ class NLPClassifier(object):
                 y = batch['labels'].cuda()
                 am = batch["attention_mask"].float().cuda()
                 am[:, indices!=k] = 0
-                outputs = self.model(x, attention_mask=am).logits
-                loss = self.criterion(outputs, y)
+                outputs = self.model(x,  attention_mask=am)
+                loss = outputs.loss#self.criterion(outputs, y)
+                outputs = outputs.logits
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==y.cpu()).sum().item()
