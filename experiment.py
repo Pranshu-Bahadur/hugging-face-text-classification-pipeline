@@ -65,6 +65,7 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             score = max(list(map(lambda l_: l_[1],l)))
             if score == float('nan') or float('nan') in list(map(lambda l_: l_[1],l)):
+                K += 2
                 continue
             l = list(filter(lambda a_: a_[1] == score, l))
             i = l[0]
