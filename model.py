@@ -72,7 +72,7 @@ class NLPClassifier(object):
             x = batch['input_ids'].cuda()
             x_ = batch['attention_mask'].cuda()
             y = batch['labels'].cuda()
-            outputs = self.model(x[:,indices==k],attention_mask=x_[:, indices==k]).logits
+            outputs = self.model.forward(x[:,indices==k],attention_mask=x_[:, indices==k]).logits
             loss = self.criterion(outputs, y)
             loss.backward()
             self.optimizer.step()
@@ -97,7 +97,7 @@ class NLPClassifier(object):
                 x = batch['input_ids'].cuda()
                 x_ = batch['attention_mask'].cuda()
                 y = batch['labels'].cuda()
-                outputs = self.model(x[:,indices==k],attention_mask=x_[:, indices==k]).logits
+                outputs = self.model.forward(x[:,indices==k],attention_mask=x_[:, indices==k]).logits
                 loss = self.criterion(outputs, y)
                 training_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
