@@ -67,6 +67,7 @@ class NLPClassifier(object):
     def _run_epoch(self, loaders, indices, k):
         f1_train, acc_train, loss_train = self._train(loaders[0], indices, k)
         f1_val, acc_val, loss_val = self._validate(loaders[1], indices, k)
+        self.curr_epoch += 1
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
 
     def _train(self, loader, indices, k):
@@ -114,7 +115,7 @@ class NLPClassifier(object):
                 x = batch['input_ids'].cuda()
                 y = batch['labels'].cuda()
                 am = batch["attention_mask"].float().cuda()
-                #am[:, indices!=k] = 0
+                am[:, indices!=k] = 0
                 outputs = self.model.forward(x, attention_mask=am).logits
                 loss = self.criterion(outputs, y)
                 running_loss += loss.item()

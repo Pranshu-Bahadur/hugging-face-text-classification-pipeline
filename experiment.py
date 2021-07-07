@@ -18,7 +18,7 @@ class Experiment(object):
         score, k, indices = self._features_selection(loaders[0])
         print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            f1_train, f1_val, train_acc, train_loss, val_acc, val_loss = self.classifier._run_epoch(loaders, indices, k)
+            f1_train, f1_val, train_acc, val_acc, train_loss, val_loss = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch: {} | Training Accuracy: {} | Training Loss: {} | Validation Accuracy: {} | Validation Loss: {} | f1 Train: {} | f1 Val  {}".format(self.classifier.curr_epoch, train_acc, train_loss, val_acc, val_loss, f1_train, f1_val))
             self.classifier.writer.add_scalar("Training Accuracy", train_acc, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",val_acc, self.classifier.curr_epoch)
