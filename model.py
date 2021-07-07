@@ -92,13 +92,15 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-    #self.model.eval()
+        self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
                 x = batch['input_ids'].cuda()
                 y = batch['labels'].cuda()
-                outputs = self.model.forward(x[:,indices==k]).logits
+                am = batch["attention_mask"].float().cuda()
+                am[:, indices!=k] = 0
+                outputs = self.model.forward(x, attention_mask=am).logits
                 loss = self.criterion(outputs, y)
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
