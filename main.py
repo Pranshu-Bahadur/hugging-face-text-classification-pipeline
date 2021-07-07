@@ -24,7 +24,6 @@ def _model_config(args):
         "save_interval": int(args.save_interval),
         "library": args.library,
         "save_directory": args.save_directory,
-        "list": args.list,
         "test": args.test if args.test else ""
         
     }
