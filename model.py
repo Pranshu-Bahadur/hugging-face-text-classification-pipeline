@@ -133,7 +133,7 @@ class NLPClassifier(object):
         x = data["attention_mask"].float().cuda()
         x.requires_grad = True
         h = self.model.forward(data["input_ids"][:,indices==i if i != -1 else indices].cuda(), attention_mask=x[:, indices==i if i != -1 else indices]).pooler_output
-        m = torch.zeros((x.size(0), self.nc))
+        m = torch.zeros((x.size(0), 1024))
         m[:, 0] = 1
         h.backward(m.cuda())
         return x.grad
