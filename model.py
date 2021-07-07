@@ -7,7 +7,7 @@ import numpy as np
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
-        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config['tokenizer'], config["num_classes"])
+        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config['tokenizer_name'], config["num_classes"])
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
