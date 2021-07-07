@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, SqueezeBertForSequenceClassification,  BigBirdModel, OpenAIGPTModel
+from transformers import AutoModel, AutoConfig, AutoTokenizer, SqueezeBertForSequenceClassification,  BigBirdModel, OpenAIGPTLMHeadModel
 from nfnets import SGD_AGC
 from sam import SAMSGD
 from sklearn.metrics import f1_score
@@ -30,7 +30,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, tokenizer, num_classes):
         if library == "hugging-face":
-            return OpenAIGPTModel.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
+            return OpenAIGPTLMHeadModel.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr,weight_decay=1e-5, momentum=0.9),#, nesterov=True
@@ -132,7 +132,7 @@ class NLPClassifier(object):
         data = next(iter(loader))
         x = data["attention_mask"].float().cuda()
         x.requires_grad = True
-        h = self.model.forward(data["input_ids"][:,indices==i if i != -1 else indices].cuda(), attention_mask=x[:, indices==i if i != -1 else indices]).pooler_output
+        h = self.model.forward(data["input_ids"][:,indices==i if i != -1 else indices].cuda(), attention_mask=x[:, indices==i if i != -1 else indices]).logits
         m = torch.zeros((x.size(0), 1024))
         m[:, 0] = 1
         h.backward(m.cuda())
