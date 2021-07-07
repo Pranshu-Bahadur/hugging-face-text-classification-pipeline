@@ -65,7 +65,8 @@ class NLPClassifier(object):
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
 
     def _train(self, loader, indices, k):
-        #self.model.train()
+        self.model.train()
+        print(indices)
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for _, batch in enumerate(loader):
             self.optimizer.zero_grad()
