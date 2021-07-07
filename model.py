@@ -130,9 +130,9 @@ class NLPClassifier(object):
         for batch in loader:
             y = batch['labels'].cuda()
             try:
-                result += eval_score_perclass(J, y)
+                result += eval_score_perclass(J, y)/1e-4
             except:
                 continue
-        return result
+        return result/1e-4
 
 
