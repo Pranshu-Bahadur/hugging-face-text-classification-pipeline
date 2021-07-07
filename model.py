@@ -116,6 +116,7 @@ class NLPClassifier(object):
     def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
         data = {k: v.cuda() for k, v in data.items()}
+        data.popitem("labels")
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(**data).logits
