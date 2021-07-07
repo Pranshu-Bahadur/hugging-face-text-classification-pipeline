@@ -57,6 +57,7 @@ class Experiment(object):
         while t_score != score:
             data = next(iter(loader))
             X = data["input_ids"].cpu().numpy()
+            Z = torch.tensor(X.T)
             t_score = score
             kmeans = KMeans(K)
             indices = kmeans.fit_predict(X.T)
