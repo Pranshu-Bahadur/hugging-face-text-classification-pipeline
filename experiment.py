@@ -62,6 +62,7 @@ class Experiment(object):
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             t_score = score
             l = list(map(lambda idx: self.classifier._score(loader, indices, idx), clusters))
+            print(torch(l))
             i, score = torch.max(l)
             K += 2
             print(K)
