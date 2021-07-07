@@ -13,7 +13,7 @@ class NLPClassifier(object):
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.model = nn.DataParallel(self.model).cuda()
-        self.tokenizer = nn.DataParallel(self.tokenizer).cuda()
+        self.tokenizer = self.tokenizer.cuda()
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
