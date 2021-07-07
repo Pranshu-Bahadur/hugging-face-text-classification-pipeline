@@ -85,7 +85,7 @@ class NLPClassifier(object):
             running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
             correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
-            f1 += f1_score(batch["labels"], y_.cpu(), average='micro')
+            f1 += f1_score(batch["labels"].cpu(), y_.cpu(), average='micro')
             total += batch["labels"].size(0)
             iterations += 1
             torch.cuda.empty_cache()
