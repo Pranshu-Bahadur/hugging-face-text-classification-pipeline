@@ -56,8 +56,10 @@ class Experiment(object):
         t_score = self.classifier._score(loader, [i for i in range(X.shape[1])], -1)
         while t_score != score:
             indices = kmeans.fit_predict(X.T)
-            z, indices = torch.tensor(X.T), torch.tensor(indices)
-            clusters = [i for i in range(K)]
+            Z, indices = torch.tensor(X.T), torch.tensor(indices)
+            clusters = {i: Z[indices==i] for i in range(K)}
+            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
+            clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             t_score = score
             l = list(map(lambda idx: self.classifier._score(loader, indices, idx), clusters))
             i, score = torch.max(torch.tensor(l))
