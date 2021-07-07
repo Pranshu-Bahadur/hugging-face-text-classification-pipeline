@@ -28,7 +28,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, tokenizer, num_classes):
         if library == "hugging-face":
-            return AutoConfig.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
+            return AutoModel.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr,weight_decay=1e-5, momentum=0.9, nesterov=True),
