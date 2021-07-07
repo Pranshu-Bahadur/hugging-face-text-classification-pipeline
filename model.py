@@ -17,7 +17,7 @@ class NLPClassifier(object):
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
-        self.name = "{}-{}-{}-{}-{}".format(config["model_name"], config["tokenizer_name"], config["resolution"], config["batch_size"], config["learning_rate"])
+        self.name = "{}-{}-{}-{}".format(config["model_name"], config["tokenizer_name"], config["batch_size"], config["learning_rate"])
         self.bs = config["batch_size"]
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
