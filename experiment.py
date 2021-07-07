@@ -42,7 +42,7 @@ class Experiment(object):
             split_names = ['train', 'validation', 'test']
             classes = list(dataSetFolder.labels.items())
             print(classes)
-            distributions = {split_names[i]: {k: len(list(filter(lambda x: x[1]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
+            distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
             print(distributions)
             return splits
         return dataSetFolder
