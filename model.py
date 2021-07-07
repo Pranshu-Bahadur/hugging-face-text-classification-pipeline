@@ -66,9 +66,7 @@ class NLPClassifier(object):
 
     def _train(self, loader, indices, k):
         self.model.train()
-        print(indices)
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #indices = indices[indices==k].long()
         for _, batch in enumerate(loader):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
@@ -88,6 +86,7 @@ class NLPClassifier(object):
             iterations += 1
             del x, y
             torch.cuda.empty_cache()
+            print(float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
 
