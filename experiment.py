@@ -15,7 +15,7 @@ class Experiment(object):
         split = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
-        print(self._features_selection(loaders[0]))
+        score, i, indices = self._features_selection(loaders[0])
 
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, train_acc, train_loss, val_acc, val_loss = self.classifier._run_epoch(loaders)
@@ -62,8 +62,8 @@ class Experiment(object):
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             t_score = score
             l = list(map(lambda idx: torch.tensor([idx, self.classifier._score(loader, indices, idx)]), clusters))
-            print(torch.tensor(l))
-            i = torch.argmax(torch.tensor(l))
+            print(torch.stack(l))
+            i = torch.argmax(torch.stack(l))
             i, score = l[i][0], l[i][1]
             K += 2
             print(K)
