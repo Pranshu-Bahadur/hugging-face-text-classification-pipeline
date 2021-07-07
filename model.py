@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead
+from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification
 from nfnets import SGD_AGC
 from sam import SAMSGD
 from sklearn.metrics import f1_score
@@ -30,7 +30,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, tokenizer, num_classes):
         if library == "hugging-face":
-            return AutoModelWithLMHead.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
+            return AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr,weight_decay=1e-5, momentum=0.9),#, nesterov=True
@@ -116,7 +116,6 @@ class NLPClassifier(object):
     def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
         data = {k: v.cuda() for k, v in data.items()}
-        data.popitem("labels")
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(**data).logits
