@@ -67,7 +67,7 @@ class NLPClassifier(object):
     def _train(self, loader, indices, k):
         #self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        for batch in loader:
+        for _, batch in enumerate(loader):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
             y = batch['labels'].cuda()
@@ -91,7 +91,7 @@ class NLPClassifier(object):
         #self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
-            for batch in loader:
+            for _, batch in enumerate(loader):
                 x = batch['input_ids'].cuda()
                 y = batch['labels'].cuda()
                 outputs = self.model.forward(x[:,indices==k]).logits

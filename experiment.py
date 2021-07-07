@@ -16,7 +16,7 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
         score, k, indices = self._features_selection(loaders[0])
-        print(k, score)
+        print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, train_acc, train_loss, val_acc, val_loss = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch: {} | Training Accuracy: {} | Training Loss: {} | Validation Accuracy: {} | Validation Loss: {} | f1 Train: {} | f1 Val  {}".format(self.classifier.curr_epoch, train_acc, train_loss, val_acc, val_loss, f1_train, f1_val))
@@ -29,7 +29,7 @@ class Experiment(object):
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print("Testing:...")
-        print(self.classifier._validate(loaders[2]))
+        print(self.classifier._validate(loaders[2], indices, k))
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
@@ -55,6 +55,8 @@ class Experiment(object):
         t_score = self.classifier._score(loader, [i for i in range(X.shape[1])], -1)
         Z = torch.tensor(X.T)
         while t_score != score:
+            data = next(iter(loader))
+            X = data["input_ids"].cpu().numpy()
             t_score = score
             kmeans = KMeans(K)
             indices = kmeans.fit_predict(X.T)
