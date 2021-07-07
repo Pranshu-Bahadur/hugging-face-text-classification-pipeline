@@ -52,13 +52,15 @@ class Experiment(object):
         X = data["input_ids"].cpu().numpy()
         K = 2
         score = float("-inf")
-        t_score = self.classifier._score(loader, [i for i in range(X.shape[1])], -1)
+        i = -1
+        t_score = [self.classifier._score(loader, [i for i in range(X.shape[1])], i)]
         Z = torch.tensor(X.T)
-        while t_score != score:
+        while max(t_score) != score:
             X = next(iter(loader))["input_ids"].cpu().numpy()
             Z = torch.tensor(X.T)
-            if t_score < score:
-                t_score = score
+            if max(t_score) < score:
+                print(score, K-2, i)
+                t_score.append(score)
             kmeans = KMeans(K)
             indices = kmeans.fit_predict(Z)
             indices = torch.tensor(indices)
@@ -67,7 +69,7 @@ class Experiment(object):
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
-            if s == float('nan') or float('nan') in list(map(lambda l_: l_[1],l)) or t_score > s:
+            if s == float('nan') or float('nan') in list(map(lambda l_: l_[1],l)) or max(t_score) > s:
                 K += 2
                 continue
             score = s
@@ -78,6 +80,4 @@ class Experiment(object):
                 K += 2
                 continue
             K += 2
-            if(t_score < score):
-                print(t_score, score, K, i)
         return score, i, indices
