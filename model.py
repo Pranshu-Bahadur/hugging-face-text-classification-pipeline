@@ -65,12 +65,11 @@ class NLPClassifier(object):
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
 
     def _train(self, loader, indices, k):
-        self.model.train()
+        #self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for batch in loader:
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
-            x_ = batch['attention_mask'].cuda()
             y = batch['labels'].cuda()
             outputs = self.model.forward(x[:,indices==k]).logits
             loss = self.criterion(outputs, y)
@@ -89,13 +88,11 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        self.model.eval()
+        #self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for batch in loader:
-                self.optimizer.zero_grad()
                 x = batch['input_ids'].cuda()
-                x_ = batch['attention_mask'].cuda()
                 y = batch['labels'].cuda()
                 outputs = self.model.forward(x[:,indices==k]).logits
                 loss = self.criterion(outputs, y)
