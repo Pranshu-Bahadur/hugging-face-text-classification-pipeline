@@ -53,7 +53,7 @@ class Experiment(object):
         K = 2
         kmeans = KMeans(K)
         score = float("-inf")
-        t_score = self.classifier._score(loader, indices=[i for i in range(X.size(1))])
+        t_score = self.classifier._score(loader, indices=[i for i in range(X.shape[1])])
         while t_score != score:
             indices = kmeans.fit_predict(X.T)
             z, indices = torch.tensor(X.T), torch.tensor(indices)
