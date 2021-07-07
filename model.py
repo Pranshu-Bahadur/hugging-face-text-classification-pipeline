@@ -79,13 +79,9 @@ class NLPClassifier(object):
             am = batch["attention_mask"].float().cuda()
             am[:, indices!=k] = 0
             y = batch['labels'].cuda()
-            try:
-                outputs = self.model(x,  attention_mask=am, labels=y)
-            except:
-                continue
-            loss = outputs.loss#self.criterion(outputs, y)
+            outputs = self.model(x,  attention_mask=am).logits
+            loss = self.criterion(outputs, y)
             loss.backward()
-            outputs = outputs.logits
             """
             if True:
                 def closure():
@@ -120,12 +116,8 @@ class NLPClassifier(object):
                 y = batch['labels'].cuda()
                 am = batch["attention_mask"].float().cuda()
                 am[:, indices!=k] = 0
-                try:
-                    outputs = self.model(x,  attention_mask=am, labels=y)
-                except:
-                    continue
-                loss = outputs.loss#self.criterion(outputs, y)
-                outputs = outputs.logits
+                outputs = self.model(x,  attention_mask=am)
+                loss = self.criterion(outputs, y)
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==y.cpu()).sum().item()
@@ -141,7 +133,7 @@ class NLPClassifier(object):
         x = data["attention_mask"].float().cuda()
         x.requires_grad = True
         h = self.model.forward(data["input_ids"][:,indices==i if i != -1 else indices].cuda(), attention_mask=x[:, indices==i if i != -1 else indices]).logits
-        m = torch.zeros((x.size(0), x[:, indices==i if i != -1 else indices].size(1), 30522))
+        m = torch.zeros((x.size(0), x[:, indices==i if i != -1 else indices].size(1)))
         m[:, 0] = 1
         h.backward(m.cuda())
         return x.grad
