@@ -84,8 +84,8 @@ class NLPClassifier(object):
             if True:
                 def closure():
                     self.optimizer.zero_grad()
-                    preds = self.model(x.cuda())
-                    loss = self.criterion(preds, y.cuda())
+                    preds = self.model.forward(x,  attention_mask=am).logits
+                    loss = self.criterion(preds, y)
                     loss.backward()
                     return loss
                 self.optimizer.zero_grad()
