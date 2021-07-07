@@ -17,15 +17,11 @@ def _model_config(args):
         "checkpoint": args.checkpoint if args.checkpoint else "",
         "num_classes": int(args.num_classes),
         "curr_epoch": int(args.curr_epoch) if args.curr_epoch else 0,
-        "resolution": int(args.resolution),
         "epochs": int(args.epochs) if args.epochs else 0,
         "train": True if args.train else False,
-        "pretrained": True if args.pretrained else False,
         "save_interval": int(args.save_interval),
         "library": args.library,
-        "save_directory": args.save_directory,
-        "test": args.test if args.test else ""
-        
+        "save_directory": args.save_directory,        
     }
     return config
 
@@ -34,7 +30,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", "-m", help="Pick a model name")
     parser.add_argument("--dataset_directory", "-d", help="Set dataset directory path")
-    parser.add_argument("--resolution", "-r", help="Set image resolution")
     parser.add_argument("--batch_size", "-b", help="Set batch size")
     parser.add_argument("--learning_rate", "-l", help="set initial learning rate")
     parser.add_argument("--checkpoint", "-c", help="Specify path for model to be loaded")
@@ -48,7 +43,6 @@ if __name__ == "__main__":
     parser.add_argument("--library")
     parser.add_argument("--save_directory", "-s")
     parser.add_argument("--save_interval")
-    parser.add_argument("--pretrained", action="store_true")
     parser.add_argument("--tokenizer")
 
     args = parser.parse_args()
