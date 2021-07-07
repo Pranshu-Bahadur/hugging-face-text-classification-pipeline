@@ -75,33 +75,20 @@ class NLPClassifier(object):
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for idx, batch in enumerate(loader):
             self.optimizer.zero_grad()
-            x = batch['input_ids'].cuda()
-            am = batch["attention_mask"].float().cuda()
-            am[:, indices!=k] = 0
-            y = batch['labels'].cuda()
-            outputs = self.model(x,  attention_mask=am).logits
-            loss = self.criterion(outputs, y)
+            batch = {k: v.cuda() for k, v in batch.items()}
+            batch["attention_mask"][:, indices!=k] = 0
+            outputs = self.model(**batch)
+            loss = outputs.loss#self.criterion(outputs, y)
             loss.backward()
-            """
-            if True:
-                def closure():
-                    self.optimizer.zero_grad()
-                    preds = self.model(x,  attention_mask=am).logits
-                    loss = self.criterion(preds, y)
-                    loss.backward()
-                    return loss
-                self.optimizer.zero_grad()
-                loss = self.optimizer.step(closure)
-            """
+            outputs = outputs.logits
             self.optimizer.step()
             self.scheduler.step()
             running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
-            correct += (y_.cpu()==y.cpu()).sum().item()
-            f1 += f1_score(y.cpu(), y_.cpu(), average='micro')
-            total += y.size(0)
+            correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
+            f1 += f1_score(batch["labels"], y_.cpu(), average='micro')
+            total += batch["labels"].size(0)
             iterations += 1
-            del x, y
             torch.cuda.empty_cache()
             print(idx, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
@@ -112,19 +99,17 @@ class NLPClassifier(object):
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
-                x = batch['input_ids'].cuda()
-                y = batch['labels'].cuda()
-                am = batch["attention_mask"].float().cuda()
-                am[:, indices!=k] = 0
-                outputs = self.model(x,  attention_mask=am)
-                loss = self.criterion(outputs, y)
+                batch = {k: v.cuda() for k, v in batch.items()}
+                batch["attention_mask"][:, indices!=k] = 0
+                outputs = self.model(**batch)
+                loss = outputs.loss#self.criterion(outputs, y)
+                outputs = outputs.logits
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
-                correct += (y_.cpu()==y.cpu()).sum().item()
-                f1 += f1_score(y.cpu(), y_.cpu(), average='micro')
-                total += y.size(0)
+                correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
+                f1 += f1_score(batch["labels"].cpu(), y_.cpu(), average='micro')
+                total += batch["labels"].size(0)
                 iterations += 1
-                del x, y
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
