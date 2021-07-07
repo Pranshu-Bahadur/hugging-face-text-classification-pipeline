@@ -64,9 +64,9 @@ class Experiment(object):
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             print(l)
+            score = max(list(map(lambda l_: l_[1],l)))
             if torch.isnan(score):
                 continue
-            score = max(list(map(lambda l_: l_[1],l)))
             l = list(filter(lambda a_: a_[1] == score, l))
             i = l[0]
             K += 2
