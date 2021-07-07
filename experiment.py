@@ -65,7 +65,9 @@ class Experiment(object):
             print(torch.stack(l))
             l = torch.stack(l)
             i = torch.argmax(l)
-            i, score = tuple(l[i].view(1, -1))
+            l = l.view(1, -1)
+            l = l[i:]
+            i, score = l[0], l[1]
             K += 2
             print(K)
             if(t_score < score):
