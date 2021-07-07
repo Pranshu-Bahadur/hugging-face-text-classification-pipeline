@@ -68,7 +68,11 @@ class Experiment(object):
                 K += 2
                 continue
             l = list(filter(lambda a_: a_[1] == score, l))
-            i = l[0]
+            try:
+                i = l[0]
+            except:
+                K += 2
+                continue
             K += 2
             if(t_score < score):
                 print(t_score, score, K, i)
