@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoModel, AutoConfig, AutoTokenizer
 from sklearn.metrics import f1_score
 import numpy as np
 
