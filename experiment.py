@@ -63,10 +63,10 @@ class Experiment(object):
             t_score = score
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             l_= max(list(map(lambda l_: l_[1],l)))
+            print(l_)
             l = list(filter(lambda a_: a_[1] == l_,l))
             i, score = l[0]
             K += 2
-            print(K)
             if(t_score < score):
                 print(t_score, score, K, i)
         return score, i, indices
