@@ -59,9 +59,9 @@ class NLPClassifier(object):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
 
-    def _run_epoch(self, split, indices, k):
-        f1_train, acc_train, loss_train = self._train(split[0], indices, k)
-        f1_val, acc_val, loss_val = self._validate(split[1], indices, k)
+    def _run_epoch(self, loaders, indices, k):
+        f1_train, acc_train, loss_train = self._train(loaders[0], indices, k)
+        f1_val, acc_val, loss_val = self._validate(loaders[1], indices, k)
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
 
     def _train(self, loader, indices, k):
@@ -71,7 +71,7 @@ class NLPClassifier(object):
             self.optimizer.zero_grad()
             x = batch['input_ids'].cuda()
             y = batch['labels'].cuda()
-            outputs = self.model.forward(x[:,indices==k]).logits
+            outputs = self.model.forward(x).logits
             loss = self.criterion(outputs, y)
             loss.backward()
             self.optimizer.step()
