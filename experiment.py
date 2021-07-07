@@ -39,11 +39,11 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            split_names = ['train', 'validation', 'test']
-            classes = list(dataSetFolder.labels.items())
-            print(classes)
-            distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            print(distributions)
+            #split_names = ['train', 'validation', 'test']
+            #classes = list(dataSetFolder.labels.items())
+            #print(classes)
+            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
+            #print(distributions)
             return splits
         return dataSetFolder
     
