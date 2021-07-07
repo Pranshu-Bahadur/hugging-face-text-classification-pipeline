@@ -2,6 +2,8 @@ import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, SqueezeBertForSequenceClassification
+from nfnets import SGD_AGC
+from sam import SAMSGD
 from sklearn.metrics import f1_score
 import numpy as np
 
@@ -32,7 +34,10 @@ class NLPClassifier(object):
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr,weight_decay=1e-5, momentum=0.9, nesterov=True),
-                      "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999))
+                      "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
+                      "SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.01, weight_decay=1e-05, nesterov=True, momentum=0.9),
+                      "SAMSGD": SAMSGD(model_params.parameters(), lr, momentum=0.9,weight_decay=1e-5)
+
         }
         return optim_dict[name]
     
@@ -74,9 +79,18 @@ class NLPClassifier(object):
             am[:, indices!=k] = 0
             y = batch['labels'].cuda()
             outputs = self.model.forward(x,  attention_mask=am).logits
-            loss = self.criterion(outputs, y)
-            loss.backward()
-            self.optimizer.step()
+            #loss = self.criterion(outputs, y)
+            #loss.backward()
+            if True:
+                def closure():
+                    self.optimizer.zero_grad()
+                    preds = self.model(x.cuda())
+                    loss = self.criterion(preds, y.cuda())
+                    loss.backward()
+                    return loss
+                self.optimizer.zero_grad()
+                loss = self.optimizer.step(closure)
+            #self.optimizer.step()
             self.scheduler.step()
             running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
