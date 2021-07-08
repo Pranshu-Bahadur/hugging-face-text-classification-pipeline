@@ -57,9 +57,6 @@ class Experiment(object):
         Z = torch.tensor(X.T)
         iterations = 0
         while max(t_score) != score:
-            shuffle_seed = torch.randperm(X.shape[0])
-            X = X[shuffle_seed]
-            Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 K = K//2
