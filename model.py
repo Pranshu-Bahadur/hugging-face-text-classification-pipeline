@@ -82,7 +82,7 @@ class NLPClassifier(object):
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             splits = [batch["labels"][batch["labels"]==y] for y in list(torch.unique(batch["labels"]))]
                 #dist = [batch["labels"][batch["labels"]==y].size(0) for y in list(torch.unique(batch["labels"]))]
-            bal = len(list(torch.unique(batch["labels"])))//16
+            bal = batch["labels"].size(0)//len(list(torch.unique(batch["labels"])))
             samples = [[i for i in range(bal)] if y.size(0) >= bal else [i for i in range(int(bal-y.size(0)))]+[i for i in range(y.size(0))] for y in splits]
             batch = {k: torch.stack([v[idx] for sample in samples for idx in sample]) for k,v in list(batch.items())}
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
