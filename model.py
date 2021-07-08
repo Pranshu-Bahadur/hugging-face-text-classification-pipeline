@@ -30,7 +30,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModelForTokenClassification.from_pretrained(model_name)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
@@ -107,7 +107,7 @@ class NLPClassifier(object):
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
-                loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
+                loss = self.criterion(outputs.view(batch["input_ids"].size(0), -1), batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
@@ -125,7 +125,7 @@ class NLPClassifier(object):
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
-        m = torch.zeros((data["attention_mask"].size(0), data["attention_mask"].size(1), 16))
+        m = torch.zeros((data["attention_mask"].size(0), 16))
         m[:,0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
