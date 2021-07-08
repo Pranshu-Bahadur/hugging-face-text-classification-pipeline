@@ -12,11 +12,10 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        split = self._preprocessing(dataset, True)
+        split, ds = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
-        ds = SpreadSheetNLPCustomDataset(dataset, self.classifier.tokenizer)
-        score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, shuffle=True, num_workers=4))
+        score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, num_workers=4))
         print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
@@ -45,7 +44,7 @@ class Experiment(object):
             #self.classifier.writer.add_text("Classes:",f'{classes}')
             #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
             #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
-            return splits
+            return splits, dataSetFolder
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader):
