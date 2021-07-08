@@ -16,7 +16,7 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
         ds = SpreadSheetNLPCustomDataset(dataset, self.classifier.tokenizer)
-        score, k, indices = self._features_selection(Loader(ds,len(ds)//2, shuffle=True, num_workers=4))
+        score, k, indices = self._features_selection(Loader(ds,self.classifier.bs, shuffle=True, num_workers=4))
         print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
@@ -49,15 +49,15 @@ class Experiment(object):
         return dataSetFolder
     
     def _features_selection(self, loader):
-        data = next(iter(loader))
-        X = data["input_ids"].cpu().numpy()
+        X = tensor.stack([data["input_ids"].cpu().numpy() for data in loader][:-1])
         K = 2
         score = float("-inf")
         i = -1
         t_score = [self.classifier._score(loader, [i for i in range(X.shape[1])], i)]
         Z = torch.tensor(X.T)
         while max(t_score) != score:
-            X = next(iter(loader))["input_ids"].cpu().numpy()
+            shuffle_seed = torch.randperm(X.size(0))
+            X = X[shuffle_seed]
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(score, K-2, i)
