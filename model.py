@@ -30,7 +30,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, tokenizer, num_classes):
         if library == "hugging-face":
-            return AutoModelForSequenceClassification.from_pretrained(model_name, num_classes = num_classes), AutoTokenizer.from_pretrained(model_name, num_classes = num_classes)
+            return AutoModelForSequenceClassification.from_pretrained(model_name, num_classes = num_classes), AutoTokenizer.from_pretrained(model_name)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
