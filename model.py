@@ -121,7 +121,6 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         #shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-        print(data)
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
@@ -134,13 +133,13 @@ class NLPClassifier(object):
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
+            print(labels)
             if jacob.size(0) != labels.size(0):
                 return 0
             K = 1e-5
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
             ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
-            print(score)
             return score
         return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels']), loader)))
 
