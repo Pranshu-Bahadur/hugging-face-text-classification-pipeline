@@ -78,7 +78,13 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for batch in loader:
-
+            shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
+            batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
+            splits = [batch["labels"][batch["labels"]==y] for y in list(torch.unique(batch["labels"]))]
+                #dist = [batch["labels"][batch["labels"]==y].size(0) for y in list(torch.unique(batch["labels"]))]
+            bal = batch["labels"].size(0)//16
+            samples = [[i for i in range(bal)] if y.size(0) >= batch["labels"].size(0)//16 else [i for i in range(bal-y.size(0))]+[i for i in range(y.size(0))] for y in splits]
+            batch = {k: torch.stack([v[idx] for idx in sample for sample in samples]) for k,v in list(batch.items())}
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
@@ -128,7 +134,14 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         self.model.eval()
         self.model.zero_grad()
-        data = {k: v.cuda() for k, v in data.items()}
+        shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+        splits = [data["labels"][data["labels"]==y] for y in list(torch.unique(data["labels"]))]
+        bal = data["labels"].size(0)//16
+        samples = [[i for i in range(bal)] if y.size(0) >= data["labels"].size(0)//16 else [i for i in range(bal-y.size(0))]+[i for i in range(y.size(0))] for y in splits]
+        data = {k: torch.stack([v[idx] for idx in sample for sample in samples]) for k,v in list(data.items())}
+        shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        data = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
