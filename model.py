@@ -2,7 +2,7 @@ import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification, AutoModelForTokenClassification, AutoModelForPreTraining, AutoConfig
-#from nfnets import SGD_AGC
+from nfnets import SGD_AGC
 from sam import SAMSGD
 from sklearn.metrics import f1_score
 import numpy as np
@@ -39,7 +39,7 @@ class NLPClassifier(object):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
                       "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      #"SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.01, weight_decay=1e-05, nesterov=True, momentum=0.9),
+                      "SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.01, weight_decay=1e-05, nesterov=True, momentum=0.9),
                       "SAMSGD": SAMSGD(model_params.parameters(), lr, momentum=0.9,weight_decay=1e-5)
 
         }
