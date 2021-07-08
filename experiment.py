@@ -40,11 +40,11 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            #split_names = ['train', 'validation', 'test']
-            #classes = list(dataSetFolder.labels.items())
-            #print(classes)
-            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            #print(distributions)
+            split_names = ['train', 'validation', 'test']
+            classes = list(dataSetFolder.labels.items())
+            self.classifier.writer.add_text("Classes:",f'{classes}')
+            distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
+            self.classifier.writer.add_text("Run distribution:",f'{distributions}')
             return splits
         return dataSetFolder
     
@@ -56,7 +56,7 @@ class Experiment(object):
         t_score = [self.classifier._score(loader, [i for i in range(X.shape[1])], i)]
         Z = torch.tensor(X.T)
         while max(t_score) != score:
-            shuffle_seed = torch.randperm(X.size(0))
+            shuffle_seed = torch.randperm(X.shape[0])
             X = X[shuffle_seed]
             Z = torch.tensor(X.T)
             if max(t_score) < score:
