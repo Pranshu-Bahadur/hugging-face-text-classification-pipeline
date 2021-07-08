@@ -77,12 +77,12 @@ class NLPClassifier(object):
     def _train(self, loader, indices, k):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        for idx, batch in enumerate(loader):
+        for batch in loader:
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
-            outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], labels=batch["labels"]).logits
-            loss = self.criterion(outputs, batch["labels"])
+            outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+            loss = self.criterion(torch.max(outputs, -1), batch["labels"])
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -94,7 +94,7 @@ class NLPClassifier(object):
             total += batch["labels"].size(0)
             iterations += 1
             torch.cuda.empty_cache()
-            print(idx, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
+            print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
 
@@ -102,12 +102,12 @@ class NLPClassifier(object):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
-            for _, batch in enumerate(loader):
+            for batch in loader:
                 shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
-                outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], labels=batch["labels"]).logits
-                loss = self.criterion(outputs, batch["labels"])
+                outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+                loss = self.criterion(torch.max(outputs, -1), batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
