@@ -33,8 +33,9 @@ class NLPClassifier(object):
             return AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_classes), AutoTokenizer.from_pretrained(tokenizer)
 
     def _create_optimizer(self, name, model_params, lr):
-        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr,weight_decay=1e-5, momentum=0.9),#, nesterov=True
+        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999)),
                       "SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.01, weight_decay=1e-05, nesterov=True, momentum=0.9),
                       "SAMSGD": SAMSGD(model_params.parameters(), lr, momentum=0.9,weight_decay=1e-5)
 
@@ -94,12 +95,12 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        #self.model.eval()
+        self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
                 batch = {k: v.cuda() for k, v in batch.items()}
-                batch["attention_mask"][:, indices!=k] = 0
+                #batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model(**batch).logits
                 loss = self.criterion(outputs, batch["labels"])
                 running_loss += loss.item()
