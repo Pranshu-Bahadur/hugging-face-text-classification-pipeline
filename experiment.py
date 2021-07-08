@@ -49,7 +49,7 @@ class Experiment(object):
         return dataSetFolder
     
     def _features_selection(self, loader):
-        X = np.concatenate((data["input_ids"] for data in loader)[:-1].cpu().numpy())
+        X = np.concatenate((data["input_ids"].cpu().numpy() for data in loader)[:-1])
         K = 2
         score = float("-inf")
         i = -1
