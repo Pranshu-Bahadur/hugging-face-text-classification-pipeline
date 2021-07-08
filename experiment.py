@@ -67,6 +67,7 @@ class Experiment(object):
         indices = []
         Z = torch.tensor(X.T)
         memoisation = {}
+        memoisation[score] = (indices,i)
         while max(t_score) != score:
             data = next(iter(loader))
             #X = data["input_ids"].cpu().numpy()
