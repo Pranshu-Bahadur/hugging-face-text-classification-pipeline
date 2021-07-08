@@ -125,10 +125,10 @@ class NLPClassifier(object):
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
-        m = torch.zeros((data["attention_mask"].size(0), 16))
+        m = torch.zeros((data["attention_mask"].size(0), data["attention_mask"].size(1), 16))
         m[:,0] = 1
         h.backward(m.cuda())
-        return J
+        return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
