@@ -19,7 +19,7 @@ class Experiment(object):
         score = float('-inf')
         K = 512
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            K = K // 2
+            K = K // 2 if K != 2 else 256
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K)
             if score < score_:
