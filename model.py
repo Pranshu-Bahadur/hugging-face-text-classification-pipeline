@@ -128,7 +128,7 @@ class NLPClassifier(object):
         m = torch.zeros((data["attention_mask"].size(0), self.nc))
         m[:, 0] = 1
         h.backward(m.cuda())
-        return data["attention_mask"].grad/len(indices[indices!=i])
+        return data["attention_mask"].grad
 
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
