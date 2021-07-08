@@ -50,7 +50,7 @@ class Experiment(object):
     
     def _features_selection(self, loader):
         X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader][:-1]))
-        K = 2
+        K = 512//2
         score = float("-inf")
         i = -1
         t_score = [self.classifier._score(loader, [i for i in range(X.shape[1])], i)]
@@ -61,7 +61,7 @@ class Experiment(object):
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(score, K, i)
-                K += 2
+                K = K//2
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
