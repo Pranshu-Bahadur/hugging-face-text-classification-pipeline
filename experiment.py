@@ -49,7 +49,6 @@ class Experiment(object):
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader):
-        self.classifier.model.eval()
         X = next(iter(loader))["input_ids"].cpu().numpy() #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         K = 2
         score = float("-inf")
