@@ -95,7 +95,8 @@ class Experiment(object):
                 continue
             score = s
             if score == s:
-                print(f"{iterations}: K = {K} score_ = {score}")
+                print(f"{iterations}: K = {K} score = {score}")
+                K+=2
             try:
                 i = l[0][0]
             except:
