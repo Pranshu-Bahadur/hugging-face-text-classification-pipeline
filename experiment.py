@@ -74,10 +74,17 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), clusters))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
-                print("Naan bread detected skipping.")
+                print("Naan bread detected...Reshuffling.")
+                data = next(iter(loader))
+                X = data["input_ids"].cpu().numpy()
                 #K += 2
                 continue
             score = max(list(map(lambda l_: l_[1],l)))
+            if score == 0:
+                print("max is 0...Reshuffling")
+                data = next(iter(loader))
+                X = data["input_ids"].cpu().numpy()
+                continue
             print(f"{iterations}: K = {K} score_ = {score}")
             try:
                 i = l[0][0]
