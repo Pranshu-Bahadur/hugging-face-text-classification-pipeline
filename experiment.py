@@ -49,7 +49,7 @@ class Experiment(object):
         return dataSetFolder
     
     def _features_selection(self, loader):
-        X = tensor.stack([data["input_ids"].cpu().numpy() for data in loader][:-1])
+        X = torch.stack([data["input_ids"].cpu().numpy() for data in loader][:-1])
         K = 2
         score = float("-inf")
         i = -1

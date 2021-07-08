@@ -118,8 +118,7 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
-    def _get_jacobian(self, loader, indices, i):
-        data = next(iter(loader))
+    def _get_jacobian(self, data, indices, i):
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
@@ -138,8 +137,8 @@ class NLPClassifier(object):
             ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             return np.sum(np.absolute(list(ind_corr_matrix_score.values())))
         result = 0
-        J = self._get_jacobian(loader, indices, k)
         for batch in loader:
+            J = self._get_jacobian(batch, indices, k)
             y = batch['labels'].cuda()
             try:
                 result += eval_score_perclass(J, y)/1e+4
