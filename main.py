@@ -1,3 +1,4 @@
+import numpy as np
 import torchvision
 import torch
 import argparse
@@ -28,6 +29,7 @@ def _model_config(args):
 
 if __name__ == "__main__":
     torch.multiprocessing.set_sharing_strategy('file_system')
+    np.seterr(divide='ignore', invalid='ignore')
     torch.backends.cudnn.enabled = True
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", "-m", help="Pick a model name")
