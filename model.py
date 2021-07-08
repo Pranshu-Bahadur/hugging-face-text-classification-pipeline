@@ -121,6 +121,7 @@ class NLPClassifier(object):
 
     def _get_jacobian(self, data, indices, i):
         #shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        print(data)
         data = {k: v.cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
