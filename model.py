@@ -15,7 +15,7 @@ class NLPClassifier(object):
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.model = nn.DataParallel(self.model).cuda()
-        print(self.model)
+        #print(self.model)
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
