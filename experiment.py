@@ -69,17 +69,17 @@ class Experiment(object):
             Z = torch.tensor(X.T)
             if max(t_score) <= score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                K += 2
                 t_score.append(score)
                 if len(list(filter(lambda x: x == max(t_score), t_score))) > 1:
                     print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
                     return score, i, indices
+                K += 2
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            clusters = {i: Z[indices==i] for i in range(K)}
-            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), clusters))#clusters
+            #clusters = {i: Z[indices==i] for i in range(K)}
+            #big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
+            #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
+            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), list(clusters.keys())))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected...Reshuffling.")
@@ -88,7 +88,7 @@ class Experiment(object):
                 #K += 2
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
-            if s == 0 or s is float('nan') or s == float('-inf') or s == float('inf'):
+            if s == 0 or s == float('nan') or s == float('-inf') or s == float('inf'):
                 print("max is 0...Reshuffling")
                 data = next(iter(loader))
                 X = data["input_ids"].cpu().numpy()

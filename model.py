@@ -138,12 +138,12 @@ class NLPClassifier(object):
             try:
                 K = 1e-3
                 per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
-                ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))))/1e+5 for k,v in list(per_class.items())}
+                ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))))+K/1e+2 for k,v in list(per_class.items())}
                 score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             except:
                 return 0
             return score
         J = self._get_jacobian(data, indices, k)
-        return eval_score_perclass(J, data['labels'].cuda())/1e+5
+        return eval_score_perclass(J, data['labels'].cuda())/1e+2
 
 
