@@ -47,10 +47,10 @@ class Experiment(object):
             #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
             return splits
         return dataSetFolder
-    
+    #@TODO...improve this...
     def _features_selection(self, loader):
         X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
-        K = X.shape[1]//2
+        K = 2
         score = float("-inf")
         i = -1
         t_score = [1e-4]
@@ -59,7 +59,7 @@ class Experiment(object):
         while max(t_score) != score:
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                K = K//2
+                K += K
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
@@ -69,12 +69,14 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
             if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or max(t_score) > s:
+                K += K
                 continue
             score = s
             l = list(filter(lambda a_: a_[1] == score, l))
             try:
                 i = l[0][0]
             except:
+                K += K
                 continue
             iterations += 1
         return score, i, indices

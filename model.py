@@ -129,7 +129,8 @@ class NLPClassifier(object):
         m[:, 0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
-
+    
+    #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
             try:
