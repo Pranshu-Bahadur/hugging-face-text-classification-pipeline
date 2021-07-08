@@ -127,7 +127,7 @@ class NLPClassifier(object):
         h = self.model(**data).logits
         m = torch.zeros((data["attention_mask"].size(0), self.nc))
         m[:, 0] = 1
-        h.backward()
+        h.backward(m.cuda())
         return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
