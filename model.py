@@ -144,6 +144,6 @@ class NLPClassifier(object):
                 return 0
             return score
         J = self._get_jacobian(data, indices, k)
-        return eval_score_perclass(J, data['labels'].cuda())
+        return eval_score_perclass(J, data['labels'].cuda())/1e-3
 
 
