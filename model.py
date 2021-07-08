@@ -81,7 +81,7 @@ class NLPClassifier(object):
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
-            outputs = self.model(batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+            outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], labels=batch["labels"]).logits
             loss = self.criterion(outputs, batch["labels"])
             self.optimizer.zero_grad()
             loss.backward()
@@ -106,7 +106,7 @@ class NLPClassifier(object):
                 shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
-                outputs = self.model(batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+                outputs = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], labels=batch["labels"]).logits
                 loss = self.criterion(outputs, batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
