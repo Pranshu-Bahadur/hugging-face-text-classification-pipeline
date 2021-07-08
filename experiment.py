@@ -20,7 +20,7 @@ class Experiment(object):
         K = 2
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
-            score_, k_, indices_ = self._features_selection(loaders[0], K)
+            score_, k_, indices_ = self._features_selection(loaders[0], K, score)
             if score < score_:
                 #K = K // 2 if K > 2 else 8
                 print("Better score updating features.")
@@ -56,11 +56,10 @@ class Experiment(object):
             return splits
         return dataSetFolder
     #@TODO...improve this...
-    def _features_selection(self, loader, K):
+    def _features_selection(self, loader, K, score):
         data = next(iter(loader))
         X = data["input_ids"].cpu().numpy()
         #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
-        score = float("-inf")
         i = -1
         t_score = [1e-4]
         iterations = 0
@@ -70,7 +69,7 @@ class Experiment(object):
         memoisation[t_score[0]] = (indices,i)
         while max(list(memoisation.keys())) != score:
             data = next(iter(loader))
-            #X = data["input_ids"].cpu().numpy()
+            X = data["input_ids"].cpu().numpy()
             iterations += 1
             if score >= max(list(memoisation.keys())):
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
