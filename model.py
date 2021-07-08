@@ -145,6 +145,6 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(next(iter(loader)), indices, k).cuda(), batch['labels'].cuda()), [data for data in loader])))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(next(iter(loader)), indices, k), batch['labels'].cuda()), [data for data in loader])))
 
 
