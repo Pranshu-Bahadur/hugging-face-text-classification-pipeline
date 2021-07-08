@@ -95,7 +95,7 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        self.model.eval()
+        #self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
