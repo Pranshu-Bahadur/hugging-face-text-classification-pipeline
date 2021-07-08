@@ -58,6 +58,7 @@ class Experiment(object):
     #@TODO...improve this...
     def _features_selection(self, loader, K, score):
         data = next(iter(loader))
+        
         X = data["input_ids"].cpu().numpy()
         #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         i = -1
@@ -67,7 +68,7 @@ class Experiment(object):
         Z = torch.tensor(X.T)
         memoisation = {}
         memoisation[t_score[0]] = (indices,i)
-        while max(list(memoisation.keys())) != score:
+        while max(list(memoisation.keys())) != score or score is float("-inf") or score is float("nan"):
             data = next(iter(loader))
             X = data["input_ids"].cpu().numpy()
             iterations += 1
