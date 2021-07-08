@@ -62,23 +62,20 @@ class Experiment(object):
             if max(t_score) < score:
                 print(score, K-2, i)
                 t_score.append(score)
-            kmeans = KMeans(K)
-            indices = kmeans.fit_predict(Z)
-            indices = torch.tensor(indices)
+            kmeans = KMeans(K, init="k-means++")
+            indices = torch.tensor(kmeans.fit_predict(Z))
             clusters = {i: Z[indices==i] for i in range(K)}
-            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
+            avg = sum(list(map(lambda c: len(c),list(clusters.values()))))/K
+            clusters = list(filter(lambda k: len(clusters[k])>=avg,list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
-            if s == float('nan') or float('nan') in list(map(lambda l_: l_[1],l)) or max(t_score) > s:
-                K += 2
+            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or max(t_score) > s:
                 continue
             score = s
             l = list(filter(lambda a_: a_[1] == score, l))
             try:
                 i = l[0]
             except:
-                K += 2
                 continue
             K += 2
         return score, i, indices
