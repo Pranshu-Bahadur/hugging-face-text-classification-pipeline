@@ -33,7 +33,7 @@ class NLPClassifier(object):
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=768, out_features=num_classes, bias=True)
             model.num_labels = num_classes
-            return model, AutoTokenizer.from_pretrained(model_name)
+            return model, AutoTokenizer.from_pretrained('squeezebert/squeezebert-uncased')
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
