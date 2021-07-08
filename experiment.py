@@ -58,6 +58,7 @@ class Experiment(object):
         Z = torch.tensor(X.T)
         iterations = 0
         while max(t_score) != score:
+            iterations += 1
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 K += K
@@ -80,5 +81,4 @@ class Experiment(object):
             except:
                 K += K
                 continue
-            iterations += 1
         return score, i, indices
