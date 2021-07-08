@@ -79,12 +79,13 @@ class Experiment(object):
                 X = data["input_ids"].cpu().numpy()
                 #K += 2
                 continue
-            score = max(list(map(lambda l_: l_[1],l)))
-            if score == 0:
+            s = max(list(map(lambda l_: l_[1],l)))
+            if s == 0:
                 print("max is 0...Reshuffling")
                 data = next(iter(loader))
                 X = data["input_ids"].cpu().numpy()
                 continue
+            score = s
             print(f"{iterations}: K = {K} score_ = {score}")
             try:
                 i = l[0][0]
