@@ -142,8 +142,8 @@ class NLPClassifier(object):
                 score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             except:
                 return 0
-            return score/1e+5
+            return score
         J = self._get_jacobian(next(iter(loader)), indices, k)
-        return sum(list(map(lambda batch: eval_score_perclass(J.cuda(), batch['labels'].cuda()), [data for data in loader])))/1e+5
+        return sum(list(map(lambda batch: eval_score_perclass(J.cuda(), batch['labels'].cuda()), [data for data in loader])))
 
 
