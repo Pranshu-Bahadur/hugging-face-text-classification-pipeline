@@ -133,7 +133,7 @@ class NLPClassifier(object):
         return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
-    def _score(self, loader, indices, k):
+    def _score(self, data, indices, k):
         def eval_score_perclass(jacob, labels):
             if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
@@ -145,7 +145,7 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        J = self._get_jacobian(next(iter(loader)), indices, k)
-        return sum(list(map(lambda batch: eval_score_perclass(J, batch['labels'].cuda()), [data for data in loader])))
+        J = self._get_jacobian(data, indices, k)
+        return eval_score_perclass(J, data['labels'].cuda())
 
 

@@ -6,6 +6,7 @@ from torchvision import transforms as transforms
 import torch
 from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
+import random
 
 class Experiment(object):
     def __init__(self, config: dict):
@@ -15,11 +16,10 @@ class Experiment(object):
         split, ds = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, num_workers=4))
-        print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
+            score, k, indices = self._features_selection(loaders[random.randrange(0, stop=2)])
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
-            print("Epoch: {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
+            print("Epoch: {} | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Training Loss",loss_train, self.classifier.curr_epoch)
@@ -49,6 +49,8 @@ class Experiment(object):
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader):
+        data = next(iter(loader))
+        X = data["input_ids"].cpu().numpy()
         #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         K = 2
         score = float("-inf")
@@ -57,7 +59,7 @@ class Experiment(object):
         iterations = 0
         while max(t_score) != score:
             iterations += 1
-            X = next(iter(loader))["input_ids"].cpu().numpy()
+            
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
@@ -68,7 +70,7 @@ class Experiment(object):
             #clusters = {i: Z[indices==i] for i in range(K)}
             #big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
             #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), [i for i in range(K)]))#clusters
+            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected skipping.")
