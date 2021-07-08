@@ -91,6 +91,9 @@ class Experiment(object):
                 continue
             score = s
             print(f"{iterations}: K = {K} score_ = {score}")
+            data = next(iter(loader))
+            X = data["input_ids"].cpu().numpy()
+            K += 2
             try:
                 i = l[0][0]
             except:
