@@ -124,16 +124,18 @@ class NLPClassifier(object):
                 iterations += 1
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
-
+    #@TODO fix under-over sampling
     def _get_jacobian(self, data, indices, i):
         self.model.eval()
         self.model.zero_grad()
+        """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         splits = [data["labels"][data["labels"]==y] for y in list(torch.unique(data["labels"]))]
         bal = data["labels"].size(0)//len(list(torch.unique(data["labels"])))
         samples = [[i for i in range(bal)] if y.size(0) >= bal else [i for i in range(bal-y.size(0))]+[i for i in range(y.size(0))] for y in splits]
         data = {k: torch.stack([v[idx] for sample in samples for idx in sample]) for k,v in list(data.items())}
+        """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
