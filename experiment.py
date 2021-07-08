@@ -16,9 +16,13 @@ class Experiment(object):
         split = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
+        score = float('-inf')
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection:".format(self.classifier.curr_epoch+1), "--------------------")
-            score, k, indices = self._features_selection(loaders[0])
+            score_, k_, indices_ = self._features_selection(loaders[0])
+            if score < score_:
+                print("Better score updating features.")
+                score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
