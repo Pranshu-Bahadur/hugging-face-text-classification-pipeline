@@ -112,13 +112,6 @@ class NLPClassifier(object):
             for batch in loader:
                 shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
-                splits = [batch["labels"][batch["labels"]==y] for y in list(torch.unique(batch["labels"]))]
-                #dist = [batch["labels"][batch["labels"]==y].size(0) for y in list(torch.unique(batch["labels"]))]
-                bal = batch["labels"].size(0)//16
-                samples = [[i for i in range(bal)] if y.size(0) >= batch["labels"].size(0)//16 else [i for i in range(bal-y.size(0))]+[i for i in range(y.size(0))] for y in splits]
-                samples = {k: torch.stack([v[idx] for idx in sample for sample in samples]) for k,v in list(batch.items())}
-                shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
-                batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
                 loss = self.criterion(outputs.view(batch["input_ids"].size(0), -1), batch["labels"])
