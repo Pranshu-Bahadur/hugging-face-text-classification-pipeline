@@ -142,7 +142,7 @@ class NLPClassifier(object):
                 score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             except:
                 return 0
-            return score
+            return score/1e-3
         J = self._get_jacobian(data, indices, k)
         return eval_score_perclass(J, data['labels'].cuda())/1e-3
 
