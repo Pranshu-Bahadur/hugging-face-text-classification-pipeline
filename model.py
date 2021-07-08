@@ -130,12 +130,12 @@ class NLPClassifier(object):
         return data["attention_mask"].grad
         """
         print(data["attention_mask"].size())
-        return torch.autograd.functional.jacobian(lambda x,y,z: self.model(x,y,z).logits, tuple(data.values()), create_graph=True, strict=True)
+        return torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],atttention_mask=x).logits, data["attention_mask"], create_graph=True)
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
-            if jacob is None or jacob.size(0) != labels.size(0) or torch.max(jacob, axis=0).item() == 0:
+            if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
             K = 1e-5
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
