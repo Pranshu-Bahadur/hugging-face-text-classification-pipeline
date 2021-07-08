@@ -122,11 +122,15 @@ class NLPClassifier(object):
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
+        """
         h = self.model(**data).loss
         m = torch.zeros(h.size())
         m[0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
+        """
+        print(data["attention_mask"].requires_grad)
+        return torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"], attention_mask=x), data["attention_mask"])
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
