@@ -49,12 +49,11 @@ class Experiment(object):
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader):
-        X = next(iter(loader))["input_ids"].cpu().numpy() #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
+        #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         K = 2
         score = float("-inf")
         i = -1
         t_score = [1e-4]
-        Z = torch.tensor(X.T)
         iterations = 0
         while max(t_score) != score:
             iterations += 1
@@ -62,7 +61,7 @@ class Experiment(object):
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                K += K
+                K += 2
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
@@ -71,7 +70,8 @@ class Experiment(object):
             #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), list(clusters.keys())))#clusters
             s = max(list(map(lambda l_: l_[1],l)))
-            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or s == 0:
+            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan'):
+                print("Naan bread detected"):
                 K += K
                 continue
             score = s
