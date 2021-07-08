@@ -123,7 +123,7 @@ class NLPClassifier(object):
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(**data).loss
-        m = torch.zeros((data["attention_mask"].size(0), 1))
+        m = torch.zeros(h.size())
         m[:, 0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
@@ -139,6 +139,6 @@ class NLPClassifier(object):
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             print(score)
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cpu()), [data for data in loader])))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cuda()), [data for data in loader])))
 
 
