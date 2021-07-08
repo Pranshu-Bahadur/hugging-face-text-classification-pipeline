@@ -28,7 +28,6 @@ class Experiment(object):
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-            loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
         print("Testing:...")
         print(self.classifier._validate(loaders[2], indices, k))
         print("\nRun Complete.")
@@ -61,6 +60,7 @@ class Experiment(object):
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(score, K-2, i)
+                K += 2
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
@@ -74,8 +74,7 @@ class Experiment(object):
             score = s
             l = list(filter(lambda a_: a_[1] == score, l))
             try:
-                i = l[0]
+                i = l[0][0]
             except:
                 continue
-            K += 2
         return score, i, indices

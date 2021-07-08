@@ -75,11 +75,12 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for idx, batch in enumerate(loader):
-            self.optimizer.zero_grad()
-            batch = {k: v.cuda() for k, v in batch.items()}
+            shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
+            batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
             outputs = self.model(**batch).logits
             loss = self.criterion(outputs, batch["labels"])
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
@@ -99,7 +100,8 @@ class NLPClassifier(object):
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
-                batch = {k: v.cuda() for k, v in batch.items()}
+                shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
+                batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model(**batch).logits
                 loss = self.criterion(outputs, batch["labels"])
@@ -114,7 +116,8 @@ class NLPClassifier(object):
 
     def _get_jacobian(self, loader, indices, i):
         data = next(iter(loader))
-        data = {k: v.cuda() for k, v in data.items()}
+        shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
