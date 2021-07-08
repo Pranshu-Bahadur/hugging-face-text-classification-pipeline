@@ -68,7 +68,7 @@ class Experiment(object):
             indices = torch.tensor(kmeans.fit_predict(Z))
             clusters = {i: Z[indices==i] for i in range(K)}
             big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            clusters = list(filter(lambda k: len(clusters[k])==big_c,))
+            clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
             if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or s == 0:
