@@ -82,7 +82,7 @@ class NLPClassifier(object):
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
             outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
-            loss = self.criterion(outputs.view(-1, self.nc), batch["labels"].float().view(-1, self.nc))
+            loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -107,7 +107,7 @@ class NLPClassifier(object):
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
-                loss = self.criterion(outputs.view(-1, self.nc), batch["labels"].float().view(-1, self.nc))
+                loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
