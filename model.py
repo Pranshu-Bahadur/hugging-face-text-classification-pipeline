@@ -96,7 +96,7 @@ class NLPClassifier(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            #self.scheduler.step()
+            self.scheduler.step()
             running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
             correct += (y_.cpu()==batch["labels"].cpu()).sum().item()
