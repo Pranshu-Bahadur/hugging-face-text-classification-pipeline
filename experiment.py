@@ -39,6 +39,7 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
+            dataSetFolder = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])[0]
             #split_names = ['train', 'validation', 'test']
             #classes = list(dataSetFolder.labels.items())
             #self.classifier.writer.add_text("Classes:",f'{classes}')
