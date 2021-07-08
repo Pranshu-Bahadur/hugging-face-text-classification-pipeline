@@ -66,24 +66,24 @@ class Experiment(object):
         iterations = 0
         indices = []
         Z = torch.tensor(X.T)
+        memoisation = {}
         while max(t_score) != score:
             data = next(iter(loader))
             #X = data["input_ids"].cpu().numpy()
             iterations += 1
-            if max(t_score) <= score:
+            if score >= max(list(memoisation.keys())):
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                t_score.append(score)
-                if len(list(filter(lambda x: x == max(t_score), t_score))) > 1:
+                if score in list(memoisation.keys()):
                     print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
                     return score, i, indices
-                #K += 2
+                memoisation[score] = (indices, i)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
             clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
-            big_c = torch.max(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
-            clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
+            big_c = torch.mean(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
+            clusters = list(filter(lambda k: torch.mean(clusters[k])>=big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
-            l = list(filter(lambda a_: float('nan') != a_[1], l))
+            l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation)) <= a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected...")
                 continue
