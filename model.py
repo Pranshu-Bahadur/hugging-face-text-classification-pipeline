@@ -31,7 +31,7 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModelForTokenClassification.from_pretrained(model_name)
-            model.classifier = nn.Linear(in_features=128, out_features=num_classes, bias=True)
+            #model.classifier = nn.Linear(in_features=128, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
 
