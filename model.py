@@ -131,7 +131,7 @@ class NLPClassifier(object):
         def eval_score_perclass(jacob, labels):
             K = 1e-5
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
-            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy())+K))) for k,v in list(per_class.items())}
+            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             return np.sum(np.absolute(list(ind_corr_matrix_score.values())))
         result = 0
         J = self._get_jacobian(loader, indices, k)
