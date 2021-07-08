@@ -49,18 +49,19 @@ class Experiment(object):
         return dataSetFolder
     
     def _features_selection(self, loader):
-        X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader][:-1]))
-        K = 512//2
+        X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
+        K = X.shape[1]//2
         score = float("-inf")
         i = -1
         t_score = [self.classifier._score(loader, [i for i in range(X.shape[1])], i)]
         Z = torch.tensor(X.T)
+        iterations = 0
         while max(t_score) != score:
             shuffle_seed = torch.randperm(X.shape[0])
             X = X[shuffle_seed]
             Z = torch.tensor(X.T)
             if max(t_score) < score:
-                print(score, K, i)
+                print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 K = K//2
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
@@ -78,4 +79,5 @@ class Experiment(object):
                 i = l[0][0]
             except:
                 continue
+            iterations += 1
         return score, i, indices
