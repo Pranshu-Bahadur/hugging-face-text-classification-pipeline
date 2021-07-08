@@ -143,6 +143,6 @@ class NLPClassifier(object):
             ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cpu()), loader)))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cpu()), [data for data in loader])))
 
 
