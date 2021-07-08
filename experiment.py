@@ -66,6 +66,8 @@ class Experiment(object):
         iterations = 0
         indices = []
         while max(t_score) != score:
+            data = next(iter(loader))
+            X = data["input_ids"].cpu().numpy()
             iterations += 1
             Z = torch.tensor(X.T)
             if max(t_score) <= score:
@@ -78,21 +80,16 @@ class Experiment(object):
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
             clusters = {i: Z[indices==i] for i in range(K)}
-            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
+            big_c = max(list(map(lambda c: torch.mean(c),list(clusters.values()))))
+            clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
-                print("Naan bread detected...Reshuffling.")
-                data = next(iter(loader))
-                X = data["input_ids"].cpu().numpy()
-                #K += 2
+                print("Naan bread detected...")
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
             if s == 0 or s == float('nan') or s == float('-inf') or s == float('inf'):
-                print("max is 0...Reshuffling")
-                data = next(iter(loader))
-                X = data["input_ids"].cpu().numpy()
+                print("max is 0...")
                 continue
             score = s
             if score == s:
@@ -101,8 +98,6 @@ class Experiment(object):
             try:
                 i = l[0][0]
             except:
-                print("Random unidentified error...Reshuffling")
-                data = next(iter(loader))
-                X = data["input_ids"].cpu().numpy()
+                print("Random unidentified error...")
                 continue
         return score, i, indices
