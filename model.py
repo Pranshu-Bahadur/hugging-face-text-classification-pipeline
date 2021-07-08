@@ -31,7 +31,7 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, tokenizer, num_classes):
         if library == "hugging-face":
             config = AutoConfig.from_pretrained(model_name)
-            config.num_classes = self.num_classes
+            config.num_classes = num_classes
             return AutoModelForSequenceClassification.from_pretrained(config), AutoTokenizer.from_pretrained(config)
 
     def _create_optimizer(self, name, model_params, lr):
