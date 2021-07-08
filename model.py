@@ -16,7 +16,6 @@ class NLPClassifier(object):
             self.criterion = self._create_criterion(config["criterion_name"])
         self.model = nn.DataParallel(self.model).cuda()
         print(self.model)
-        #self.tokenizer = self.tokenizer.cuda()
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
@@ -34,7 +33,6 @@ class NLPClassifier(object):
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=768, out_features=num_classes, bias=True)
             model.num_labels = num_classes
-            #model.num_classes = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
 
     def _create_optimizer(self, name, model_params, lr):
@@ -126,8 +124,8 @@ class NLPClassifier(object):
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
-        h = self.model(data["input_ids"], attention_mask=data["attention_mask"]).logits
-        m = torch.zeros((data["attention_mask"].size(0), self.nc))
+        h = self.model(data["input_ids"], attention_mask=data["attention_mask"]).loss
+        m = torch.zeros((data["attention_mask"].size(0), 1))
         m[:, 0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
