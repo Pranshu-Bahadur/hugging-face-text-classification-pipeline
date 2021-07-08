@@ -78,6 +78,7 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for batch in loader:
+            """
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             splits = [batch["labels"][batch["labels"]==y] for y in list(torch.unique(batch["labels"]))]
@@ -87,6 +88,7 @@ class NLPClassifier(object):
             batch = {k: torch.stack([v[idx] for sample in samples for idx in sample]) for k,v in list(batch.items())}
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             print(batch["attention_mask"].size(0))
+            """
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
             outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
