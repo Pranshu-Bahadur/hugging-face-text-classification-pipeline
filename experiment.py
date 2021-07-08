@@ -69,6 +69,7 @@ class Experiment(object):
             clusters = list(filter(lambda k: len(clusters[k])==big_c,list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
+            print(iterations, s)
             if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or max(t_score) > s:
                 K += K
                 continue
