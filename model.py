@@ -140,6 +140,7 @@ class NLPClassifier(object):
         data["attention_mask"].requires_grad = True
         h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
         m = torch.zeros((data["attention_mask"].size(0), 16))
+        print(data["attention_mask"].size(0))
         m[:,0] = 1
         h.backward(m.cuda())
         return data["attention_mask"].grad
