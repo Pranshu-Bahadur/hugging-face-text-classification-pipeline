@@ -90,6 +90,8 @@ class Experiment(object):
             try:
                 i = l[0][0]
             except:
-                K += 2
+                print("Random unidentified error...Reshuffling")
+                data = next(iter(loader))
+                X = data["input_ids"].cpu().numpy()
                 continue
         return score, i, indices
