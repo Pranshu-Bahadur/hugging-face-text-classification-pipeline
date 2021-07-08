@@ -61,7 +61,6 @@ class Experiment(object):
         iterations = 0
         while max(t_score) != score:
             iterations += 1
-            
             Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
@@ -69,16 +68,17 @@ class Experiment(object):
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            #clusters = {i: Z[indices==i] for i in range(K)}
-            #big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
+            clusters = {i: Z[indices==i] for i in range(K)}
+            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
+            clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
+            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), clusters))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected skipping.")
                 #K += 2
                 continue
             score = max(list(map(lambda l_: l_[1],l)))
+            print(f"{iterations}: K = {K} score_ = {score}")
             try:
                 i = l[0][0]
             except:
