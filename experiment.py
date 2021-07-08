@@ -17,12 +17,12 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         score = float('-inf')
-        K = 512
+        K = 256
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            K = K // 2 if K != 2 else 256
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K)
             if score < score_:
+                K = K // 2 if K != 2 else 256
                 print("Better score updating features.")
                 score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
@@ -77,9 +77,9 @@ class Experiment(object):
                 #K += 2
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            #clusters = {i: Z[indices==i] for i in range(K)}
-            #big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
+            clusters = {i: Z[indices==i] for i in range(K)}
+            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
+            clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
