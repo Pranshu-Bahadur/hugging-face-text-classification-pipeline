@@ -28,6 +28,7 @@ class Experiment(object):
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
+            loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
         print("Testing:...")
         print(self.classifier._validate(loaders[2], indices, k))
         print("\nRun Complete.")
