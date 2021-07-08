@@ -22,7 +22,7 @@ class Experiment(object):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K)
             if score < score_:
-                K = K // 2 if K != 8 else 128
+                K = K // 2 if K > 8 else 128
                 print("Better score updating features.")
                 score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
