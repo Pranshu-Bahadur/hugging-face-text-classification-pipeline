@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification, AutoModelForPreTraining, AutoConfig
+from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification, AutoModelForTokenClassification, AutoModelForPreTraining, AutoConfig
 from nfnets import SGD_AGC
 from sam import SAMSGD
 from sklearn.metrics import f1_score
@@ -30,7 +30,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            model = AutoModelForTokenClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=768, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
