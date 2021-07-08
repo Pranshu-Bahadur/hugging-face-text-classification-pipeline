@@ -132,18 +132,13 @@ class NLPClassifier(object):
 
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
-            K = 1e-5
-            per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
-            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
-            return np.sum(np.absolute(list(ind_corr_matrix_score.values())))
-        result = 0
-        for batch in loader:
-            J = self._get_jacobian(batch, indices, k)
-            y = batch['labels'].cuda()
             try:
-                result += eval_score_perclass(J, y)/y.size(0)
+                K = 1e-5
+                per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
+                ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
+                return np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             except:
-                continue
-        return result/len(loader)
+                return 0
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels']), loader)))/len(loader)
 
 
