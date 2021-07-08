@@ -118,13 +118,13 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
     def _get_jacobian(self, data, indices, i):
-        #with torch.no_grad():
-        self.model.zero_grad()
-        data = {k: v.cuda() for k, v in data.items()}
-        data["attention_mask"][:, indices!=i] = 0
-        data["attention_mask"] = data["attention_mask"].float()
-        data["attention_mask"].requires_grad = True
-        J = torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],attention_mask=x).logits, data["attention_mask"], create_graph=True)
+        with torch.no_grad():
+            self.model.zero_grad()
+            data = {k: v.cuda() for k, v in data.items()}
+            data["attention_mask"][:, indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].float()
+            data["attention_mask"].requires_grad = True
+            J = torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],attention_mask=x).logits, data["attention_mask"], create_graph=True)
         return J
     
     #@TODO Improve this...its nasty.
