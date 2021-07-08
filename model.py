@@ -135,7 +135,7 @@ class NLPClassifier(object):
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
-            if jacob is None or jacob.size(0) != labels.size(0):
+            if jacob is None or jacob.size(0) != labels.size(0) or torch.max(jacob, axis=0).item() == 0:
                 return 0
             K = 1e-5
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
