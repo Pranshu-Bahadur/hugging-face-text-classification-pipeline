@@ -139,7 +139,7 @@ class NLPClassifier(object):
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
             ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
-            return score
+            return score/1e+5
         J = self._get_jacobian(next(iter(loader)), indices, k)
         return sum(list(map(lambda batch: eval_score_perclass(J.cuda(), batch['labels'].cuda()), [data for data in loader])))/1e+5
 
