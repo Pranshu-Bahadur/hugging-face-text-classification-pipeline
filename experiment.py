@@ -65,11 +65,11 @@ class Experiment(object):
         t_score = [1e-4]
         iterations = 0
         indices = []
+        Z = torch.tensor(X.T)
         while max(t_score) != score:
             data = next(iter(loader))
-            X = data["input_ids"].cpu().numpy()
+            #X = data["input_ids"].cpu().numpy()
             iterations += 1
-            Z = torch.tensor(X.T)
             if max(t_score) <= score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 t_score.append(score)
