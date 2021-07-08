@@ -65,20 +65,19 @@ class Experiment(object):
                 t_score.append(score)
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            clusters = {i: Z[indices==i] for i in range(K)}
+            #clusters = {i: Z[indices==i] for i in range(K)}
             #big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
             #clusters = list(filter(lambda k: len(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), list(clusters.keys())))#clusters
-            s = max(list(map(lambda l_: l_[1],l)))
-            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan'):
-                print("Naan bread detected"):
-                K += K
+            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), [i for i in range(K)]))#clusters
+            l = list(filter(lambda a_: float('nan') != a_[1], l))
+            if len(l) == 0:
+                print("Naan bread detected skipping.")
+                #K += 2
                 continue
-            score = s
-            l = list(filter(lambda a_: a_[1] == score, l))
+            score = max(list(map(lambda l_: l_[1],l)))
             try:
                 i = l[0][0]
             except:
-                K += K
+                K += 2
                 continue
         return score, i, indices
