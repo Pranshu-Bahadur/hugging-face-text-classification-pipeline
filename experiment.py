@@ -80,7 +80,7 @@ class Experiment(object):
                 #K += 2
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
-            if s == 0:
+            if s == 0 or s == float('nan'):
                 print("max is 0...Reshuffling")
                 data = next(iter(loader))
                 X = data["input_ids"].cpu().numpy()
