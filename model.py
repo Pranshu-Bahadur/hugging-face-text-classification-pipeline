@@ -33,7 +33,7 @@ class NLPClassifier(object):
             model = AutoModelForTokenClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=768, out_features=num_classes, bias=True)
             model.num_labels = num_classes
-            return model, AutoTokenizer.from_pretrained(model_name)
+            return model, AutoTokenizer.from_pretrained(model_name, truncation=True, padding=True)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
@@ -99,7 +99,7 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        #self.model.eval()
+        self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for _, batch in enumerate(loader):
@@ -145,6 +145,7 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(next(iter(loader)), indices, k), batch['labels'].cuda()), [data for data in loader])))
+        J = self._get_jacobian(next(iter(loader)))
+        return sum(list(map(lambda batch: eval_score_perclass(J, indices, k), batch['labels'].cuda()), [data for data in loader]))
 
 
