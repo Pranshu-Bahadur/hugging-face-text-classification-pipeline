@@ -104,6 +104,8 @@ class NLPClassifier(object):
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for batch in loader:
+                shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
+                batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 splits = [batch["labels"][batch["labels"]==y] for y in list(torch.unique(batch["labels"]))]
                 #dist = [batch["labels"][batch["labels"]==y].size(0) for y in list(torch.unique(batch["labels"]))]
                 bal = batch["labels"].size(0)//16
