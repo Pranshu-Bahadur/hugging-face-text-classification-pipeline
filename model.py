@@ -126,7 +126,7 @@ class NLPClassifier(object):
             data["attention_mask"].requires_grad = True
             h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
             h.requires_grad = True
-            m = torch.zeros((data["attention_mask"].size(0), data["attention_mask"].size(1), 16))
+            m = torch.zeros((data["attention_mask"].size(), 16))
             m.requires_grad = True
             m[:,0] = 1
             h.backward(m.cuda())
@@ -146,6 +146,6 @@ class NLPClassifier(object):
                 return 0
             return score
         J = self._get_jacobian(next(iter(loader)), indices, k)
-        return sum(list(map(lambda batch: eval_score_perclass(J, batch['labels'].cuda()), [data for data in loader]))
+        return sum(list(map(lambda batch: eval_score_perclass(J, batch['labels'].cuda()), [data for data in loader])))
 
 
