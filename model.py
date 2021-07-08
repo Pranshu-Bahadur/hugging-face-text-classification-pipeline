@@ -122,13 +122,6 @@ class NLPClassifier(object):
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
-        """
-        h = self.model(**data).loss
-        m = torch.zeros(h.size())
-        m[0] = 1
-        h.backward(m.cuda())
-        return data["attention_mask"].grad
-        """
         print(data["attention_mask"].size())
         return torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],attention_mask=x).logits, data["attention_mask"], create_graph=True)
     
@@ -139,10 +132,9 @@ class NLPClassifier(object):
                 return 0
             K = 1e-5
             per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
-            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
+            ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))))/1e+5 for k,v in list(per_class.items())}
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
-            print(score)
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cuda()), [data for data in loader])))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cuda()), [data for data in loader])))/1e+5
 
 
