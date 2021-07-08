@@ -63,13 +63,17 @@ class Experiment(object):
         i = -1
         t_score = [1e-4]
         iterations = 0
+        indices = []
         while max(t_score) != score:
             iterations += 1
             Z = torch.tensor(X.T)
-            if max(t_score) < score:
+            if max(t_score) <= score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 K += 2
                 t_score.append(score)
+                if len(list(filter(lambda x: x == max(t_score), t_score))) > 1:
+                    print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
+                    return score, i, indices
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
             clusters = {i: Z[indices==i] for i in range(K)}
@@ -84,16 +88,14 @@ class Experiment(object):
                 #K += 2
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
-            if s == 0 or s == float('nan') or s == float('-inf') or s == float('inf'):
+            if s == 0 or s is float('nan') or s == float('-inf') or s == float('inf'):
                 print("max is 0...Reshuffling")
                 data = next(iter(loader))
                 X = data["input_ids"].cpu().numpy()
                 continue
             score = s
-            print(f"{iterations}: K = {K} score_ = {score}")
-            data = next(iter(loader))
-            X = data["input_ids"].cpu().numpy()
-            K += 2
+            if score == s:
+                print(f"{iterations}: K = {K} score_ = {score}")
             try:
                 i = l[0][0]
             except:
