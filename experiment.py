@@ -17,9 +17,11 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         score = float('-inf')
+        K = 512
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            print("Epoch {} Features selection:".format(self.classifier.curr_epoch+1), "--------------------")
-            score_, k_, indices_ = self._features_selection(loaders[0])
+            K = K // 2
+            print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
+            score_, k_, indices_ = self._features_selection(loaders[0], K)
             if score < score_:
                 print("Better score updating features.")
                 score, k, indices = score_, k_, indices_
@@ -54,11 +56,10 @@ class Experiment(object):
             return splits
         return dataSetFolder
     #@TODO...improve this...
-    def _features_selection(self, loader):
+    def _features_selection(self, loader, K):
         data = next(iter(loader))
         X = data["input_ids"].cpu().numpy()
         #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
-        K = 2
         score = float("-inf")
         i = -1
         t_score = [1e-4]
@@ -73,7 +74,7 @@ class Experiment(object):
                 if len(list(filter(lambda x: x == max(t_score), t_score))) > 1:
                     print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
                     return score, i, indices
-                K += 2
+                #K += 2
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
             #clusters = {i: Z[indices==i] for i in range(K)}
@@ -96,7 +97,7 @@ class Experiment(object):
             score = s
             if score == s:
                 print(f"{iterations}: K = {K} score = {score}")
-                K+=2
+                #K+=2
             try:
                 i = l[0][0]
             except:
