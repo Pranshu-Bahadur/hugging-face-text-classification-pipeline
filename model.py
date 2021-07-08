@@ -119,8 +119,8 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
     def _get_jacobian(self, data, indices, i):
-        shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-        data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+        #shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
