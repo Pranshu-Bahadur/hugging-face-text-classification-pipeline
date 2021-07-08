@@ -17,12 +17,12 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         score = float('-inf')
-        K = 128
+        K = 8
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K)
             if score < score_:
-                K = K // 2 if K > 8 else 128
+                K = K // 2 if K > 2 else 8
                 print("Better score updating features.")
                 score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
