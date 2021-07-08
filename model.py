@@ -118,16 +118,16 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
     def _get_jacobian(self, data, indices, i):
-        #with torch.no_grad():
-        self.model.zero_grad()
-        data = {k: v.cuda() for k, v in data.items()}
-        data["attention_mask"][:, indices!=i] = 0
-        data["attention_mask"] = data["attention_mask"].float()
-        data["attention_mask"].requires_grad = True
-        h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
-        m = torch.zeros((data["attention_mask"].size(0), data["attention_mask"].size(1), 16))
-        m[:,0] = 1
-        h.backward(m.cuda())
+        with torch.no_grad():
+            self.model.zero_grad()
+            data = {k: v.cuda() for k, v in data.items()}
+            data["attention_mask"][:, indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].float()
+            data["attention_mask"].requires_grad = True
+            h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
+            m = torch.zeros((data["attention_mask"].size(0), data["attention_mask"].size(1), 16))
+            m[:,0] = 1
+            h.backward(m.cuda())
         return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
@@ -143,7 +143,6 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        J = self._get_jacobian(next(iter(loader)), indices, k)
-        return sum(list(map(lambda batch: eval_score_perclass(J.cuda(), batch['labels'].cuda()), [data for data in loader])))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(next(iter(loader)), indices, k).cuda(), batch['labels'].cuda()), [data for data in loader])))
 
 
