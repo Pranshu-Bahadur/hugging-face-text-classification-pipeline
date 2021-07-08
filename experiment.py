@@ -79,7 +79,7 @@ class Experiment(object):
                 #K += 2
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            clusters = {i: Z[indices==i] for i in range(K)}
+            clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
             big_c = max(list(map(lambda c: torch.mean(c),list(clusters.values()))))
             clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)), [i for i in range(K)]))#clusters
