@@ -16,7 +16,7 @@ class Experiment(object):
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
         ds = SpreadSheetNLPCustomDataset(dataset, self.classifier.tokenizer)
-        score, k, indices = self._features_selection(Loader(ds,self.classifier.bs, shuffle=True, num_workers=4))
+        score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, shuffle=True, num_workers=4))
         print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
@@ -49,7 +49,7 @@ class Experiment(object):
         return dataSetFolder
     
     def _features_selection(self, loader):
-        X = torch.stack([data["input_ids"].cpu().numpy() for data in loader][:-1])
+        X = torch.stack([data["input_ids"] for data in loader][:-1]).cpu().numpy()
         K = 2
         score = float("-inf")
         i = -1
