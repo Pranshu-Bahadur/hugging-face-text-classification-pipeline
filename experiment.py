@@ -15,7 +15,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         split = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(data, self.classifier.bs, shuffle=False, num_workers=4) for data in split]
+        loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         score = float('-inf')
         K = 2
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
@@ -34,6 +34,7 @@ class Experiment(object):
             self.classifier.writer.add_scalar("Validation Loss",loss_val, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
+            loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print("Testing:...")
