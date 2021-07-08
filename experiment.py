@@ -51,9 +51,9 @@ class Experiment(object):
     def _features_selection(self, loader):
         X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         K = X.shape[1]//2
-        score = 1e+3
+        score = float("-inf")
         i = -1
-        t_score = [float("-inf")]
+        t_score = [1e-4]
         Z = torch.tensor(X.T)
         iterations = 0
         while max(t_score) != score:
