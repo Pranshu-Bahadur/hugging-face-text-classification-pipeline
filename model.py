@@ -128,6 +128,7 @@ class NLPClassifier(object):
         m = torch.zeros((data["attention_mask"].size(0), self.nc))
         m[:, 0] = 1
         h.backward(m.cuda())
+        print(data["attention_mask"].grad)
         return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
