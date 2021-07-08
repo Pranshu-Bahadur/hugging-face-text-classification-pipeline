@@ -9,12 +9,13 @@ import numpy as np
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
-        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config['tokenizer_name'], config["num_classes"])
+        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config["num_classes"])
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.model = nn.DataParallel(self.model).cuda()
+        print(self.model)
         #self.tokenizer = self.tokenizer.cuda()
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
@@ -28,7 +29,7 @@ class NLPClassifier(object):
         print("Generated model: {}".format(self.name))
 
         
-    def _create_model(self, library, model_name, tokenizer, num_classes):
+    def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.classifier = nn.Linear(in_features=768, out_features=num_classes, bias=True)
@@ -141,6 +142,6 @@ class NLPClassifier(object):
             ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K)))) for k,v in list(per_class.items())}
             score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             return score
-        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels']), loader)))
+        return sum(list(map(lambda batch: eval_score_perclass(self._get_jacobian(batch, indices, k), batch['labels'].cpu()), loader)))
 
 

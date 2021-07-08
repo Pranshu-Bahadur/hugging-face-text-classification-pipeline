@@ -10,7 +10,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 def _model_config(args):
     config = {
         "model_name": args.model_name,
-        "tokenizer_name": args.tokenizer,
         "optimizer_name": args.optimizer,
         "criterion_name": args.loss,
         "scheduler_name": args.scheduler,
@@ -45,7 +44,6 @@ if __name__ == "__main__":
     parser.add_argument("--library")
     parser.add_argument("--save_directory", "-s")
     parser.add_argument("--save_interval")
-    parser.add_argument("--tokenizer")
 
     args = parser.parse_args()
     config = _model_config(args)

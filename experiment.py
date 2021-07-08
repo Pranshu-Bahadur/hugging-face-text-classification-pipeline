@@ -14,7 +14,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         split, ds = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(ds, self.classifier.bs, shuffle=True, num_workers=4) for ds in split]
+        loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, num_workers=4))
         print("features selected, optimal model score = ", score)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
