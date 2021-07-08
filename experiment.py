@@ -48,8 +48,8 @@ class Experiment(object):
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader):
-        X = np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
-        print(X.shape)
+        X = next(iter(loader))["input_ids"].cpu().numpy() #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
+        #print(X.shape)
         K = 2
         score = float("-inf")
         i = -1
@@ -58,6 +58,8 @@ class Experiment(object):
         iterations = 0
         while max(t_score) != score:
             iterations += 1
+            X = next(iter(loader))["input_ids"].cpu().numpy()
+            Z = torch.tensor(X.T)
             if max(t_score) < score:
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 K += K
