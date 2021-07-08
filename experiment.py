@@ -70,7 +70,7 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
             s = max(list(map(lambda l_: l_[1],l)))
             print(iterations, s)
-            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or max(t_score) > s:
+            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or s == 0:
                 K += K
                 continue
             score = s
