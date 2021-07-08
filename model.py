@@ -130,7 +130,7 @@ class NLPClassifier(object):
         return data["attention_mask"].grad
         """
         print(data["attention_mask"].size())
-        return torch.autograd.functional.jacobian(lambda x: self.model(**data).logits, data, create_graph=True, strict=True)
+        return torch.autograd.functional.jacobian(lambda x,y,z: self.model(x,y,z).logits, **data, create_graph=True, strict=True)
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
