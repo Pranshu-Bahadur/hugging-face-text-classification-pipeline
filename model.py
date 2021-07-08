@@ -120,21 +120,20 @@ class NLPClassifier(object):
 
     def _get_jacobian(self, data, indices, i):
         #shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-        #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+        data = {k: v.cuda() for k, v in data.items()}
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
         h = self.model(**data).loss
-        #m = torch.zeros((h.size()))
-        #m[:, 0] = 1
+        m = torch.zeros((h.size()))
+        m[:, 0] = 1
         h.backward()
-        print(data["attention_mask"].grad)
         return data["attention_mask"].grad
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
-            print(labels)
+            print(jacob)
             if jacob.size(0) != labels.size(0):
                 return 0
             K = 1e-5
