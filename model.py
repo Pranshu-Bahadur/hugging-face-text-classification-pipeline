@@ -124,7 +124,7 @@ class NLPClassifier(object):
         data["attention_mask"][:, indices!=i] = 0
         data["attention_mask"] = data["attention_mask"].float()
         data["attention_mask"].requires_grad = True
-        J = torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],attention_mask=x, labels=data["labels"]).logits, data["attention_mask"])
+        J = torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"],attention_mask=x).logits, data["attention_mask"])
         return J
     
     #@TODO Improve this...its nasty.
