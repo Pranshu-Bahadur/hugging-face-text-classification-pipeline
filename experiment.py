@@ -15,7 +15,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         split = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
+        loaders = [Loader(data, self.classifier.bs, shuffle=False, num_workers=4) for data in split]
         score = float('-inf')
         K = 2
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
