@@ -129,8 +129,8 @@ class NLPClassifier(object):
         h.backward(m.cuda())
         return data["attention_mask"].grad
         """
-        print(data["attention_mask"].requires_grad)
-        return torch.autograd.functional.jacobian(lambda x: self.model(data["input_ids"], attention_mask=x, labels=data["labels"]).logits, data["attention_mask"], create_graph=True, strict=True)
+        print(data["attention_mask"].size())
+        return torch.autograd.functional.jacobian(lambda x: self.model(**data).logits, data, create_graph=True, strict=True)
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
