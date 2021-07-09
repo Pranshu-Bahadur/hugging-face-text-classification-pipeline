@@ -228,6 +228,8 @@ class NLPClassifier(object):
     def _score(self, data, indices, k):
         def eval_score_perclass(jacob, data):
             labels = data["labels"]
+            if torch.max(jacob).item() == 0 or jacob.size(0) != labels.size(0):
+                return 0
             try:
                 K = 1e-2
                 score = np.sum(np.log(np.absolute(np.corrcoef(jacob.view(self.bs, -1).cpu().numpy(),labels.view(self.bs, -1).cpu().numpy()))))
