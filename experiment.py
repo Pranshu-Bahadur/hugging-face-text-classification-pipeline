@@ -85,9 +85,11 @@ class Experiment(object):
             Z = torch.tensor(X.T)
             iterations += 1
             if score > max(list(memoisation.keys())):
-                print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")"""
+                print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
+                """
                 if score in list(memoisation.keys()):
-                    print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")"""
+                    print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
+                """
                 return score, i, indices
                 #memoisation[score] = [indices, i]
             kmeans = KMeans(K, init="k-means++")
