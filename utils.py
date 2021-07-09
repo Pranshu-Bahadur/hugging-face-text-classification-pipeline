@@ -14,7 +14,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self._labels[idx])
-        if self.library == "timm" or if long:
+        if self.library == "timm" or long:
             AA = item["input_ids"]
             AA = AA.view(AA.size(0), -1).float()
             AA = torch.stack([AA for i in range(3)], dim=1)

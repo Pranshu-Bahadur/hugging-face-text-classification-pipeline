@@ -44,7 +44,7 @@ class Experiment(object):
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library)
+        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library, self.long)
         #@TODO add features selection here
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
