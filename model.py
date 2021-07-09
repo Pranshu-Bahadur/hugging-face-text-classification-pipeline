@@ -224,9 +224,8 @@ class NLPClassifier(object):
                 return 0
             try:
                 K = 1e-3
-                per_class={i.item(): jacob[labels==i].view(labels.size(0), -1) for i in list(torch.unique(labels))}
-                ind_corr_matrix_score = {k: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))+K))+K/1e+2 for k,v in list(per_class.items())}
-                score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
+                per_class= list(map(lambda i: jacob[labels==i].view(labels.size(0), -1), list(torch.unique(labels))))
+                score = np.sum(np.absolute(list(map(lambda v: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))+K))+K/1e+2,per_class))))
             except:
                 return 0
             return score        
