@@ -179,7 +179,7 @@ class NLPClassifier(object):
         data = {k: torch.cat([v[idx] for sample in samples for idx in sample]) for k,v in list(data.items())}
         """
         if self.library != "timm":
-            data = self._splitter(data)
+            #data = self._splitter(data)
 
             shuffle_seed = torch.randperm(data["attention_mask"].size(0))
             data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
@@ -191,10 +191,10 @@ class NLPClassifier(object):
             data["attention_mask"].requires_grad = True
             #with torch.no_grad():
             h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
-            h.requires_grad = True
+            #h.requires_grad = True
             m = torch.ones((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
-            m[h!=0,:] = 1
+            m[h!=0] = 1
             h.backward(m.cuda())
             J = data["attention_mask"].grad
             print(J.size())
