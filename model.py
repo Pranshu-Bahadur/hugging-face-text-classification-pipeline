@@ -171,7 +171,7 @@ class NLPClassifier(object):
         #self.model.zero_grad()
         model = copy.deepcopy(self.model)
         #model = self.model
-        model.eval()
+        model.train()
         #model.zero_grad()
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
@@ -198,7 +198,9 @@ class NLPClassifier(object):
             #h.requires_grad = True
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
-            m[:,0] = 1
+            y_ = torch.argmax(h, dim=1)
+            m[:,y_] = 1
+            #m[:,0] = 1
             h.backward(m.cuda())
             J = data["attention_mask"].grad
             #print(J.size())
@@ -224,8 +226,6 @@ class NLPClassifier(object):
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, data):
             labels = data["labels"].cuda()
-            if jacob is None or jacob.size(0) != labels.size(0):
-                return 0
             try:
                 K = 1e-3
                 score = sum(list(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)))),list(torch.unique(labels)))))))
@@ -234,7 +234,7 @@ class NLPClassifier(object):
             return score
         data = next(iter(loader))
         j_d = self._get_jacobian(data, indices, k)
-        return eval_score_perclass(**j_d)/1e+3 #sum(list(map(lambda data:eval_score_perclass(j_d["J"], data["labels"])/1e+2, loader)))
+        return eval_score_perclass(**j_d)/1e+2 #sum(list(map(lambda data:eval_score_perclass(j_d["J"], data["labels"])/1e+2, loader)))
     
     def _splitter(self, data):
         #[b.view(-1) for b in torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512), dim=0)]
