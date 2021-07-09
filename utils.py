@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import pandas as pd
-from pd import Series
+from pandas import Series
 import re
 
 def chunkstring(string, length):
@@ -14,7 +14,6 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.long = long
         self.library = library
         self.dataset = pd.concat([Series(self.dataset['type'], chunkstring(self.dataset['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index()
-
         self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 512, truncation=True, padding='max_length', return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
