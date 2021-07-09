@@ -104,6 +104,7 @@ class NLPClassifier(object):
                 x[:,indices!=k] = 0
                 data["input_ids"] = x.view(data["input_ids"].size()).float()
                 outputs = self.model(data["input_ids"])
+                loss = self.criterion(outputs, data["labels"])
             else:
                 #data = self._splitter(data)
                 #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
@@ -114,9 +115,10 @@ class NLPClassifier(object):
                 data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
+                loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
-            loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
+            
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
