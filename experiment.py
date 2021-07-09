@@ -97,8 +97,7 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), [i for i in range(K)]))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation.keys())) <= a_[1], l))
             if len(l) == 0:
-                score = -100
-                print("Naan bread detected...")
+                print("Naan bread detected...Just use prev features.")
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
             if s == 0 or s == float('nan') or s == float('-inf') or s == float('inf'):
@@ -113,4 +112,5 @@ class Experiment(object):
             except:
                 print("Random unidentified error...")
                 continue
-        return score, i, indices
+        final = (max(list(memoisation.keys())), memoisation[max(list(memoisation.keys()))][1],  memoisation[max(list(memoisation.keys()))][0])
+        return final
