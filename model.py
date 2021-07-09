@@ -144,7 +144,7 @@ class NLPClassifier(object):
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                     x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
                     x[:,:,indices!=k] = 0
-                    data["input_ids"] = x.view(data["input_ids"].size()).float()
+                    data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
                     outputs = self.model(data["input_ids"])
                 else:
                     #data = self._splitter(data)
