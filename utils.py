@@ -15,10 +15,10 @@ class SpreadSheetNLPCustomDataset(Dataset):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self._labels[idx])
         if self.library == "timm":
-            AA = item["input_ids"].view(item["input_ids"].size(0), -1)
+            AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
             AA -= AA.min(1, keepdim=True)[0]
             AA /= AA.max(1, keepdim=True)[0]
-            item["input_ids"] = AA.view(1, 3, 256, 256).float()
+            item["input_ids"] = AA.view(1, 3, 256, 256)
         return item
     
     def __len__(self):
