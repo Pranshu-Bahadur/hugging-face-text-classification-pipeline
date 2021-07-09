@@ -211,10 +211,10 @@ class NLPClassifier(object):
             data["input_ids"] = x.view(data["input_ids"].size()).float()
             data["input_ids"].requires_grad = True
             h = model(data["input_ids"])
-            m = torch.ones((data["input_ids"].size(0), 16))
+            m = torch.zero((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
-            #y_ = torch.argmax(h, dim=1)
-            m[:,0] = 1
+            y_ = torch.argmax(h, dim=1)
+            m[:,y_] = 1
             h.backward(m.cuda())
             J = data["input_ids"].grad
 
