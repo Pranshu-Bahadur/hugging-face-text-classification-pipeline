@@ -5,7 +5,8 @@ from pandas import Series
 import re
 
 def chunkstring(string, length):
-  return re.findall('.{%d}' % length, string)
+    l = re.findall('.{%d}' % length, string)
+    return l[:len(l)//4]
 
 def explode(df, lst_cols, fill_value='', preserve_index=False):
     # make sure `lst_cols` is list-alike
