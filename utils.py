@@ -6,7 +6,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library):
         self.dataset = pd.read_csv(csv_path)
         self.library = library
-        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=128*128, truncation=True, padding="longest", return_attention_mask=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=32*32*3, truncation=True, padding="longest", return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
