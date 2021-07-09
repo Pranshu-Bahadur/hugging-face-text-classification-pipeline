@@ -61,7 +61,7 @@ class Experiment(object):
         self.classifier.model.train()
         data = next(iter(loader))
         #X = data["input_ids"].cpu().numpy()
-        #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
+        X = np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader]), axis=0)
         i = -1
         t_score = [1e-4]
         iterations = 0
@@ -70,8 +70,7 @@ class Experiment(object):
         memoisation = {}
         memoisation[t_score[0]] = (indices,i)
         while max(list(memoisation.keys())) != score or score is float("-inf") or score is float("nan"):
-            data = next(iter(loader))
-            X = data["input_ids"].cpu().numpy() if self.classifier.library != "timm" else data["input_ids"].view(self.classifier.bs, -1).cpu().numpy()
+            X = next(iter(loader))["input_ids"].cpu().numpy() if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
             iterations += 1
             if score >= max(list(memoisation.keys())):
