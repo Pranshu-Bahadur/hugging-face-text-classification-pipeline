@@ -167,7 +167,9 @@ class NLPClassifier(object):
         """
         if self.library != "timm":
             data = self._splitter(data)
-            data["attention_mask"][:, indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].view(-1)
+            data["attention_mask"][indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].view(-1, 512)
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
             h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
