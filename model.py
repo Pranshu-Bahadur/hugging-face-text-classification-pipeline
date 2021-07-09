@@ -105,7 +105,7 @@ class NLPClassifier(object):
                 data["input_ids"] = x.view(data["input_ids"].size()).float()
                 outputs = self.model(data["input_ids"])
             else:
-                splits = [(y,torch.stack(torch.tensor_split(data["input_ids"][data["labels"]==y]), 4096//512, dim=1)) for y in list(torch.unique(data["labels"]))]
+                splits = [(y,torch.stack(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))) for y in list(torch.unique(data["labels"]))]
                 splits = {splits[0]: {"input_ids": split[1], "labels":torch.stack([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]),
                 "attention_mask":[data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]} for split in splits}
                 data = {k:torch.stack([split[k] for split in list(splits.values())]) for k in list(data.keys)}
@@ -144,7 +144,7 @@ class NLPClassifier(object):
                     data["input_ids"] = x.view(data["input_ids"].size()).float()
                     outputs = self.model(data["input_ids"])
                 else:
-                    splits = [(y,torch.stack(torch.tensor_split(data["input_ids"][data["labels"]==y]), 4096//512, dim=1)) for y in list(torch.unique(data["labels"]))]
+                    splits = [(y,torch.stack(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))) for y in list(torch.unique(data["labels"]))]
                     splits = {splits[0]: {"input_ids": split[1], "labels":torch.stack([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]),
                     "attention_mask":[data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]} for split in splits}
                     data = {k:torch.stack([split[k] for split in list(splits.values())]) for k in list(data.keys)}
@@ -176,7 +176,7 @@ class NLPClassifier(object):
         data = {k: torch.stack([v[idx] for sample in samples for idx in sample]) for k,v in list(data.items())}
         """
         if self.library != "timm":
-            splits = [(y,torch.stack(torch.tensor_split(data["input_ids"][data["labels"]==y]), 4096//512, dim=1)) for y in list(torch.unique(data["labels"]))]
+            splits = [(y,torch.stack(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))) for y in list(torch.unique(data["labels"]))]
             splits = {splits[0]: {
                 "input_ids": split[1], "labels":torch.stack([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]),
                 "attention_mask":[data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]} for split in splits}
