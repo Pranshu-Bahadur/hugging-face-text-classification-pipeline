@@ -38,7 +38,7 @@ class NLPClassifier(object):
             if not "long" in model_name:
                 model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             else:
-                model.classifier.out_proj = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
+                model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
