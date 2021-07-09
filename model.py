@@ -99,10 +99,10 @@ class NLPClassifier(object):
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                data["input_ids"].requires_grad = True
-                x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                x[:,:,indices!=k] = 0
-                data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
+                #data["input_ids"].requires_grad = True
+                #x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                #x[:,:,indices!=k] = 0
+                #data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
@@ -142,10 +142,11 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                    x[:,:,indices!=k] = 0
-                    data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
+                    #x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                    #x[:,:,indices!=k] = 0
+                    #data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
                     outputs = self.model(data["input_ids"])
+                    loss = self.criterion(outputs, data["labels"])
                 else:
                     #data = self._splitter(data)
                     #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
@@ -156,7 +157,7 @@ class NLPClassifier(object):
                     data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
-                loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
+                    loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
