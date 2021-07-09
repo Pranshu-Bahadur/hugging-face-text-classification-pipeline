@@ -18,11 +18,10 @@ class Experiment(object):
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         scores = [float('-inf')]
         K = 2
-        scores, k, indices = self._features_selection(loaders[0], K, max(scores))
-        print("Features selection with K {} complete:".format(K))
+        #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
+        #print("Features selection with K {} complete:".format(K))
         #self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            """
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
             if max(scores) < score_:
@@ -31,7 +30,7 @@ class Experiment(object):
                 score, k, indices = score_, k_, indices_
                 scores.append(score)
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
-            """
+            
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
@@ -70,8 +69,8 @@ class Experiment(object):
     def _features_selection(self, loader, K, score):
         #self.classifier.model.train()
         data = next(iter(loader))
-        X = data["input_ids"].cpu().numpy()
-        #X = np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
+        #X = data["input_ids"].cpu().numpy()
+        X = np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
         #X = torch.tensor(X).view(-1, 512).cpu().numpy()
         i = -1
         t_score = [1e-4]
@@ -81,7 +80,7 @@ class Experiment(object):
         memoisation = {}
         memoisation[t_score[0]] = (indices,i)
         while max(list(memoisation.keys())) != score or score is float("-inf") or score is float("nan"):
-            X = next(iter(loader))["input_ids"].cpu().numpy() if self.classifier.library != "timm" else X
+            #X = next(iter(loader))["input_ids"].cpu().numpy() if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
             iterations += 1
             if score >= max(list(memoisation.keys())):

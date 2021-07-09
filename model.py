@@ -167,10 +167,10 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         #self.model.eval()
         #self.model.zero_grad()
-        #model = copy.deepcopy(self.model)
-        model = self.model
-        #model.eval()
-        #model.zero_grad()
+        model = copy.deepcopy(self.model)
+        #model = self.model
+        model.eval()
+        model.zero_grad()
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
@@ -228,8 +228,9 @@ class NLPClassifier(object):
                 score = np.sum(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K))+K))+K/1e+2,list(torch.unique(labels))))))
             except:
                 return 0
-            return score     
-        return sum(list(map(lambda data:eval_score_perclass(**self._get_jacobian(data, indices, k))/1e+2, [d for d in loader])))
+            return score
+        j_d = self._get_jacobian(next(iter(loader)), indices, k)
+        return sum(list(map(lambda labels:eval_score_perclass(j_d["J"], labels)/1e+2, [d["labels"] for d in loader])))
     
     def _splitter(self, data):
         #[b.view(-1) for b in torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512), dim=0)]
