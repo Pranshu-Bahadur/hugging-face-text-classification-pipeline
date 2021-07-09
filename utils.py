@@ -5,6 +5,7 @@ import pandas as pd
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
         self.dataset = pd.read_csv(csv_path)
+        self.long = long
         self.library = library
         self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 4096, truncation=True, padding='max_length', return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
@@ -14,7 +15,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self._labels[idx])
-        if self.library == "timm" or long:
+        if self.library == "timm":
             AA = item["input_ids"]
             AA = AA.view(AA.size(0), -1).float()
             AA = torch.stack([AA for i in range(3)], dim=1)

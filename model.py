@@ -172,6 +172,8 @@ class NLPClassifier(object):
             #print(data["attention_mask"].size(0))
             m[:,:,0] = 1
             h.backward(m.cuda())
+            J = data["attention_mask"].grad
+            J = J.view(data["attention_mask"].size(0), 3, 64, 64).float()
         else:
             x = data["input_ids"].view(data["input_ids"].size(0), -1).clone()
             x[:,indices!=i] = 0
@@ -182,7 +184,9 @@ class NLPClassifier(object):
             #print(data["attention_mask"].size(0))
             m[:,0] = 1
             h.backward(m.cuda())
-        return data["attention_mask"].grad if self.library != "timm" else data["input_ids"].grad
+            J = data["input_ids"].grad
+
+        return J
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
