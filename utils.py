@@ -18,7 +18,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
             AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
             AA -= AA.min(1, keepdim=True)[0].clamp(1e-2)
             AA /= AA.max(1, keepdim=True)[0].clamp(1e-2)
-            AA = AA.view(1, 64, 64)
+            AA = AA.view(1, 1, 64, 64)
             expand = torch.nn.Conv2d(in_channels=1,out_channels=3,kernel_size=3, stride=1, bias=False)
             item["input_ids"] = expand(AA)
         return item
