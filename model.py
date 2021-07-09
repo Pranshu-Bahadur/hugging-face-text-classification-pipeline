@@ -19,6 +19,7 @@ class NLPClassifier(object):
         
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         #print(self.model)
+        self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
