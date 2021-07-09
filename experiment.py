@@ -16,7 +16,7 @@ class Experiment(object):
         split, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        scores = [float('-inf')]
+        scores = [-1]
         K = 2
         #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
         #print("Features selection with K {} complete:".format(K))
@@ -79,7 +79,7 @@ class Experiment(object):
         #Z = torch.tensor(X.T)
         memoisation = {}
         memoisation[score] = (indices,i)
-        while max(list(memoisation.keys())) != score or (score is float("-inf") or score is float("nan")):
+        while max(list(memoisation.keys())) != score:
             X = next(iter(loader))["input_ids"].cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
             iterations += 1
@@ -97,6 +97,7 @@ class Experiment(object):
             l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), [i for i in range(K)]))#clusters
             l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation.keys())) <= a_[1], l))
             if len(l) == 0:
+                score = -100
                 print("Naan bread detected...")
                 continue
             s = max(list(map(lambda l_: l_[1],l)))
