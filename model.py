@@ -129,7 +129,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     #@TODO fix under-over sampling
     def _get_jacobian(self, data, indices, i):
-        self.model.eval()
+        #self.model.eval()
         self.model.zero_grad()
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
