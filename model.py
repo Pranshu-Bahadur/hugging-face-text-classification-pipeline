@@ -208,7 +208,7 @@ class NLPClassifier(object):
         else:
             shuffle_seed = torch.randperm(data["attention_mask"].size(0))
             data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-            x = data["input_ids"].view(data["input_ids"].size(0), -1).clone()
+            x = data["input_ids"].view(data["input_ids"].size(0), -1)
             x[:,indices!=i] = 0
             data["input_ids"] = x.view(data["input_ids"].size()).float()
             data["input_ids"].requires_grad = True

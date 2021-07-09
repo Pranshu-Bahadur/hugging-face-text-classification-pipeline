@@ -69,7 +69,7 @@ class Experiment(object):
     def _features_selection(self, loader, K, score):
         #self.classifier.model.train()
         data = next(iter(loader))
-        X = data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() #if self.classifier.library != "timm" else np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
+        X = data["input_ids"][:,0,:,:].view(self.classifier.bs, -1).cpu().numpy() #if self.classifier.library != "timm" else np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
         #X = 
         #X = torch.tensor(X).view(-1, 512).cpu().numpy()
         i = -1
@@ -82,7 +82,7 @@ class Experiment(object):
         score = 1e-4
         while max(list(memoisation.keys())) != score:# and iterations = 0:
             data = next(iter(loader))
-            X = data["input_ids"].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
+            X = data["input_ids"][:,0,:,:].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
             if score > max(list(memoisation.keys())):
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
