@@ -71,7 +71,7 @@ class Experiment(object):
         memoisation[t_score[0]] = (indices,i)
         while max(list(memoisation.keys())) != score or score is float("-inf") or score is float("nan"):
             data = next(iter(loader))
-            X = data["input_ids"].cpu().numpy() if self.classifier.library != "timm" else data["input_ids"].view(-1).cpu().numpy()
+            X = data["input_ids"].cpu().numpy() if self.classifier.library != "timm" else data["input_ids"].view(self.classifier.bs, -1).cpu().numpy()
             Z = torch.tensor(X.T)
             iterations += 1
             if score >= max(list(memoisation.keys())):
