@@ -57,8 +57,8 @@ class Experiment(object):
             self.classifier.writer.add_text("Run distribution:",f'{distributions}')
             #total = sum(list(distributions[0].values()))
             weights = torch.tensor(list(distributions["train"].values()))
-            weights -= weights.min()[0].clamp(1e-2)
-            weights /= weights.max()[0].clamp(1e-2)
+            weights -= weights.min().item().clamp(1e-2)
+            weights /= weights.max().item().clamp(1e-2)
             return splits, weights
         return dataSetFolder
     #@TODO...improve this...
