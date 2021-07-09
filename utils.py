@@ -18,7 +18,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
             AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
             AA -= AA.min(1, keepdim=True)[0]
             AA /= AA.max(1, keepdim=True)[0]
-            item["input_ids"] = AA.view(1, 3, 32, 32)
+            item["input_ids"] = AA.view(3, 32, 32)
         return item
     
     def __len__(self):

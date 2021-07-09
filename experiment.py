@@ -26,7 +26,7 @@ class Experiment(object):
                 print("Better score updating features.")
                 score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
-            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
+            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices if self.classifier.library != "timm" else indices.view(3, 32, 32), k)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)
@@ -71,7 +71,7 @@ class Experiment(object):
         memoisation[t_score[0]] = (indices,i)
         while max(list(memoisation.keys())) != score or score is float("-inf") or score is float("nan"):
             data = next(iter(loader))
-            X = data["input_ids"].cpu().numpy()
+            X = data["input_ids"].cpu().numpy() if self.classifier.library != "timm" else data["input_ids"].view(data["input_ids"].size(0), -1).cpu().numpy()
             iterations += 1
             if score >= max(list(memoisation.keys())):
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
