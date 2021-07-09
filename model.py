@@ -100,9 +100,9 @@ class NLPClassifier(object):
                 shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                 data["input_ids"].requires_grad = True
-                x = data["input_ids"].view(data["input_ids"].size(0), -1).clone()
-                x[:,indices!=k] = 0
-                data["input_ids"] = x.view(data["input_ids"].size()).float()
+                x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                x[:,:,indices!=k] = 0
+                data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
@@ -142,8 +142,8 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    x = data["input_ids"].view(data["input_ids"].size(0), -1).clone()
-                    x[:,indices!=k] = 0
+                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                    x[:,:,indices!=k] = 0
                     data["input_ids"] = x.view(data["input_ids"].size()).float()
                     outputs = self.model(data["input_ids"])
                 else:
@@ -208,9 +208,9 @@ class NLPClassifier(object):
         else:
             shuffle_seed = torch.randperm(data["attention_mask"].size(0))
             data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-            x = data["input_ids"].view(data["input_ids"].size(0), -1)
-            x[:,indices!=i] = 0
-            data["input_ids"] = x.view(data["input_ids"].size()).float()
+            x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+            x[:,:,indices!=i] = 0
+            data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
             data["input_ids"].requires_grad = True
             h = model(data["input_ids"])
             m = torch.zeros((data["input_ids"].size(0), 16))
