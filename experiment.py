@@ -18,7 +18,7 @@ class Experiment(object):
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         scores = [float('-inf')]
         K = 2
-        self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights)
+        self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
