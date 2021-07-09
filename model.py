@@ -183,8 +183,9 @@ class NLPClassifier(object):
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
             m[:,0] = 1
-            h.backward(m.cuda())
+            h.backward(data["attention_mask"])
             J = data["attention_mask"].grad
+            print(J.size())
             #J = J.view(data["attention_mask"].size(0), 1, 256, 256).float()
         else:
             shuffle_seed = torch.randperm(data["attention_mask"].size(0))
