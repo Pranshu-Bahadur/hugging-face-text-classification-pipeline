@@ -94,7 +94,7 @@ class NLPClassifier(object):
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             if self.library == "timm":
                 x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
-                x[:,indices==k] = 0
+                x[:,indices!=k] = 0
                 batch["input_ids"] = x.view(batch["input_ids"].size()).float()
                 outputs = self.model(batch["input_ids"])
             else:
@@ -126,7 +126,7 @@ class NLPClassifier(object):
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 if self.library == "timm":
                     x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
-                    x[:,indices==k] = 0
+                    x[:,indices!=k] = 0
                     batch["input_ids"] = x.view(batch["input_ids"].size()).float()
                     outputs = self.model(batch["input_ids"])
                 else:
