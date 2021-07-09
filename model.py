@@ -178,7 +178,7 @@ class NLPClassifier(object):
         return data["attention_mask"].grad if self.library != "timm" else data["input_ids"].grad
     
     #@TODO Improve this...its nasty.
-    def _score(self, data, indices, k):
+    def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, labels):
             if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
@@ -190,7 +190,7 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        J = self._get_jacobian(data, indices, k)
-        return eval_score_perclass(J, data['labels'].cuda())/1e+2
+        
+        return [eval_score_perclass(self._get_jacobian(data, indices, k), data['labels'].cuda())/1e+2 for data in loader]
 
 
