@@ -69,9 +69,9 @@ class Experiment(object):
     def _features_selection(self, loader, K, score):
         #self.classifier.model.train()
         data = next(iter(loader))
-        X = data["input_ids"].cpu().numpy() #if self.classifier.library != "timm" else np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
+        X = data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() #if self.classifier.library != "timm" else np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
         #X = 
-        X = torch.tensor(X).view(-1, 512).cpu().numpy()
+        #X = torch.tensor(X).view(-1, 512).cpu().numpy()
         i = -1
         t_score = 1e-4
         iterations = 0
