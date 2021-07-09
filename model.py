@@ -230,7 +230,7 @@ class NLPClassifier(object):
             labels = data["labels"]
             try:
                 K = 1e-3
-                score = sum(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)+K))),list(torch.unique(labels))))))
+                score = sum(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)+K)))/1e+3,list(torch.unique(labels))))))
             except:
                 return 0
             print(score)
