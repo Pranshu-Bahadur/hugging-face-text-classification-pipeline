@@ -169,8 +169,8 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         #self.model.eval()
         #self.model.zero_grad()
-        model = copy.deepcopy(self.model)
-        #model = self.model
+        #model = copy.deepcopy(self.model)
+        model = self.model
         model.train()
         #model.zero_grad()
         """
@@ -230,7 +230,7 @@ class NLPClassifier(object):
             labels = data["labels"].cuda()
             try:
                 K = 1e-3
-                score = sum(list(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)))),list(torch.unique(labels)))))))
+                score = sum(list(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)+K))),list(torch.unique(labels)))))))
             except:
                 return 0
             return score
