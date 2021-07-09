@@ -3,18 +3,20 @@ from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification, AutoModelForTokenClassification, AutoModelForPreTraining, AutoConfig
 #from nfnets import SGD_AGC
-from sam import SAMSGD
 from sklearn.metrics import f1_score
 import numpy as np
+import timm
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
+        self.library = config["library"]
         self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config["num_classes"])
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
-        self.model = nn.DataParallel(self.model).cuda()
+        
+        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         #print(self.model)
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
@@ -34,14 +36,14 @@ class NLPClassifier(object):
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
+        else:
+            return timm.create_model(model_name, pretrained=True, num_classes=num_classes)
 
     def _create_optimizer(self, name, model_params, lr):
-        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
+        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9),#, nesterov=True),#
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
                       "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999),weight_decay=1e-5),
                       #"SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.16, weight_decay=1e-05, nesterov=True, momentum=0.9),
-                      "SAMSGD": SAMSGD(model_params.parameters(), lr, momentum=0.9,weight_decay=1e-5)
-
         }
         return optim_dict[name]
     
@@ -90,8 +92,12 @@ class NLPClassifier(object):
             print(batch["attention_mask"].size(0))
             """
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
-            batch["attention_mask"][:, indices!=k] = 0
-            outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+            if self.library == "timm":
+                batch["input_ids"][:, :,indices!=k] = 0
+                outputs = self.model(batch["input_ids"])
+            else:
+                batch["attention_mask"][:, indices!=k] = 0
+                outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
             outputs = nn.functional.dropout2d(outputs, 0.2)
             loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
             self.optimizer.zero_grad()
@@ -116,8 +122,12 @@ class NLPClassifier(object):
             for batch in loader:
                 shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
-                batch["attention_mask"][:, indices!=k] = 0
-                outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+                if self.library == "timm":
+                    batch["input_ids"][:, :,indices!=k] = 0
+                    outputs = self.model(batch["input_ids"])
+                else:
+                    batch["attention_mask"][:, indices!=k] = 0
+                    outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
                 loss = self.criterion(outputs.view(batch["input_ids"].size(0), -1), batch["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
@@ -141,15 +151,25 @@ class NLPClassifier(object):
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-        data["attention_mask"][:, indices!=i] = 0
-        data["attention_mask"] = data["attention_mask"].float()
-        data["attention_mask"].requires_grad = True
-        h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
-        m = torch.zeros((data["attention_mask"].size(0), 16))
-        #print(data["attention_mask"].size(0))
-        m[:,0] = 1
-        h.backward(m.cuda())
-        return data["attention_mask"].grad
+        if self.library != "timm":
+            data["attention_mask"][:,:, indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].float()
+            data["attention_mask"].requires_grad = True
+            h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
+            m = torch.zeros((data["input_ids"].size(0), 16))
+            #print(data["attention_mask"].size(0))
+            m[:,:,0] = 1
+            h.backward(m.cuda())
+        else:
+            data["input_ids"][:,:, indices==i] = 0
+            data["input_ids"] = data["input_ids"].float()
+            data["input_ids"].requires_grad = True
+            h = self.model(data["input_ids"])
+            m = torch.zeros((data["input_ids"].size(0), 16))
+            #print(data["attention_mask"].size(0))
+            m[:,0] = 1
+            h.backward(m.cuda())
+        return data["attention_mask"].grad if self.library != "timm" else data["input_ids"].grad
     
     #@TODO Improve this...its nasty.
     def _score(self, data, indices, k):

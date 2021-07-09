@@ -23,7 +23,8 @@ def _model_config(args):
         "train": True if args.train else False,
         "save_interval": int(args.save_interval),
         "library": args.library,
-        "save_directory": args.save_directory,        
+        "save_directory": args.save_directory,   
+        "multi": True if args.multi else False,
     }
     return config
 
@@ -47,6 +48,8 @@ if __name__ == "__main__":
     parser.add_argument("--library")
     parser.add_argument("--save_directory", "-s")
     parser.add_argument("--save_interval")
+    parser.add_argument("--multi", help="Set this model to parallel mode", action="store_true")
+
 
     args = parser.parse_args()
     config = _model_config(args)

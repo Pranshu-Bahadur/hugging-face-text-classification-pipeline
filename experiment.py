@@ -42,7 +42,7 @@ class Experiment(object):
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer)
+        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library)
         #@TODO add features selection here
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
@@ -58,8 +58,8 @@ class Experiment(object):
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader, K, score):
+        self.classifier.model.train()
         data = next(iter(loader))
-        
         X = data["input_ids"].cpu().numpy()
         #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
         i = -1
