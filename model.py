@@ -147,6 +147,7 @@ class NLPClassifier(object):
         #self.model.eval()
         #self.model.zero_grad()
         model = copy.deepcopy(self.model)
+        model.eval()
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
