@@ -119,16 +119,16 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        self.model.train()
+        self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for batch in loader:
                 shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
                 batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
                 if self.library == "timm":
-                    x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
+                    """x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
                     x[:,indices!=k] = 0
-                    batch["input_ids"] = x.view(batch["input_ids"].size()).float()
+                    batch["input_ids"] = x.view(batch["input_ids"].size()).float()"""
                     outputs = self.model(batch["input_ids"])
                 else:
                     batch["attention_mask"][:, indices!=k] = 0
