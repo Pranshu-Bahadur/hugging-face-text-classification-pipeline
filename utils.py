@@ -16,8 +16,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         item['labels'] = torch.tensor(self._labels[idx])
         if self.library == "timm":
             AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
-            AA -= AA.min(1, keepdim=True)[0]
-            AA /= AA.max(1, keepdim=True)[0]
+            AA -= AA.min(1, keepdim=True)[0].clamp(1e-2)
+            AA /= AA.max(1, keepdim=True)[0].clamp(1e-2)
             item["input_ids"] = AA.view(3, 32, 32)
         return item
     
