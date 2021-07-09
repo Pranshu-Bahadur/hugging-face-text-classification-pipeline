@@ -170,7 +170,7 @@ class NLPClassifier(object):
         #self.model.eval()
         #self.model.zero_grad()
         #model = copy.deepcopy(self.model)
-        model = self.model
+        #model = self.model
         #model.train()
         #model.zero_grad()
         """
@@ -194,9 +194,9 @@ class NLPClassifier(object):
             data["attention_mask"].requires_grad = True
             #print(data["input_ids"], data["attention_mask"])
             #with torch.no_grad():
-            h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits
+            h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits
             #h.requires_grad = True
-            m = torch.ones((data["input_ids"].size(0), 16))
+            m = torch.ones((self.bs, 16))
             #print(data["attention_mask"].size(0))
             #y_ = torch.argmax(h, dim=1)
             #m[:,y_] = 1
@@ -206,14 +206,14 @@ class NLPClassifier(object):
             #print(J.size())
             #J = J.view(data["attention_mask"].size(0), 1, 256, 256).float()
         else:
-            shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-            data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+            #shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+            #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
             x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
             x[:,:,indices!=i] = 0
             data["input_ids"] = x.view(self.bs, 3, 64, 64).float()
             data["input_ids"].requires_grad = True
-            h = model(data["input_ids"])
-            m = torch.zeros((data["input_ids"].size(0), 16))
+            h = self.model(data["input_ids"])
+            m = torch.zeros((self.bs, 16))
             #print(data["attention_mask"].size(0))
             #y_ = torch.argmax(h, dim=1)
             #y_ = torch.argmax(h, dim=1)
@@ -229,8 +229,8 @@ class NLPClassifier(object):
         def eval_score_perclass(jacob, data):
             labels = data["labels"]
             try:
-                K = 1e-3
-                score = sum(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)+K)))/1e+3,list(torch.unique(labels))))))
+                K = 1e-2
+                score = np.sum(np.log(np.absolute(np.corrcoef(jacob.view(self.bs, -1).cpu().numpy(),labels.view(self.bs, -1).cpu().numpy()))))
             except:
                 return 0
             print(score)
