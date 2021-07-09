@@ -73,12 +73,12 @@ class Experiment(object):
         #X = 
         #X = torch.tensor(X).view(-1, 512).cpu().numpy()
         i = -1
-        t_score = [1e-4]
+        t_score = 1e-4
         iterations = 0
         indices = []
         #Z = torch.tensor(X.T)
         memoisation = {}
-        memoisation[t_score] = (indices,i)
+        memoisation[t_score] = [indices,i]
         while max(list(memoisation.keys())) != score:
             X = next(iter(loader))["input_ids"].cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
@@ -88,7 +88,7 @@ class Experiment(object):
                 if score in list(memoisation.keys()):
                     print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
                     return score, i, indices
-                memoisation[score] = (indices, i)
+                memoisation[score] = [indices, i]
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
             #clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
