@@ -112,7 +112,7 @@ class NLPClassifier(object):
                 shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
-                data["attention_mask"][:,indices!=k] = 0
+                #data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
@@ -134,7 +134,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
 
-    def _validate(self, loader, indices, k):
+    def _validate(self, loader, indices, i):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
@@ -154,7 +154,7 @@ class NLPClassifier(object):
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
-                    data["attention_mask"][:,indices!=k] = 0
+                    #data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                     loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
