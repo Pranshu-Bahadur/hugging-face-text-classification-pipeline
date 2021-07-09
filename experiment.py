@@ -67,7 +67,7 @@ class Experiment(object):
         data = next(iter(loader))
         #X = data["input_ids"].cpu().numpy()
         X = np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
-        X = torch.tensor(X).view(-1, 512).cpu().numpy()
+        #X = torch.tensor(X).view(-1, 512).cpu().numpy()
         i = -1
         t_score = [1e-4]
         iterations = 0
