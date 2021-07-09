@@ -198,9 +198,9 @@ class NLPClassifier(object):
             #h.requires_grad = True
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
-            y_ = torch.argmax(h, dim=1)
-            m[:,y_] = 1
-            #m[:,0] = 1
+            #y_ = torch.argmax(h, dim=1)
+            #m[:,y_] = 1
+            m[:,0] = 1
             h.backward(m.cuda())
             J = data["attention_mask"].grad
             #print(J.size())
@@ -216,9 +216,9 @@ class NLPClassifier(object):
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
             #y_ = torch.argmax(h, dim=1)
-            y_ = torch.argmax(h, dim=1)
-            m[:,y_] = 1
-            #m[:,0] = 1
+            #y_ = torch.argmax(h, dim=1)
+            #m[:,y_] = 1
+            m[:,0] = 1
             h.backward(m.cuda())
             J = data["input_ids"].grad
 
