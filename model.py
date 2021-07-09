@@ -105,10 +105,14 @@ class NLPClassifier(object):
                 data["input_ids"] = x.view(data["input_ids"].size()).float()
                 outputs = self.model(data["input_ids"])
             else:
-                data = self._splitter(data)
-                data["attention_mask"] = data["attention_mask"].view(-1, 4096)
+                #data = self._splitter(data)
+                #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
+
+                shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+
                 data["attention_mask"][:,indices!=k] = 0
-                data["attention_mask"] = data["attention_mask"].view(-1, 512)
+                #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
@@ -141,10 +145,14 @@ class NLPClassifier(object):
                     data["input_ids"] = x.view(data["input_ids"].size()).float()
                     outputs = self.model(data["input_ids"])
                 else:
-                    data = self._splitter(data)
-                    data["attention_mask"] = data["attention_mask"].view(-1, 4096)
+                    #data = self._splitter(data)
+                    #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
+
+                    shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+
                     data["attention_mask"][:,indices!=k] = 0
-                    data["attention_mask"] = data["attention_mask"].view(-1, 512)
+                    #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
                 running_loss += loss.item()
@@ -172,9 +180,13 @@ class NLPClassifier(object):
         """
         if self.library != "timm":
             data = self._splitter(data)
-            data["attention_mask"] = data["attention_mask"].view(-1, 4096)
+
+            shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+            data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+
+            #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
             data["attention_mask"][:,indices!=i] = 0
-            data["attention_mask"] = data["attention_mask"].view(-1, 512)
+            #data["attention_mask"] = data["attention_mask"].view(-1, 512)
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
             #with torch.no_grad():
