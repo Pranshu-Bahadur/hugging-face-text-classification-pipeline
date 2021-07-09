@@ -98,7 +98,7 @@ class Experiment(object):
             #big_c = torch.max(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
             #clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
             l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)),[i for i in range(K)]))#clusters 
-            l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation.keys())) <= a_[1], l))
+            l = list(filter(lambda a_: float('nan') != a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected...Just use prev features.")
                 continue
