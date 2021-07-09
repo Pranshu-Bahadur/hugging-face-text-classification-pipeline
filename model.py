@@ -24,7 +24,7 @@ class NLPClassifier(object):
             self._load(config["checkpoint"])
         self.curr_epoch = config["curr_epoch"]
         self.name = "{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"])
-        self.bs = config["data_size"]
+        self.bs = config["batch_size"]
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.final_epoch = config["epochs"]
