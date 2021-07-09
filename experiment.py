@@ -18,6 +18,8 @@ class Experiment(object):
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         scores = [1]
         K = 2
+        indices = []
+        k = 0
         #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
         #print("Features selection with K {} complete:".format(K))
         #self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
