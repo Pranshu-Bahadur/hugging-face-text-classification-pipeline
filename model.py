@@ -220,7 +220,7 @@ class NLPClassifier(object):
         splits = [(y, data["input_ids"][data["labels"]==y].view(-1,512), data["attention_mask"][data["labels"]==y].view(-1,512)) for y in list(torch.unique(data["labels"]))]
         splits = {split[0]: {
         "input_ids": split[1],
-        "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)]),
+        "labels":torch.cat([split[0] for _ in range(split[1].size(0))]),
         "attention_mask": split[2]} for split in splits}
         data = {k:torch.cat([split[k] for split in list(splits.values())]) for k in ["input_ids", "attention_mask", "labels"]}
         print([v.size() for v in list(data.values())])
