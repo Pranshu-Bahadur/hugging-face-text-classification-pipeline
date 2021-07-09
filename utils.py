@@ -6,7 +6,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library):
         self.dataset = pd.read_csv(csv_path)
         self.library = library
-        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=4096 if library == "timm" else 512, truncation=True, padding='max_length', return_attention_mask=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 512, truncation=True, padding='max_length', return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
@@ -15,10 +15,12 @@ class SpreadSheetNLPCustomDataset(Dataset):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self._labels[idx])
         if self.library == "timm":
-            AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
+            AA = item["input_ids"]
+            AA = AA.view(AA.size(0), -1).float()
+            AA = torch.stack([AA for i in range(3)], dim=1)
             AA -= AA.min(1, keepdim=True)[0].clamp(1e-2)
             AA /= AA.max(1, keepdim=True)[0].clamp(1e-2)
-            AA = AA.view(64, 64)
+            AA = AA.view(64*3, 64*3)
             item["input_ids"] = torch.stack([AA for i in range(3)])
         return item
     
