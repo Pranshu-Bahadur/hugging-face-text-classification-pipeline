@@ -39,7 +39,7 @@ class NLPClassifier(object):
                 model.num_labels = num_classes
             else:
                 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_classes)
-            return model, AutoTokenizer.from_pretrained(model_name)
+            return model, AutoTokenizer.from_pretrained("nateraw/bert-base-uncased-emotion")
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes),  AutoTokenizer.from_pretrained("nateraw/bert-base-uncased-emotion")
 
