@@ -109,12 +109,13 @@ class NLPClassifier(object):
                 #data = self._splitter(data)
                 #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
 
-                shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+                shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
                 #data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
-                outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
+                outputs = self.model.forward(input_ids=data["input_ids"]).logits
+                self.criterion.weight(torch.tensor([data["labels"][data["labels"]==y].size(0) for y in list(torch.unique(data["labels"]))]))
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
@@ -151,12 +152,12 @@ class NLPClassifier(object):
                     #data = self._splitter(data)
                     #data["attention_mask"] = data["attention_mask"].view(-1, 4096)
 
-                    shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+                    shuffle_seed = torch.randperm(data["input_ids"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
                     #data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
-                    outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
+                    outputs = self.model.forward(input_ids=data["input_ids"]).logits
                     loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
