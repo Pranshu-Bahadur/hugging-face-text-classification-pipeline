@@ -2,7 +2,7 @@ import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelWithLMHead, AutoModelForSequenceClassification, AutoModelForTokenClassification, AutoModelForPreTraining, AutoConfig
-from nfnets import SGD_AGC
+#from nfnets import SGD_AGC
 from sam import SAMSGD
 from sklearn.metrics import f1_score
 import numpy as np
@@ -38,8 +38,8 @@ class NLPClassifier(object):
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr),#,weight_decay=1e-5, momentum=0.9),#, nesterov=True
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      "SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.08, weight_decay=1e-05, nesterov=True, momentum=0.9),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999),weight_decay=1e-5),
+                      #"SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.16, weight_decay=1e-05, nesterov=True, momentum=0.9),
                       "SAMSGD": SAMSGD(model_params.parameters(), lr, momentum=0.9,weight_decay=1e-5)
 
         }
@@ -78,7 +78,6 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         for batch in loader:
-            
             shuffle_seed = torch.randperm(batch["attention_mask"].size(0))
             """
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
@@ -93,6 +92,7 @@ class NLPClassifier(object):
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             batch["attention_mask"][:, indices!=k] = 0
             outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
+            outputs = nn.functional.dropout2d(outputs, 0.2)
             loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
             self.optimizer.zero_grad()
             loss.backward()
@@ -110,7 +110,7 @@ class NLPClassifier(object):
 
 
     def _validate(self, loader, indices, k):
-        self.model.eval()
+        self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         with torch.no_grad():                
             for batch in loader:
