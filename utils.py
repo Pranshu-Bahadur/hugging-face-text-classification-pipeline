@@ -21,6 +21,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
             AA = AA.view(1, 1, 64, 64)
             expand = torch.nn.Conv2d(in_channels=1,out_channels=3,kernel_size=3, stride=1, bias=False)
             item["input_ids"] = expand(AA).view(3, 64, 64).float()
+            item["input_ids"].requires_grad = False
         return item
     
     def __len__(self):
