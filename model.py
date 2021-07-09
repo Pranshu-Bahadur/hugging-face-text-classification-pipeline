@@ -223,7 +223,7 @@ class NLPClassifier(object):
         "labels":torch.ones(split[1].size(0))*split[0],
         "attention_mask": split[2]} for split in splits}
         data = {k:torch.cat([split[k] for split in list(splits.values())]) for k in ["input_ids", "attention_mask", "labels"]}
-        print([v.size() for v in list(data.values())])
+        #print([v.size() for v in list(data.values())])
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         return data
