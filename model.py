@@ -229,7 +229,7 @@ class NLPClassifier(object):
             except:
                 return 0
             return score        
-        return sum([eval_score_perclass(**self._get_jacobian(data, indices, k))/1e+2 for data in loader])
+        return sum(list(map(lambda data:eval_score_perclass(**self._get_jacobian(data, indices, k))/1e+2, loader)))
     
     def _splitter(self, data):
         #[b.view(-1) for b in torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512), dim=0)]
