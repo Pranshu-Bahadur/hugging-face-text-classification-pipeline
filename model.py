@@ -224,11 +224,10 @@ class NLPClassifier(object):
                 return 0
             try:
                 K = 1e-3
-                per_class= list(map(lambda i: jacob[labels==i].view(labels.size(0), -1), list(torch.unique(labels))))
-                score = np.sum(np.absolute(list(map(lambda v: np.sum(np.log(np.absolute(np.corrcoef(v.cpu().numpy()+K))+K))+K/1e+2,per_class))))
+                score = np.sum(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K))+K))+K/1e+2,list(torch.unique(labels))))))
             except:
                 return 0
-            return score        
+            return score     
         return sum(list(map(lambda data:eval_score_perclass(**self._get_jacobian(data, indices, k))/1e+2, loader)))
     
     def _splitter(self, data):
