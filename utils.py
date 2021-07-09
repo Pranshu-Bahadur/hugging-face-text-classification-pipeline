@@ -18,7 +18,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
             AA = item["input_ids"].view(item["input_ids"].size(0), -1).float()
             AA -= AA.min(1, keepdim=True)[0].clamp(1e-2)
             AA /= AA.max(1, keepdim=True)[0].clamp(1e-2)
-            AA = AA.view(1, 64, 64)
+            AA = AA.view(64, 64)
             item["input_ids"] = torch.stack([AA for i in range(3)])
         return item
     
