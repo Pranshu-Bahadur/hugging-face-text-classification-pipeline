@@ -161,8 +161,9 @@ class NLPClassifier(object):
             m[:,:,0] = 1
             h.backward(m.cuda())
         else:
-            data["input_ids"][:,:, indices==i] = 0
-            data["input_ids"] = data["input_ids"].float()
+            x = data["input_ids"].view(data["input_ids"].size(0), -1).clone()
+            x[:,indices==i] = 0
+            data["input_ids"] = x.view(data["input_ids"].size()).float()
             data["input_ids"].requires_grad = True
             h = self.model(data["input_ids"])
             m = torch.zeros((data["input_ids"].size(0), 16))
