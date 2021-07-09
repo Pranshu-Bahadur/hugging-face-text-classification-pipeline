@@ -160,7 +160,7 @@ class NLPClassifier(object):
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         if self.library != "timm":
-            data["attention_mask"][:,:, indices!=i] = 0
+            data["attention_mask"][:, indices!=i] = 0
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
             h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
