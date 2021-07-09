@@ -220,7 +220,7 @@ class NLPClassifier(object):
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
         def eval_score_perclass(jacob, data):
-            labels = data["labels"].cuda()
+            labels = data
             if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
             try:
