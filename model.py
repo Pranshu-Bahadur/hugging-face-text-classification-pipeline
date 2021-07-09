@@ -178,8 +178,10 @@ class NLPClassifier(object):
         if self.library != "timm":
             splits = [(y,torch.stack(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))) for y in list(torch.unique(data["labels"]))]
             splits = {splits[0]: {
-                "input_ids": split[1], "labels":torch.stack([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]),
+                "input_ids": split[1],
+                "labels":torch.stack([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0)+1)]),
                 "attention_mask":[data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0)) - split[1].size(0))]} for split in splits}
+
             data = {k:torch.stack([split[k] for split in list(splits.values())]) for k in list(data.keys)}
             shuffle_seed = torch.randperm(data["attention_mask"].size(0))
             data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
