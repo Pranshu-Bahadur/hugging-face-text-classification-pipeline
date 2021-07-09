@@ -33,9 +33,12 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
-            model.num_labels = num_classes
+            if "long" not in model_name:
+                model = AutoModelForSequenceClassification.from_pretrained(model_name)
+                model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
+                model.num_labels = num_classes
+            else:
+                model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_classes)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes),  AutoTokenizer.from_pretrained("nateraw/bert-base-uncased-emotion")
