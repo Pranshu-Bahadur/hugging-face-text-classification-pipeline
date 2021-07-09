@@ -18,7 +18,7 @@ class Experiment(object):
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         scores = [float('-inf')]
         K = 2
-        self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
+        #self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
@@ -50,15 +50,16 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            split_names = ['train', 'validation', 'test']
-            classes = list(dataSetFolder.labels.items())
-            self.classifier.writer.add_text("Classes:",f'{classes}')
-            distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            self.classifier.writer.add_text("Run distribution:",f'{distributions}')
+            #split_names = ['train', 'validation', 'test']
+            #classes = list(dataSetFolder.labels.items())
+            #self.classifier.writer.add_text("Classes:",f'{classes}')
+            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
+            #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
             #total = sum(list(distributions[0].values()))
-            weights = torch.tensor(list(distributions["train"].values())).float()
-            weights -= weights.min().item()
-            weights /= weights.max().item()
+            #weights = torch.tensor(list(distributions["train"].values())).float()
+            #weights -= weights.min().item()
+            #weights /= weights.max().item()
+            weights = []
             return splits, weights
         return dataSetFolder
     #@TODO...improve this...
