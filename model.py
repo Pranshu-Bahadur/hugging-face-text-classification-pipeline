@@ -107,7 +107,8 @@ class NLPClassifier(object):
             else:
                 data = self._splitter(data)
                 data["attention_mask"] = data["attention_mask"].view(-1, 4096)
-                data["attention_mask"][:,indices!=i] = 0
+                data["attention_mask"][:,indices!=k] = 0
+                data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
@@ -142,7 +143,8 @@ class NLPClassifier(object):
                 else:
                     data = self._splitter(data)
                     data["attention_mask"] = data["attention_mask"].view(-1, 4096)
-                    data["attention_mask"][:,indices!=i] = 0
+                    data["attention_mask"][:,indices!=k] = 0
+                    data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
                 running_loss += loss.item()
@@ -171,6 +173,7 @@ class NLPClassifier(object):
             data = self._splitter(data)
             data["attention_mask"] = data["attention_mask"].view(-1, 4096)
             data["attention_mask"][:,indices!=i] = 0
+            data["attention_mask"] = data["attention_mask"].view(-1, 512)
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
             h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
