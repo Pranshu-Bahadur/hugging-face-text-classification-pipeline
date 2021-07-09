@@ -16,7 +16,7 @@ class Experiment(object):
         split, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        scores = [1e-2]
+        scores = [-1]
         K = 2
         #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
         #print("Features selection with K {} complete:".format(K))
@@ -79,8 +79,8 @@ class Experiment(object):
         #Z = torch.tensor(X.T)
         memoisation = {}
         memoisation[score] = [indices,i]
-        score = 1e-4
-        while t_score < score:# and iterations = 0:
+        score = 1e-1
+        while t_score > score:# and iterations = 0:
             data = next(iter(loader))
             X = data["input_ids"][:,0,:,:].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
@@ -115,5 +115,6 @@ class Experiment(object):
             except:
                 print("Random unidentified error...")
                 continue
-        final = (max(list(memoisation.keys())), memoisation[max(list(memoisation.keys()))][1],  memoisation[max(list(memoisation.keys()))][0])
+            final = (score, i, indices)
+        print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
         return final
