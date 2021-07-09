@@ -207,13 +207,13 @@ class NLPClassifier(object):
             #print(data["attention_mask"].size(0))
             m[:,0] = 1
             h.backward(m.cuda())
-            J = data["input_ids"].grad, data
+            J = data["input_ids"].grad
 
-        return J
+        return J, data
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
-        def eval_score_perclass(jacob):
+        def eval_score_perclass(jacob, data):
             labels = data["labels"].cuda()
             if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
@@ -224,8 +224,7 @@ class NLPClassifier(object):
                 score = np.sum(np.absolute(list(ind_corr_matrix_score.values())))
             except:
                 return 0
-            return score
-        
+            return score        
         return sum([eval_score_perclass(self._get_jacobian(data, indices, k))/1e+2 for data in loader])
 
 
