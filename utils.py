@@ -15,8 +15,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item['labels'] = torch.tensor(self._labels[idx])
         if self.library == "timm":
-            item["input_ids"] -= item["input_ids"].min(1, keepdim=True)[0]
-            item["input_ids"] /= item["input_ids"].min(1, keepdim=True)[0]
+            item["input_ids"] -= item["input_ids"].min()[0]
+            item["input_ids"] /= item["input_ids"].min()[0]
             item["input_ids"] = item["input_ids"].view(3, 256).float()
             item["attention_mask"] = item["attention_mask"].view(3, 256).float()
         return item
