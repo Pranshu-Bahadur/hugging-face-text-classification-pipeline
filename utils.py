@@ -13,7 +13,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.read_csv(csv_path)
         self.long = long
         self.library = library
-        self.dataset = pd.concat([Series(self.dataset['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index()
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
         self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 512, truncation=True, padding='max_length', return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
