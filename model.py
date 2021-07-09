@@ -191,6 +191,6 @@ class NLPClassifier(object):
                 return 0
             return score
         
-        return [eval_score_perclass(self._get_jacobian(data, indices, k), data['labels'].cuda())/1e+2 for data in loader]
+        return sum([eval_score_perclass(self._get_jacobian(data, indices, k), data['labels'].cuda())/1e+2 for data in loader])
 
 
