@@ -233,6 +233,7 @@ class NLPClassifier(object):
                 score = sum(list(np.absolute(list(map(lambda i: np.sum(np.log(np.absolute(np.corrcoef(jacob[labels==i].view(labels.size(0), -1).cpu().numpy()+K)+K))),list(torch.unique(labels)))))))
             except:
                 return 0
+            print(score)
             return score
         #data = next(iter(loader))
         j_d = self._get_jacobian(data, indices, k)
