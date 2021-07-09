@@ -45,7 +45,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.long = long
         self.library = library
         cols_n = self.dataset.columns.tolist()
-        print(cols_n)
+        cols_n.reverse()
         #print(self.dataset.head())
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
         #print(self.dataset.head())
