@@ -1,13 +1,21 @@
 import torch
 from torch.utils.data import Dataset
 import pandas as pd
+from pd import Series
+import re
+
+def chunkstring(string, length):
+  return re.findall('.{%d}' % length, string)
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
+        
         self.dataset = pd.read_csv(csv_path)
         self.long = long
         self.library = library
-        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 4096, truncation=True, padding='max_length', return_attention_mask=True)
+        self.dataset = pd.concat([Series(self.dataset['type'], chunkstring(self.dataset['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index()
+
+        self.encodings = tokenizer(list(self.dataset['posts'].values), max_length=64*64 if library == "timm" else 512, truncation=True, padding='max_length', return_attention_mask=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
