@@ -78,7 +78,7 @@ class Experiment(object):
         indices = []
         #Z = torch.tensor(X.T)
         memoisation = {}
-        memoisation[score] = (indices,i)
+        memoisation[t_score] = (indices,i)
         while max(list(memoisation.keys())) != score:
             X = next(iter(loader))["input_ids"].cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
