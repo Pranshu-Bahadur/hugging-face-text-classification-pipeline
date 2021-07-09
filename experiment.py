@@ -13,11 +13,12 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        split = self._preprocessing(dataset, True)
+        split, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
         scores = [float('-inf')]
         K = 2
+        self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
             score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
@@ -50,12 +51,14 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             dataSetFolder = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])[0]
-            #split_names = ['train', 'validation', 'test']
-            #classes = list(dataSetFolder.labels.items())
-            #self.classifier.writer.add_text("Classes:",f'{classes}')
-            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
-            return splits
+            split_names = ['train', 'validation', 'test']
+            classes = list(dataSetFolder.labels.items())
+            self.classifier.writer.add_text("Classes:",f'{classes}')
+            distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
+            self.classifier.writer.add_text("Run distribution:",f'{distributions}')
+            total = sum(list(distributions[0].values()))
+            weights = torch(list(distributions[0].values()))/total
+            return splits, weights
         return dataSetFolder
     #@TODO...improve this...
     def _features_selection(self, loader, K, score):
