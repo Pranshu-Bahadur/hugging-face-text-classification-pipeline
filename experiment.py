@@ -56,7 +56,7 @@ class Experiment(object):
             distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
             self.classifier.writer.add_text("Run distribution:",f'{distributions}')
             total = sum(list(distributions[0].values()))
-            weights = torch(list(distributions[0].values()))/total
+            weights = torch.tensor(list(distributions[0].values()))/total
             return splits, weights
         return dataSetFolder
     #@TODO...improve this...
