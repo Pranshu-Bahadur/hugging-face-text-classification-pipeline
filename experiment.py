@@ -20,7 +20,7 @@ class Experiment(object):
         K = 2
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
-            score_, k_, indices_ = self._features_selection(loaders[random.randrange(0,2)], K, max(scores))
+            score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
             if max(scores) < score_:
                 #K = K // 2 if K > 2 else 8
                 print("Better score updating features.")
