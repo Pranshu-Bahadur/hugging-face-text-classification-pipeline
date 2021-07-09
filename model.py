@@ -167,9 +167,10 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         #self.model.eval()
         #self.model.zero_grad()
-        model = copy.deepcopy(self.model)
-        model.eval()
-        model.zero_grad()
+        #model = copy.deepcopy(self.model)
+        model = self.model
+        #model.eval()
+        #model.zero_grad()
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}

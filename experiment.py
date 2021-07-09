@@ -67,8 +67,8 @@ class Experiment(object):
             return splits, weights
         return dataSetFolder
     #@TODO...improve this...
-    def _features_selection(self, loader, K, score):
-        self.classifier.model.train()
+    def _features_selection(self, loader, K, score, model):
+        #self.classifier.model.train()
         data = next(iter(loader))
         X = data["input_ids"].cpu().numpy()
         #X = np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
