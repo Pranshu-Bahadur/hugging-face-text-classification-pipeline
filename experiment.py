@@ -80,10 +80,10 @@ class Experiment(object):
         memoisation = {}
         memoisation[score] = [indices,i]
         score = 1e-4
-        while max(list(memoisation.keys())) != score and iterations = 0:
-            X = next(iter(loader))["input_ids"].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
+        while max(list(memoisation.keys())) != score:# and iterations = 0:
+            data = next(iter(loader))
+            X = data["input_ids"].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
             Z = torch.tensor(X.T)
-            iterations += 1
             if score > max(list(memoisation.keys())):
                 print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
                 """
@@ -97,7 +97,7 @@ class Experiment(object):
             #clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
             #big_c = torch.max(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
             #clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)),[i for i in range(K)]))#clusters 
+            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)),[i for i in range(K)]))#clusters 
             l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation.keys())) <= a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected...Just use prev features.")

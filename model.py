@@ -225,7 +225,7 @@ class NLPClassifier(object):
         return {"jacob": J, "data": data}
     
     #@TODO Improve this...its nasty.
-    def _score(self, loader, indices, k):
+    def _score(self, data, indices, k):
         def eval_score_perclass(jacob, data):
             labels = data["labels"].cuda()
             try:
@@ -234,7 +234,7 @@ class NLPClassifier(object):
             except:
                 return 0
             return score
-        data = next(iter(loader))
+        #data = next(iter(loader))
         j_d = self._get_jacobian(data, indices, k)
         return eval_score_perclass(**j_d) #sum(list(map(lambda data:eval_score_perclass(j_d["J"], data["labels"])/1e+2, loader)))
     
