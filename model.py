@@ -35,7 +35,6 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            print(model)
             if not "long" in model_name:
                 model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             else:
