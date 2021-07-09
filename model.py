@@ -205,13 +205,14 @@ class NLPClassifier(object):
             #print(data["attention_mask"].size(0))
             m[:,0] = 1
             h.backward(m.cuda())
-            J = data["input_ids"].grad
+            J = data["input_ids"].grad, data
 
         return J
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
-        def eval_score_perclass(jacob, labels):
+        def eval_score_perclass(jacob):
+            labels = data["labels"].cuda()
             if jacob is None or jacob.size(0) != labels.size(0):
                 return 0
             try:
@@ -223,6 +224,6 @@ class NLPClassifier(object):
                 return 0
             return score
         
-        return sum([eval_score_perclass(self._get_jacobian(data, indices, k), data['labels'].cuda())/1e+2 for data in loader])
+        return sum([eval_score_perclass(self._get_jacobian(data, indices, k))/1e+2 for data in loader])
 
 
