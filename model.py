@@ -211,12 +211,11 @@ class NLPClassifier(object):
     
     def _splitter(self, data):
         #[b.view(-1) for b in torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512), dim=0)]
-        splits = [(y, data["input_ids"][data["labels"]==y].view(-1,512)) for y in list(torch.unique(data["labels"]))]
-        splits = [(y, ) for split in splits]
+        splits = [(y, data["input_ids"][data["labels"]==y].view(-1,512), data["attention_mask"][data["labels"]==y].view(-1,512))) for y in list(torch.unique(data["labels"]))]
         splits = {split[0]: {
         "input_ids": split[1],
         "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)]),
-        "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)])} for split in splits}
+        "attention_mask": split[2]} for split in splits}
         data = {k:torch.cat([split[k] for split in list(splits.values())]) for k in ["input_ids", "attention_mask", "labels"]}
         print([v.size() for v in list(data.values())])
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
