@@ -209,7 +209,7 @@ class NLPClassifier(object):
             h = model(data["input_ids"])
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
-            m[:,0] = 1
+            #m[:,0] = 1
             h.backward(m.cuda())
             J = data["input_ids"].grad
 
