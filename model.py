@@ -94,14 +94,14 @@ class NLPClassifier(object):
             batch = {k: v[shuffle_seed].cuda() for k, v in batch.items()}
             if self.library == "timm":
                 batch["input_ids"].requires_grad = True
-                #x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
-                #x[:,indices!=k] = 0
+                x = batch["input_ids"].view(batch["input_ids"].size(0), -1).clone()
+                x[:,indices!=k] = 0
                 batch["input_ids"] = x.view(batch["input_ids"].size()).float()
                 outputs = self.model(batch["input_ids"])
             else:
                 batch["attention_mask"][:, indices!=k] = 0
                 outputs = self.model.forward(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).logits
-            outputs = nn.functional.dropout2d(outputs, 0.2)
+            #outputs = nn.functional.dropout2d(outputs, 0.2)
             loss = self.criterion(outputs.view(batch["input_ids"].size(0), self.nc), batch["labels"])
             self.optimizer.zero_grad()
             loss.backward()

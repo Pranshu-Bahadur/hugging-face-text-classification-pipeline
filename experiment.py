@@ -20,13 +20,11 @@ class Experiment(object):
         K = 2
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
-            indices = []
-            k = []
-            #score_, k_, indices_ = self._features_selection(loaders[random.randrange(0,2)], K, score)
-            #if score < score_:
+            score_, k_, indices_ = self._features_selection(loaders[random.randrange(0,2)], K, score)
+            if score < score_:
                 #K = K // 2 if K > 2 else 8
-                #print("Better score updating features.")
-                #score, k, indices = score_, k_, indices_
+                print("Better score updating features.")
+                score, k, indices = score_, k_, indices_
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
