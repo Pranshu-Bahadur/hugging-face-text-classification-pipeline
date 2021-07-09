@@ -16,7 +16,7 @@ class Experiment(object):
         split, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        scores = [-1]
+        scores = [1]
         K = 2
         #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
         #print("Features selection with K {} complete:".format(K))
