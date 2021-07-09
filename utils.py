@@ -50,7 +50,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
         #print(self.dataset.head())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        self.encodings = tokenizer(list(self.dataset['posts'].values))
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=512, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
