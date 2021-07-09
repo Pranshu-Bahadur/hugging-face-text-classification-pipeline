@@ -146,6 +146,7 @@ class NLPClassifier(object):
     def _get_jacobian(self, data, indices, i):
         #self.model.eval()
         #self.model.zero_grad()
+        model = copy.deepcopy(self.model)
         """
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
@@ -160,7 +161,7 @@ class NLPClassifier(object):
             data["attention_mask"][:,:, indices!=i] = 0
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
-            h = self.model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
+            h = model(data["input_ids"],attention_mask=data["attention_mask"]).logits.cuda()
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
             m[:,:,0] = 1
@@ -170,7 +171,7 @@ class NLPClassifier(object):
             x[:,indices!=i] = 0
             data["input_ids"] = x.view(data["input_ids"].size()).float()
             data["input_ids"].requires_grad = True
-            h = self.model(data["input_ids"])
+            h = model(data["input_ids"])
             m = torch.zeros((data["input_ids"].size(0), 16))
             #print(data["attention_mask"].size(0))
             m[:,0] = 1
