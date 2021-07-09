@@ -216,6 +216,7 @@ class NLPClassifier(object):
         "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)]),
         "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)])} for split in splits}
         data = {k:torch.cat([split[k] for split in list(splits.values())]) for k in ["input_ids", "attention_mask", "labels"]}
+        print([v.size() for v in list(data.values())])
         shuffle_seed = torch.randperm(data["attention_mask"].size(0))
         data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
         return data
