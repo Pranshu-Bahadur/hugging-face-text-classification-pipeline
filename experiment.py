@@ -26,7 +26,7 @@ class Experiment(object):
             score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
             if max(scores) < score_:
                 #K = K // 2 if K > 2 else 8
-                print("Better score updating features.")
+                print("Better score - updating features.")
                 score, k, indices = score_, k_, indices_
                 scores.append(score)
             print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
