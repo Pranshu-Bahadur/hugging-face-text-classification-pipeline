@@ -91,10 +91,10 @@ class Experiment(object):
                 memoisation[score] = [indices, i]
             kmeans = KMeans(K, init="k-means++")
             indices = torch.tensor(kmeans.fit_predict(Z))
-            #clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
-            #big_c = torch.mean(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
-            #clusters = list(filter(lambda k: torch.mean(clusters[k])>=big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), [i for i in range(K)]))#clusters
+            clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
+            big_c = torch.max(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
+            clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
+            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)),clusters))#clusters [i for i in range(K)]
             l = list(filter(lambda a_: float('nan') != a_[1] and max(list(memoisation.keys())) <= a_[1], l))
             if len(l) == 0:
                 print("Naan bread detected...Just use prev features.")
