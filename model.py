@@ -105,12 +105,7 @@ class NLPClassifier(object):
                 data["input_ids"] = x.view(data["input_ids"].size()).float()
                 outputs = self.model(data["input_ids"])
             else:
-                splits = [(y,torch.cat(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1)[:-1])) for y in list(torch.unique(data["labels"]))]
-                splits = {split[0]: {"input_ids": split[1], "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1]),
-                "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1])} for split in splits}
-                data = {k:torch.cat([split[k] for split in list(splits.values())][:-2]) for k in ["input_ids", "attention_mask", "labels"]}
-                shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                data = self._splitter(data)
                 data["attention_mask"][:, indices!=k] = 0
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
 
@@ -144,12 +139,7 @@ class NLPClassifier(object):
                     data["input_ids"] = x.view(data["input_ids"].size()).float()
                     outputs = self.model(data["input_ids"])
                 else:
-                    splits = [(y,torch.cat(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1)[:-1])) for y in list(torch.unique(data["labels"]))]
-                    splits = {split[0]: {"input_ids": split[1], "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1]),
-                    "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1])} for split in splits}
-                    data = {k:torch.cat([split[k] for split in list(splits.values())][:-2]) for k in ["input_ids", "attention_mask", "labels"]}
-                    shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                    data = self._splitter(data)
                     data["attention_mask"][:, indices!=k] = 0
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
@@ -176,15 +166,7 @@ class NLPClassifier(object):
         data = {k: torch.cat([v[idx] for sample in samples for idx in sample]) for k,v in list(data.items())}
         """
         if self.library != "timm":
-            splits = [(y,torch.cat(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))[:-1]) for y in list(torch.unique(data["labels"]))]
-            splits = {split[0]: {
-                "input_ids": split[1],
-                "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1]),
-                "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)][:-1])} for split in splits}
-
-            data = {k:torch.cat([split[k] for split in list(splits.values())][:-1]) for k in ["input_ids", "attention_mask", "labels"]}
-            shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-            data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+            data = self._splitter(data)
             data["attention_mask"][:, indices!=i] = 0
             data["attention_mask"] = data["attention_mask"].float()
             data["attention_mask"].requires_grad = True
@@ -209,7 +191,7 @@ class NLPClassifier(object):
             h.backward(m.cuda())
             J = data["input_ids"].grad
 
-        return J, data
+        return {"jacob": J, "data": data}
     
     #@TODO Improve this...its nasty.
     def _score(self, loader, indices, k):
@@ -226,5 +208,14 @@ class NLPClassifier(object):
                 return 0
             return score        
         return sum([eval_score_perclass(**self._get_jacobian(data, indices, k))/1e+2 for data in loader])
-
-
+    
+    def _splitter(self, data):
+        splits = [(y,torch.cat(torch.tensor_split((data["input_ids"][data["labels"]==y]), 4096//512, dim=1))) for y in list(torch.unique(data["labels"]))]
+        splits = {split[0]: {
+        "input_ids": split[1],
+        "labels":torch.cat([data["labels"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)]),
+        "attention_mask":torch.cat([data["attention_mask"][data["labels"]==split[0]] for _ in range(abs(data["labels"][data["labels"]==split[0]].size(0) - split[1].size(0))+1)])} for split in splits}
+        data = {k:torch.cat([split[k] for split in list(splits.values())]) for k in ["input_ids", "attention_mask", "labels"]}
+        shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+        data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+        return data
