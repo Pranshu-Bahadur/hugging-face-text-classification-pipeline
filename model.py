@@ -222,8 +222,11 @@ class NLPClassifier(object):
             iterations+=1
             J = torch.cat([J, self._jacobian(self.model, batch).view(self.bs, -1)])
             Y = torch.cat([Y,batch["labels"]]).float()
-            score += _epe_nas_score_E(J, Y)
+            score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
+            if score > self.score:
+                print(f"Score: {score} is better than prev best. Pruning")
+                return score
         return score
 
     #@TODO Run intialization when model is created first.
