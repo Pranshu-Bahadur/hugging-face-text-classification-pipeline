@@ -184,12 +184,13 @@ class NLPClassifier(object):
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
+    #TODO Add classwise correlation...
     def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
         print(V_J.size(), V_y.size())
         corr_m = torch.sum(V_J.T*V_y) / (torch.sqrt(torch.sum(V_J.T ** 2)) * torch.sqrt(torch.sum(V_y ** 2))).cpu()
-        corr_m.apply_(lambda x: torch.log(abs(x)+k))
+        corr_m.cpu().apply_(lambda x: torch.log(abs(x.cpu())+k))
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
     #NOTE: Untested. Only Nlp
