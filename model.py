@@ -224,8 +224,8 @@ class NLPClassifier(object):
             Y = torch.cat([Y,batch["labels"]]).float()
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
-            if score > self.score:
-                print(f"Scorea {iterations}: {score} is better than prev best. Pruning")
+            if score/len(batch)*self.bs > self.score/len(batch)*self.bs:
+                print(f"Scorea {iterations}: {score} is better than mean of previous best score. Pruning")
                 return score
         return score
 
