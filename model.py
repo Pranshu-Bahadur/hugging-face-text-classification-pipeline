@@ -182,7 +182,7 @@ class NLPClassifier(object):
         X = X.view(X.size(0),-1)
         print(X.size())
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=2, device=torch.device('cuda:0'))
-        best_cluster = selection_heuristic(cluster_ids_x).item()
+        best_cluster = selection_heuristic(cluster_ids_x)
         print(cluster_ids_x.size())
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
