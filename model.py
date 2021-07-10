@@ -176,14 +176,15 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
-    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X)):
+    def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.stack([data["input_ids"] for data in loader][:-1])
+        print(X.size())
         X = X.view(X.size(0),-1)
-        print(X.size(0))
+        print(X.size())
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=2, device=torch.device('cuda:0'))
-        print(cluster_centers, cluster_ids_x)
-        best_cluster_center, best_cluster = selection_heuristic(cluster_centers)
-        return best_cluster.item(), best_cluster_center, cluster_ids_x
+        best_cluster = selection_heuristic(cluster_ids_x).item()
+        print(cluster_ids_x.size())
+        return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
@@ -219,7 +220,7 @@ class NLPClassifier(object):
     #@TODO Run intialization when model is created first.
     def _k_means_approximation_one_step(self, loader):
         best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
-        if torch.sum(best_cluster_center.view(-1)) > self.best_cluster_center_score:
+        if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
             if self.score == 0:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
