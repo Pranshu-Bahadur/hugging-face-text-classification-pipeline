@@ -245,7 +245,7 @@ class NLPClassifier(object):
             if score > self.score:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
-                self.clusters_idx = cluster_idx
+                self.clusters_idx = clusters_idx
                 self.score = score
 
 
