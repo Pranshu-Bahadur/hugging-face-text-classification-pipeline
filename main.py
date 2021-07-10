@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("--train", help="Set this model to train mode", action="store_true")
     parser.add_argument("--library")
     parser.add_argument("--save_directory", "-s")
-    parser.add_argument("--save_interval")
+    parser.add_argument("--save_interval", help="# of epochs to save checkpoints at.")
     parser.add_argument("--multi", help="Set this model to parallel mode", action="store_true")
 
 

@@ -16,23 +16,8 @@ class Experiment(object):
         split, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        scores = [1]
-        K = 2
-        indices = []
-        k = 0
-        #scores, k, indices = self._features_selection(loaders[0], K, max(scores))
-        #print("Features selection with K {} complete:".format(K))
-        #self.classifier.criterion = torch.nn.CrossEntropyLoss(weight=weights).cuda()
+        
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            #print("Epoch {} Features selection with K {}:".format(self.classifier.curr_epoch+1, K), "--------------------")
-            #score_, k_, indices_ = self._features_selection(loaders[0], K, max(scores))
-            #if max(scores) < score_:
-                #K = K // 2 if K > 2 else 8
-                #print("Better score - updating features.")
-                #score, k, indices = score_, k_, indices_
-                #scores.append(score)
-            #print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
-            
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
@@ -55,68 +40,6 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            #split_names = ['train', 'validation', 'test']
-            #classes = list(dataSetFolder.labels.items())
-            #self.classifier.writer.add_text("Classes:",f'{classes}')
-            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
-            #total = sum(list(distributions[0].values()))
-            #weights = torch.tensor(list(distributions["train"].values())).float()
-            #weights -= weights.min().item()
-            #weights /= weights.max().item()
             weights = []
             return splits, weights
         return dataSetFolder
-    #@TODO...improve this...
-    def _features_selection(self, loader, K, score):
-        self.classifier.model.train()
-        data = next(iter(loader))
-        X = data["input_ids"][:,0,:,:].view(self.classifier.bs, -1).cpu().numpy() #if self.classifier.library != "timm" else np.concatenate(tuple([data["input_ids"].view(self.classifier.bs, -1).cpu().numpy() for data in loader][:-1]), axis=0)
-        #X = 
-        #X = torch.tensor(X).view(-1, 512).cpu().numpy()
-        i = -1
-        t_score = score
-        iterations = 0
-        indices = []
-        #Z = torch.tensor(X.T)
-        memoisation = {}
-        memoisation[score] = [indices,i]
-        score = 1e-1
-        while t_score > score:# and iterations = 0:
-            data = next(iter(loader))
-            X = data["input_ids"][:,0,:,:].view(self.classifier.bs, -1).cpu().numpy()# if self.classifier.library != "timm" else X
-            Z = torch.tensor(X.T)
-            if score > t_score:
-                print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                """
-                if score in list(memoisation.keys()):
-                    print(f"Convergence at {iterations}, done for {K} clusters, with score = {score}")
-                """
-                return score, i, indices
-                #memoisation[score] = [indices, i]
-            kmeans = KMeans(K, init="k-means++")
-            indices = torch.tensor(kmeans.fit_predict(Z))
-            clusters = {i: Z[indices==i].float().cuda() for i in range(K)}
-            big_c = torch.max(torch.stack(list(map(lambda c: torch.mean(c),list(clusters.values())))), -1)
-            clusters = list(filter(lambda k: torch.mean(clusters[k])==big_c, list(clusters.keys())))
-            l = list(map(lambda idx: (idx, self.classifier._score(data, indices, idx)),clusters))#clusters 
-            l = list(filter(lambda a_: float('nan') != a_[1], l))
-            if len(l) == 0:
-                print("Naan bread detected...Just use prev features.")
-                continue
-            s = max(list(map(lambda l_: l_[1],l)))
-            if s == 0 or s == float('nan') or s == float('-inf') or s == float('inf'):
-                print("max is 0...")
-                continue
-            score = s
-            if score == s:
-                print(f"{iterations}: K = {K} score = {score}")
-                #K+=2
-            try:
-                i = l[0][0]
-            except:
-                print("Random unidentified error...")
-                continue
-            final = (score, i, indices)
-        print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-        return final
