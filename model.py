@@ -1,3 +1,4 @@
+from math import log
 from torch.autograd.functional import jacobian
 from kmeans_pytorch import kmeans
 import copy
@@ -190,7 +191,7 @@ class NLPClassifier(object):
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
         print(V_J.size(), V_y.size())
         corr_m = torch.sum(V_J.T*V_y) / (torch.sqrt(torch.sum(V_J.T ** 2)) * torch.sqrt(torch.sum(V_y ** 2))).cpu()
-        corr_m.cpu().apply_(lambda x: torch.log(abs(x)+k))
+        corr_m.cpu().apply_(lambda x: log(abs(x)+k))
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
     #NOTE: Untested. Only Nlp
