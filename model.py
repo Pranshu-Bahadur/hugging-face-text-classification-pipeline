@@ -215,8 +215,8 @@ class NLPClassifier(object):
     
     def _epe_nas_score(self, loader):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
-        Y = torch.tensor([])
-        J = torch.tensor([])
+        Y = torch.tensor([]).cuda()
+        J = torch.tensor([]).cuda()
         iterations = 0
         for batch in batches:
             iterations+=1
@@ -225,7 +225,7 @@ class NLPClassifier(object):
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
             if score > self.score:
-                print(f"Score: {score} is better than prev best. Pruning")
+                print(f"Scorea {iterations}: {score} is better than prev best. Pruning")
                 return score
         return score
 
