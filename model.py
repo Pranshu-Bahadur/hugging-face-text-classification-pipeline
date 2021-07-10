@@ -218,6 +218,7 @@ class NLPClassifier(object):
         Y = torch.tensor([]).cuda()
         J = torch.tensor([]).cuda()
         iterations = 0
+        score = 0
         for batch in batches:
             iterations+=1
             J = torch.cat([J, self._jacobian(self.model, batch).view(self.bs, -1)])
