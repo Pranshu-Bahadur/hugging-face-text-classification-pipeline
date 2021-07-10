@@ -208,7 +208,7 @@ class NLPClassifier(object):
         preds.backward(torch.ones_like(preds).cuda())
         x["labels"] = y
         J = x["attention_mask"].grad.detach
-        #J = jacobian(lambda x2: f(x["input_ids"], attention_mask=x2).logits, x["attention_mask"], vectorize=True).grad.detach()
+        x["attention_mask"].requires_grad = False
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 1
         print(J.size())
         return J
