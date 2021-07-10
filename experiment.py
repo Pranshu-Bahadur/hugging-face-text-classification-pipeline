@@ -45,7 +45,7 @@ class Experiment(object):
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print("Testing:...")
-        print(self.classifier._validate(loaders[2], indices, k))
+        print(self.classifier._validate(loaders[2]))
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
