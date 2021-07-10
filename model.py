@@ -217,11 +217,16 @@ class NLPClassifier(object):
     def _k_means_approximation_one_step(self, loader):
         best_cluster, best_cluster_center, cluster_idx = self._features_selection(2, loader)
         if torch.sum(best_cluster_center.view(-1)) > self.best_cluster_center_score:
+            if score == 0:
+                self.cluster_idx = best_cluster
+                self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
+                self.clusters_idx = cluster_idx
             score = self._epe_nas_score(loader)
             if score > self.score:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
                 self.clusters_idx = cluster_idx
+                self.score = score
 
 
     
