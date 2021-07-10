@@ -209,12 +209,14 @@ class NLPClassifier(object):
         #x["labels"] = y
         J = jacobian(lambda x2: f(x["input_ids"], attention_mask=x2).logits, x["attention_mask"], vectorize=True).grad.detach()
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 1
+        print(J.size())
         return J
     
     def _epe_nas_score(self, loader):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
         #NOTE: Possible error
         Y = torch.stack(list(map(lambda batch: batch["labels"], batches[:-1])))
+        print(Y.size(0))
         J = torch.stack(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
         return self._epe_nas_score_E(J, Y)
 
