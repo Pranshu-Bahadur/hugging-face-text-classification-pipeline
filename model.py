@@ -50,7 +50,7 @@ class NLPClassifier(object):
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes),  AutoTokenizer.from_pretrained("nateraw/bert-base-uncased-emotion")
 
     def _create_optimizer(self, name, model_params, lr):
-        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),#, nesterov=True),#
+        optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9)#, nesterov=True),#, nesterov=True),#
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
                       "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999),weight_decay=1e-5),
                       #"SGDAGC": SGD_AGC(model_params.parameters(), lr=lr, clipping=0.16, weight_decay=1e-05, nesterov=True, momentum=0.9),
