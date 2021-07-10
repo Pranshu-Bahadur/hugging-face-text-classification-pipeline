@@ -187,7 +187,8 @@ class NLPClassifier(object):
     def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
-        corr_m = torch.sum(V_J*V_y.T) / (torch.sqrt(torch.sum(V_J ** 2)) * torch.sqrt(torch.sum(V_y.T ** 2)))
+        print(V_J.size(), V_y.size())
+        corr_m = torch.sum(V_J*V_y) / (torch.sqrt(torch.sum(V_J ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
         corr_m.apply_(lambda x: torch.log(abs(x)+k))
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
