@@ -128,7 +128,7 @@ class NLPClassifier(object):
                 
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
-            running_loss += loss.item()
+            running_loss += loss.cpu().item()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -168,7 +168,7 @@ class NLPClassifier(object):
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"]).logits
                     loss = self.criterion(outputs.view(self.bs, -1), data["labels"])
-                running_loss += loss.item()
+                running_loss += loss.cpu().item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
                 f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
