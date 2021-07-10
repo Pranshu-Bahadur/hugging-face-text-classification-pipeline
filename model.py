@@ -202,16 +202,17 @@ class NLPClassifier(object):
     def _jacobian(self, f, x):
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
         x["attention_mask"].requires_grad = True
-        x.pop("labels")
-        preds = f(**x).logits
-        preds.backward(torch.ones_like(preds))
-        return x["attention_mask"].grad.detach()
+        #y = x.pop("labels")
+        #preds = f(**x).logits
+        #preds.backward(torch.ones_like(preds))
+        #x["labels"] = y
+        return jacobian(lambda x2: f(x["input_ids"], attention_mask=x2), x["attention_mask"], vectorize=True).grad.detach()
     
     def _epe_nas_score(self, loader):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
         #NOTE: Possible error
-        J = torch.stack(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
         Y = torch.stack(list(map(lambda batch: batch["labels"], batches[:-1])))
+        J = torch.stack(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
         return self._epe_nas_score_E(J, Y)
 
     #@TODO Run intialization when model is created first.
