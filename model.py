@@ -178,10 +178,8 @@ class NLPClassifier(object):
     
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1])
-        print(X.size())
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster = selection_heuristic(cluster_ids_x)
-        print(cluster_ids_x.size())
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
@@ -202,8 +200,8 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x):
-
-        x["attention_mask"][self.clusters_idx!=self.cluster_idx] = 0
+        x["attention_mask"].requires_grad = True
+        x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
         preds = f(**x).logits
         preds.backward(torch.ones_like(preds))
         return x["attention_mask"].grad.detach()
