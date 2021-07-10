@@ -176,14 +176,14 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
-    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X, dim=-1)):
+    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X)):
         X = torch.stack([data["input_ids"] for data in loader][:-1])
         X = X.view(X.size(0),-1)
         print(X.size(0))
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
-        best_cluster_center,best_cluster = selection_heuristic(cluster_centers)
-        print(best_cluster)
-        return best_cluster, best_cluster_center, cluster_ids_x
+        best_cluster_center, best_cluster = selection_heuristic(cluster_centers)
+        print(best_cluster.item())
+        return best_cluster.item(), best_cluster_center, cluster_ids_x
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
