@@ -200,6 +200,7 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x):
+        f.zero_grad()
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
         x["attention_mask"].requires_grad = True
         #y = x.pop("labels")
