@@ -177,8 +177,8 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
     def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X, dim=1)):
-        X, y = torch.stack([data["input_ids"] for dat in loader][:-1]), torch.stack([data["labels"] for dat in loader][:-1])
-        cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, distance='soft_dtw', device=torch.device('cuda'))
+        X, y = torch.stack([data["input_ids"] for data in loader][:-1]), torch.stack([data["labels"] for data in loader][:-1])
+        cluster_ids_x, cluster_centers = kmeans(X=X.T,y=y, num_clusters=2, distance='soft_dtw', device=torch.device('cuda'))
         best_cluster, best_cluster_center = selection_heuristic(cluster_centers)
         return best_cluster, best_cluster_center, cluster_ids_x
     
