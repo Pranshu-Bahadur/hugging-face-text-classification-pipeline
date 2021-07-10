@@ -121,18 +121,18 @@ class NLPClassifier(object):
 
                 data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
-                outputs = self.model.forward(input_ids=data["input_ids"]).logits
+                outputs = self.model(input_ids=data["input_ids"]).logits
                 #self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
                 #print(self.criterion.weight)
-                loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
+                loss = self.criterion(outputs.view(self.bs, self.nc), data["labels"])
+                
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
-            
+            running_loss += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
-            running_loss += loss.item()
             y_ = torch.argmax(outputs, dim=1)
             correct += (y_.cpu()==data["labels"].cpu()).sum().item()
             f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
@@ -167,7 +167,7 @@ class NLPClassifier(object):
                     data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"]).logits
-                    loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
+                    loss = self.criterion(outputs.view(self.bs, -1), data["labels"])
                 running_loss += loss.item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
