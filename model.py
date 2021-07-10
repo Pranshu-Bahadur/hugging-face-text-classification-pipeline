@@ -176,7 +176,7 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
-    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X, dim=1)):
+    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X, dim=-1)):
         X = torch.stack([data["input_ids"] for data in loader][:-1])
         X = X.view(X.size(0),-1)
         print(X.size(0))
@@ -189,7 +189,7 @@ class NLPClassifier(object):
     def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
-        corr_m = torch.sum(V_X*V_y.T) / (torch.sqrt(torch.sum(V_X ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
+        corr_m = torch.sum(V_J*V_y.T) / (torch.sqrt(torch.sum(V_J ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
         corr_m.apply_(lambda x: torch.log(abs(x)+k))
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
@@ -202,7 +202,8 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x):
-        x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+
+        x["attention_mask"][self.clusters_idx!=self.cluster_idx] = 0
         preds = f(**x).logits
         preds.backward(torch.ones_like(preds))
         return x["attention_mask"].grad.detach()
@@ -214,13 +215,14 @@ class NLPClassifier(object):
         Y = torch.stack(list(map(lambda batch: batch["labels"], batches[:-1])))
         return self._epe_nas_score_E(J, Y)
 
+    #@TODO Run intialization when model is created first.
     def _k_means_approximation_one_step(self, loader):
-        best_cluster, best_cluster_center, cluster_idx = self._features_selection(2, loader)
+        best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
         if torch.sum(best_cluster_center.view(-1)) > self.best_cluster_center_score:
             if self.score == 0:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
-                self.clusters_idx = cluster_idx
+                self.clusters_idx = clusters_idx
             score = self._epe_nas_score(loader)
             if score > self.score:
                 self.cluster_idx = best_cluster
