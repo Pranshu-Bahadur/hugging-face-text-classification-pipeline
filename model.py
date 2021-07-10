@@ -65,7 +65,7 @@ class NLPClassifier(object):
         return scheduler_dict[name]
 
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda()#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
+        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
                      "MSE": nn.MSELoss().cuda(),
                      "BCE": nn.BCELoss().cuda()
