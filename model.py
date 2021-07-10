@@ -215,10 +215,16 @@ class NLPClassifier(object):
     
     def _epe_nas_score(self, loader):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
-        #NOTE: Possible error
-        Y = torch.cat(list(map(lambda batch: batch["labels"], batches[:-1])))
-        J = torch.cat(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
-        return self._epe_nas_score_E(J, Y)
+        Y = torch.tensor([])
+        J = torch.tensor([])
+        iterations = 0
+        for batch in batches:
+            iterations+=1
+            J = torch.cat([J, self._jacobian(self.model, batch).view(self.bs, -1)])
+            Y = torch.cat([Y,batch["labels"]]).float()
+            score += _epe_nas_score_E(J, Y)
+            print(f"{iterations}: accumluated score = {score}")
+        return score
 
     #@TODO Run intialization when model is created first.
     def _k_means_approximation_one_step(self, loader):
