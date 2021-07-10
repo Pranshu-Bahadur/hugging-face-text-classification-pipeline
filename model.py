@@ -202,6 +202,7 @@ class NLPClassifier(object):
     def _jacobian(self, f, x):
         x["attention_mask"].requires_grad = True
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+        x.pop("labels")
         preds = f(**x).logits
         preds.backward(torch.ones_like(preds))
         return x["attention_mask"].grad.detach()
