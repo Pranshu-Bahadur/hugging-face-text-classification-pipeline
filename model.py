@@ -186,7 +186,7 @@ class NLPClassifier(object):
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
-    def _epe_nas_score(self, J_n, y_n):
+    def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
         corr_m = torch.sum(V_X*V_y.T) / (torch.sqrt(torch.sum(V_X ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
@@ -207,17 +207,17 @@ class NLPClassifier(object):
         preds.backward(torch.ones_like(preds))
         return x["attention_mask"].grad.detach()
     
-    def _score(self, loader):
+    def _epe_nas_score(self, loader):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
         #NOTE: Possible error
         J = torch.stack(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
         Y = torch.stack(list(map(lambda batch: batch["labels"], batches[:-1])))
-        return self._epe_nas_score(J, Y)
+        return self._epe_nas_score_E(J, Y)
 
     def _k_means_approximation_one_step(self, loader):
         best_cluster, best_cluster_center, cluster_idx = self._features_selection(2, loader)
         if torch.sum(best_cluster_center.view(-1)) > self.best_cluster_center_score:
-            score = self._score(loader)
+            score = self._epe_nas_score(loader)
             if score > self.score:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
