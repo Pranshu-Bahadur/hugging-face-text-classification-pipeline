@@ -210,7 +210,7 @@ class NLPClassifier(object):
         J = x["attention_mask"].grad.detach
         x["attention_mask"].requires_grad = False
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 1
-        print(J.size())
+        print(J)
         return J
     
     def _epe_nas_score(self, loader):
