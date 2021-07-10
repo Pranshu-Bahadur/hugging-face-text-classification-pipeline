@@ -124,7 +124,7 @@ class NLPClassifier(object):
                 outputs = self.model(**data)
                 #self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
                 #print(self.criterion.weight)
-                loss = outputs.loss
+                loss = torch.mean(outputs.loss)
                 print(loss)
                 outputs = outputs.logits
                 #loss = self.criterion(outputs.view(self.bs, -1), data["labels"]).cuda()
