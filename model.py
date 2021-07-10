@@ -125,7 +125,7 @@ class NLPClassifier(object):
                 #self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
                 #print(self.criterion.weight)
                 loss = torch.mean(outputs.loss)
-                print(loss)
+                #print(loss)
                 outputs = outputs.logits
                 #loss = self.criterion(outputs.view(self.bs, -1), data["labels"]).cuda()
                 
@@ -169,7 +169,7 @@ class NLPClassifier(object):
 
                     data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
-                    outputs = self.model.forward(input_ids=data["input_ids"]).logits
+                    outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["input_ids"]).logits
                     loss = self.criterion(outputs.view(self.bs, -1), data["labels"])
                 running_loss += loss.cpu().item()
                 y_ = torch.argmax(outputs, dim=1)
