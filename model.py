@@ -140,7 +140,7 @@ class NLPClassifier(object):
             total += data["labels"].size(0)
             iterations += 1
             torch.cuda.empty_cache()
-            print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total))
+            print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total)
 
 
