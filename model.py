@@ -177,7 +177,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
-        X = torch.stack([data["input_ids"] for data in loader][:-1], dim=-1)
+        X = torch.cat([data["input_ids"] for data in loader][:-1])
         print(X.size())
         X = X.view(X.size(0),-1)
         print(X.size())
