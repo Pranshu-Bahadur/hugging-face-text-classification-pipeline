@@ -123,7 +123,7 @@ class NLPClassifier(object):
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"]).logits
                 #self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
-                print(self.criterion.weight)
+                #print(self.criterion.weight)
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
@@ -203,6 +203,7 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x):
+        f = copy.deepcopy(f)
         f.zero_grad()
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
         x["attention_mask"].requires_grad = True
