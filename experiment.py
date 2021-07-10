@@ -33,7 +33,7 @@ class Experiment(object):
                 #scores.append(score)
             #print("Epoch {} Training Model based of newly selected features:".format(self.classifier.curr_epoch+1), "--------------------")
             
-            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
+            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)

@@ -1,3 +1,5 @@
+from torch.autograd.functional import jacobian
+from kmeans_pytorch import kmeans
 import copy
 import torch
 from torch import nn as nn
@@ -29,6 +31,8 @@ class NLPClassifier(object):
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.final_epoch = config["epochs"]
+        self.best_cluster_center_score = 0
+        self.score = 0
         print("Generated model: {}".format(self.name))
 
         
@@ -75,15 +79,17 @@ class NLPClassifier(object):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
 
-    def _run_epoch(self, loaders, indices, k):
-        f1_train, acc_train, loss_train = self._train(loaders[0], indices, k)
-        f1_val, acc_val, loss_val = self._validate(loaders[1], indices, k)
+    def _run_epoch(self, loaders):
+        f1_train, acc_train, loss_train = self._train(loaders[0])
+        f1_val, acc_val, loss_val = self._validate(loaders[1])
         self.curr_epoch += 1
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
 
-    def _train(self, loader, indices, k):
+    def _train(self, loader):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
+        self._k_means_approximation_one_step(loader)
+        indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
             
             """
@@ -112,10 +118,10 @@ class NLPClassifier(object):
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
-                #data["attention_mask"][:,indices!=k] = 0
+                data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"]).logits
-                self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
+                #self.criterion.weight=torch.tensor([(data["labels"][data["labels"]==y].size(0)/self.bs) for y in range(self.nc)]).cuda()
                 print(self.criterion.weight)
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
 
@@ -136,9 +142,10 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
 
 
-    def _validate(self, loader, indices, i):
+    def _validate(self, loader):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
+        indices, k = self.clusters_idx, self.cluster_idx
         with torch.no_grad():                
             for data in loader:
                 if self.library == "timm":
@@ -156,7 +163,7 @@ class NLPClassifier(object):
                     shuffle_seed = torch.randperm(data["input_ids"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
 
-                    #data["attention_mask"][:,indices!=k] = 0
+                    data["attention_mask"][:,indices!=k] = 0
                     #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                     outputs = self.model.forward(input_ids=data["input_ids"]).logits
                     loss = self.criterion(outputs.view(data["input_ids"].size(0), -1), data["labels"])
@@ -168,6 +175,70 @@ class NLPClassifier(object):
                 iterations += 1
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
+    
+    def _features_selection(self, K, loader, selection_heuristic=lambda X: torch.max(X, dim=1)):
+        X, y = torch.stack([data["input_ids"] for dat in loader][:-1]), torch.stack([data["labels"] for dat in loader][:-1])
+        cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, distance='soft_dtw', device=torch.device('cuda'))
+        best_cluster, best_cluster_center = selection_heuristic(cluster_centers)
+        return best_cluster, best_cluster_center, cluster_ids_x
+    
+    #From EPE-Nas (Note: Only for cases where num_classes < 100)
+    #Given a Jacobian and target tensor calc epe-nase score.
+    def _epe_nas_score(self, J_n, y_n):
+        k = 1e-5
+        V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
+        corr_m = torch.sum(V_X*V_y.T) / (torch.sqrt(torch.sum(V_X ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
+        corr_m.apply_(lambda x: torch.log(abs(x)+k))
+        return torch.sum(torch.abs(corr_m).view(-1)).item()
+    
+    #NOTE: Untested. Only Nlp
+    #Given inputs X (dict of tensors of entire batch) return jacobian matrix on given function. 
+    #Returns jacobian matrix for entire batch.
+    def H_jacobian(self, f, X):
+        f_sum = lambda x: torch.sum(f(X), axis=0)
+        return jacobian(f_sum, X, vectorize=True).view(self.bs, -1)
+    
+    ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
+    def _jacobian(self, f, x):
+        x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+        preds = f(**x).logits
+        preds.backward(torch.ones_like(preds))
+        return x["attention_mask"].grad.detach()
+    
+    def _score(self, loader):
+        batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
+        #NOTE: Possible error
+        J = torch.stack(list(map(lambda batch: self._jacobian(self.model, batch).view(self.bs, -1),batches[:-1])))
+        Y = torch.stack(list(map(lambda batch: batch["labels"], batches[:-1])))
+        return self._epe_nas_score(J, Y)
+
+    def _k_means_approximation_one_step(self, loader):
+        best_cluster, best_cluster_center, cluster_idx = self._features_selection(2, loader)
+        if torch.sum(best_cluster_center.view(-1)) > self.best_cluster_center_score:
+            score = self._score(loader)
+            if score > self.score:
+                self.cluster_idx = best_cluster
+                self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
+                self.clusters_idx = cluster_idx
+
+
+    
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+        
+
+    
     #@TODO fix under-over sampling
     def _get_jacobian(self, data, indices, i):
         #self.model.eval()
