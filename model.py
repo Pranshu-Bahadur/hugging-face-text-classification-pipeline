@@ -239,12 +239,12 @@ class NLPClassifier(object):
         if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
             if self.score == 0:
                 self.cluster_idx = best_cluster
-                self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
+                self.best_cluster_center = torch.mean(best_cluster_center.view(-1)) ##@?
                 self.clusters_idx = clusters_idx
             score = self._epe_nas_score(loader)
             if score > self.score:
                 self.cluster_idx = best_cluster
-                self.best_cluster_center = torch.sum(best_cluster_center.view(-1)) ##@?
+                self.best_cluster_center = torch.mean(best_cluster_center.view(-1)) ##@?
                 self.clusters_idx = clusters_idx
                 self.score = score
 
