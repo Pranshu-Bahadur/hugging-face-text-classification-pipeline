@@ -60,7 +60,7 @@ class NLPClassifier(object):
         return scheduler_dict[name]
 
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),
+        loss_dict = {"CCE": nn.CrossEntropyLoss(weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
                      "MSE": nn.MSELoss().cuda(),
                      "BCE": nn.BCELoss().cuda()
@@ -115,7 +115,7 @@ class NLPClassifier(object):
                 #data["attention_mask"][:,indices!=k] = 0
                 #data["attention_mask"] = data["attention_mask"].view(-1, 512)
                 outputs = self.model.forward(input_ids=data["input_ids"]).logits
-                self.criterion.weight=torch.tensor([data["labels"][data["labels"]==y].size(0)/self.bs for y in range(self.nc)]).cuda()
+                self.criterion.weight=torch.tensor([self.criterion.weight[y].item() + data["labels"][data["labels"]==y].size(0)/self.bs for y in range(self.nc)]).cuda()
                 loss = self.criterion(outputs.view(data["input_ids"].size(0), self.nc), data["labels"])
 
             #outputs = nn.functional.dropout2d(outputs, 0.2)
