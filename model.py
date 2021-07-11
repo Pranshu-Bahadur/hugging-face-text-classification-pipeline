@@ -163,7 +163,7 @@ class NLPClassifier(object):
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster, _ = selection_heuristic(cluster_ids_x)
-        print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
+        #print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
