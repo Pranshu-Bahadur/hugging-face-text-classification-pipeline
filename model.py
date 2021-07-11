@@ -168,19 +168,19 @@ class NLPClassifier(object):
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
-    def _jacobian(self, f, x, clusters_idx, cluster_id):
+    def _jacobian(self, f, x, clusters_idx, cluster_idx):
         f = copy.deepcopy(f)
         f.zero_grad()
         if self.library == "timm":
             x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
-            x[:,:,self.clusters_idx!=self.cluster_idx] = 0
+            x[:,:,clusters_idx!=cluster_idx] = 0
             x.requires_grad = True
             preds = f(x)
             preds.backward(torch.ones_like(preds).cuda())
             J = x.grad
             print(J.size())
             return J
-        x["attention_mask"][:,self.clusters_idx] = 0
+        x["attention_mask"][:,clusters_idx!=cluster_idx] = 0
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
         preds = f(**x).logits
