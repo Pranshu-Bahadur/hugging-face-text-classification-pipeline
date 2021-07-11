@@ -186,7 +186,7 @@ class NLPClassifier(object):
         print(J.size())
         return J
     
-    def _epe_nas_score(self, loader, clusters_idx):
+    def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
         Y = torch.tensor([]).cuda()
         J = torch.tensor([]).cuda()
@@ -194,7 +194,7 @@ class NLPClassifier(object):
         score = 0
         for batch in batches:
             iterations+=1
-            J = torch.cat([J, self._jacobian(self.model, batch, clusters_idx).view(self.bs, -1)])
+            J = torch.cat([J, self._jacobian(self.model, batch, clusters_idx, cluster_idx).view(self.bs, -1)])
             Y = torch.cat([Y,batch["labels"]]).float()
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
@@ -208,7 +208,7 @@ class NLPClassifier(object):
         best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
         print(best_cluster, torch.mean(best_cluster_center.view(-1)), clusters_idx)
         if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
-            score = self._epe_nas_score(loader,clusters_idx)
+            score = self._epe_nas_score(loader,clusters_idx, cluster_idx)
             if score > self.score:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.mean(best_cluster_center.view(-1)) ##@?
