@@ -36,7 +36,6 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
-        print("Running K-means for outlier detection...")
         
 
 

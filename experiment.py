@@ -37,12 +37,13 @@ class Experiment(object):
     def _preprocessing(self, directory, train):
         dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library)
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
+        print("Running K-means for outlier detection...")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
-        best_cluster, _ = torch.mode(cluster_ids_x)
-        print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
-        dataSetFolder = dataSetFolder[cluster_ids_x==best_cluster]
+        worst, indices = torch.min(cluster_ids_x)
+        print("Result of k-means:",best_cluster, cluster_centers[worst], cluster_ids_x)
+        dataSetFolder = dataSetFolder[(cluster_ids_x != worst).nonzero(as_tuple=True)]
 
 
         #@TODO add features selection here
