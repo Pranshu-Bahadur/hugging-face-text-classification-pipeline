@@ -26,7 +26,7 @@ class Experiment(object):
             self.classifier.writer.add_scalar("Validation Loss",loss_val, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
-            loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
+            #loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print("Testing:...")
@@ -41,5 +41,6 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
             splits = torch.utils.data.random_split(dataSetFolder[:sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])], [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             weights = []
+            print("Data set has been randomly split and preprocessed")
             return splits, weights
         return dataSetFolder
