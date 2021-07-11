@@ -91,14 +91,15 @@ class NLPClassifier(object):
         indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
             if self.library == "timm":
-                shuffle_seed = torch.randperm(data["attention_mask"].size(0))
+                shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                data["input_ids"][:,self.clusters_idx] = 0
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                data["attention_mask"][:,indices!=k] = 0
+                data["attention_mask"][:,self.clusters_idx] = 0
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["input_ids"]).logits
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             self.optimizer.zero_grad()
@@ -119,19 +120,19 @@ class NLPClassifier(object):
     def _validate(self, loader):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        indices, k = self.clusters_idx, self.cluster_idx
+        #indices, k = self.clusters_idx, self.cluster_idx
         with torch.no_grad():                
             for data in loader:
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    data["input_ids"].view(data["input_ids"].size(0), -1)[:,self.clusters_idx!=self.cluster_idx] = 0
+                    data["input_ids"].view(data["input_ids"].size(0), -1)[:,self.clusters_idx] = 0
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
                     shuffle_seed = torch.randperm(data["input_ids"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    data["attention_mask"][:,indices!=k] = 0
+                    data["attention_mask"][:,self.clusters_idx] = 0
                     outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["input_ids"]).logits
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 running_loss += loss.cpu().item()
@@ -205,6 +206,7 @@ class NLPClassifier(object):
     #@TODO Run intialization when model is created first.
     def _k_means_approximation_one_step(self, loader):
         best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
+        print(best_cluster, torch.mean(best_cluster_center.view(-1)), clusters_idx)
         if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
             score = self._epe_nas_score(loader,clusters_idx)
             if score > self.score:
