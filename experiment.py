@@ -39,7 +39,7 @@ class Experiment(object):
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
-            splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
+            splits = torch.utils.data.random_split(dataSetFolder[:sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])], [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             weights = []
             return splits, weights
         return dataSetFolder
