@@ -71,7 +71,7 @@ class NLPClassifier(object):
     def _create_scheduler(self, name, optimizer):
         scheduler_dict = {
             "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, step_size=2.4, gamma=0.97),
-            "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 50, 2)
+            "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 600, 1)
         }
         return scheduler_dict[name]
 
