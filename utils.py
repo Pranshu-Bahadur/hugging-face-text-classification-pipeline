@@ -23,7 +23,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset[self.dataset['posts'].map(len) >= 128//2]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(filter_links_phrases))]
         print(f"filter success {len(self.dataset)}")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=128, truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=32, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
