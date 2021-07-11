@@ -43,6 +43,7 @@ class Experiment(object):
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
         print(torch.topk(cluster_centers, 8, dim=0))
         topk, indices = torch.topk(torch.mean(cluster_centers, dim=1), 8)
+        print(indices)
         print("Result of k-means:",topk, cluster_centers[indices], cluster_ids_x)
         dataSetFolder = dataSetFolder[(cluster_ids_x[cluster_ids_x==indices.view(-1)]).nonzero(as_tuple=True)]
 
