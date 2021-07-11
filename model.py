@@ -39,6 +39,7 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModel.from_pretrained(model_name)
+            print(model)
             """
             class ModelWrapper(nn.Module):
                 def __init__(self,num_classes):
