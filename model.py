@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.metrics import f1_score
 import numpy as np
-#import timm
+import timm
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
@@ -45,6 +45,8 @@ class NLPClassifier(object):
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
+        else:
+            timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9), #, nesterov=True),#, nesterov=True),#
