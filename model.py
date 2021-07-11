@@ -63,7 +63,7 @@ class NLPClassifier(object):
         return scheduler_dict[name]
 
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
+        loss_dict = {"CCE": nn.CrossEntropyLoss(weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
                      "MSE": nn.MSELoss().cuda(),
                      "BCE": nn.BCELoss().cuda()
@@ -90,8 +90,10 @@ class NLPClassifier(object):
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
         self._k_means_approximation_one_step(loader)
+        self.criterion.weight=torch.tensor([0 for _ in range(self.nc)])
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
+            total += data["labels"].size(0)
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
@@ -107,7 +109,7 @@ class NLPClassifier(object):
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
-                self.criterion.weight = torch.tensor([data["labels"][data["labels"]==i].size(0)/self.bs for i in range(16)])
+                self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)])
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             self.optimizer.zero_grad()
             loss.backward()
@@ -117,7 +119,6 @@ class NLPClassifier(object):
             y_ = torch.argmax(outputs, dim=1)
             correct += (y_.cpu()==data["labels"].cpu()).sum().item()
             f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
-            total += data["labels"].size(0)
             iterations += 1
             torch.cuda.empty_cache()
             print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
