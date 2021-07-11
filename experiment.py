@@ -42,9 +42,9 @@ class Experiment(object):
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
         print(torch.topk(cluster_centers, 8, dim=0))
-        worst, indexes = torch.topk(cluster_centers, 8, dim=0)
-        print("Result of k-means:",best_cluster, cluster_centers[worst], cluster_ids_x)
-        dataSetFolder = dataSetFolder[(cluster_ids_x != worst).nonzero(as_tuple=True)]
+        topk, indices = torch.topk(torch.mean(cluster_centers, dim=1), 8, dim=0)
+        print("Result of k-means:",topk, cluster_centers[indices], cluster_ids_x)
+        dataSetFolder = dataSetFolder[(cluster_ids_x==indices).nonzero(as_tuple=True)]
 
 
         #@TODO add features selection here
