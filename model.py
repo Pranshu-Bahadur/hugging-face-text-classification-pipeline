@@ -149,7 +149,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
-        X = torch.cat([data["input_ids"] for data in loader][:-1])
+        X = torch.cat([data["input_ids"] if self.library != "timm" else data["input_ids"][:,0,:]  for data in loader][:-1])
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster, _ = selection_heuristic(cluster_ids_x)
