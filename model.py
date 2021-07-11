@@ -42,6 +42,7 @@ class NLPClassifier(object):
             model.num_labels = num_classes
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
+                    super().__init__()
                     self.classifier = nn.Linear(in_features=model.pooler.dense.in_features, out_features=num_classes, bias=True)
                 def forward(self,x):
                     x = self.model(x)
