@@ -126,7 +126,7 @@ class NLPClassifier(object):
                 outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-            print(outputs.size())
+            #print(outputs.size())
             self.optimizer.zero_grad()
             loss.backward()
             running_loss += loss.cpu().item()
