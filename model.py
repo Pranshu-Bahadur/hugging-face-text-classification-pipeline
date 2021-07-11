@@ -39,11 +39,14 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModel.from_pretrained(model_name)
-            print(model)
-            """
+            model.num_labels = num_classes
             class ModelWrapper(nn.Module):
-                def __init__(self,num_classes):
-                    self.classifier =
+                def __init__(self, model, num_classes):
+                    self.classifier = nn.Linear(in_features=model.classifier.pooler.dense.in_features, out_features=num_classes, bias=True)
+                def forward(self,x):
+                    x = self.model(x)
+                    return self.classifier(x)
+            """
             if "roberta" in model_name:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             elif not "long" in model_name: #TODO convert fine-tuned weights
@@ -51,7 +54,6 @@ class NLPClassifier(object):
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
-            model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
