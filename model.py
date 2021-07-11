@@ -48,7 +48,7 @@ class NLPClassifier(object):
                     x = self.model(x)
                     return self.classifier(x)
             #model = ModelWrapper(model, num_classes)
-            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
+            model.classifier = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
             if "roberta" in model_name:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
