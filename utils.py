@@ -16,8 +16,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
+        types = list(self.dataset.type.unique())
         filter_links_phrases = ["https://", ".com", "http://"]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: len(p) > 256//2 and not any(list(map(lambda phrase: phrase in p,filter_links_phrases))), row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p:not any(list(filter(lambda type_: type_ in p,[pers for pers in types if pers != row['type']]))) and len(p) > 256//2 and not any(list(map(lambda phrase: phrase in p,filter_links_phrases))), row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         #print(self.dataset.posts.map(lambda x: len(x)).max())
         #cols_n = self.dataset.columns.tolist()
