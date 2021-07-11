@@ -47,7 +47,7 @@ class Experiment(object):
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
         topk, indices = torch.topk(torch.mean(cluster_centers, dim=-1), 12)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 2 clusters\n\n")
+        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 12 clusters\n\n")
 
         #@TODO add features selection here
         if train:
