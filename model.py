@@ -95,7 +95,7 @@ class NLPClassifier(object):
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                 x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
                 x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                data["input_ids"] = x.view(x.size(0),3, 64, 64)
+                data["input_ids"] = x.view(x.size(0),3, 128, 128)
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
@@ -130,7 +130,7 @@ class NLPClassifier(object):
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                     x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
                     x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                    data["input_ids"] = x.view(x.size(0),3, 64, 64)
+                    data["input_ids"] = x.view(x.size(0),3, 128, 128)
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
@@ -174,6 +174,7 @@ class NLPClassifier(object):
         if self.library == "timm":
             x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
             x[:,:,clusters_idx!=cluster_idx] = 0
+            x = x.view(x.size(0), x.size(1), 128,128)
             x.requires_grad = True
             preds = f(x)
             preds.backward(torch.ones_like(preds).cuda())
