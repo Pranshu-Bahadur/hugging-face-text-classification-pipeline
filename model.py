@@ -172,7 +172,7 @@ class NLPClassifier(object):
     def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
-        print(V_J.size(), V_y.size())
+        #print(V_J.size(), V_y.size())
         corr_m = torch.sum(V_J.T*V_y) / (torch.sqrt(torch.sum(V_J.T ** 2)) * torch.sqrt(torch.sum(V_y ** 2)))
         corr_m = torch.log(torch.abs(corr_m)+k)
         return torch.sum(torch.abs(corr_m).view(-1)).item()
@@ -189,7 +189,7 @@ class NLPClassifier(object):
             preds = f(x)
             preds.backward(torch.ones_like(preds).cuda())
             J = x.grad
-            print(J.size())
+            #print(J.size())
             return J
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 0
         x["attention_mask"].requires_grad = True
@@ -200,7 +200,7 @@ class NLPClassifier(object):
         J = x["attention_mask"].grad
         x["attention_mask"].requires_grad = False
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 1
-        print(J.size())
+        #print(J.size())
         return J
     
     def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
