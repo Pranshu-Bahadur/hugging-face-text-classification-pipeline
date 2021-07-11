@@ -53,7 +53,7 @@ class NLPClassifier(object):
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, betas=(0.9, 0.999),weight_decay=1e-5),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, weight_decay=1e-5),
         }
         return optim_dict[name]
     
