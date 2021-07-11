@@ -5,12 +5,8 @@ from pandas import Series
 import re
 
 def chunkstring(string, length):
-    string = string.split("|||")
     l = re.findall('.{%d}' % length, string)
     return l[:len(l)//2]
-    """
-    ENTJ Hello my name is. chicka chicka slim shady
-    """
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
@@ -20,10 +16,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
-        #print(self.dataset.head())
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
-        #print(self.dataset.head())
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
+        [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
+        print(self.dataset.head())
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=512, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
