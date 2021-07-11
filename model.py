@@ -66,7 +66,7 @@ class NLPClassifier(object):
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr, weight_decay=1e-5),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5),
         }
         return optim_dict[name]
     
@@ -126,6 +126,7 @@ class NLPClassifier(object):
                 outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
+            print(outputs.size())
             self.optimizer.zero_grad()
             loss.backward()
             running_loss += loss.cpu().item()
@@ -165,7 +166,7 @@ class NLPClassifier(object):
                     outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 running_loss += loss.cpu().item()
-                y_ = torch.argmax(outputs, dim=-1)
+                y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
                 f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
                 total += data["labels"].size(0)
