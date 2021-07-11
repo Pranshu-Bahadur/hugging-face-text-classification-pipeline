@@ -41,7 +41,8 @@ class Experiment(object):
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
-        worst, indices = torch.min(cluster_ids_x)
+        print(torch.topk(cluster_centers, 8, dim=0))
+        worst, indexes = torch.topk(cluster_centers, 8, dim=0)
         print("Result of k-means:",best_cluster, cluster_centers[worst], cluster_ids_x)
         dataSetFolder = dataSetFolder[(cluster_ids_x != worst).nonzero(as_tuple=True)]
 
