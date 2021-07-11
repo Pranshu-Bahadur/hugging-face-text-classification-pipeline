@@ -18,7 +18,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n.reverse()
         #types = list(self.dataset.type.unique())
         filter_links_phrases = ["https://", ".com", "http://"]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: len(p) > 512//2 and not any(list(map(lambda phrase: phrase in p,filter_links_phrases))), row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: len(p) < 512//2 and not any(list(map(lambda phrase: phrase in p,filter_links_phrases))), row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=512, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
