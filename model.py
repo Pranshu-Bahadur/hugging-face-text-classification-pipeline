@@ -164,7 +164,7 @@ class NLPClassifier(object):
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
-    #TODO Add classwise correlation...
+    #TODO Add vectorized classwise correlation...currently like NAS-WOT
     def _epe_nas_score_E(self, J_n, y_n):
         k = 1e-5
         V_J, V_y = (J_n - torch.mean(J_n)), (y_n - torch.mean(y_n))
