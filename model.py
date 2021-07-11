@@ -93,7 +93,9 @@ class NLPClassifier(object):
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                data["input_ids"][:,self.clusters_idx!=self.cluster_idx] = 0
+                x = data["input_ids"].view(data["input_ids"].size(0), -1)
+                x[:,self.clusters_idx!=self.cluster_idx] = 0
+                data["input_ids"] = x.view(x.size(0),3, 64, 64)
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
@@ -126,7 +128,9 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    data["input_ids"].view(data["input_ids"].size(0), -1)[:,self.clusters_idx] = 0
+                    x = data["input_ids"].view(data["input_ids"].size(0), -1)
+                    x[:,self.clusters_idx!=self.cluster_idx] = 0
+                    data["input_ids"] = x.view(x.size(0),3, 64, 64)
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
