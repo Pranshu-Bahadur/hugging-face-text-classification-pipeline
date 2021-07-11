@@ -17,9 +17,9 @@ class Experiment(object):
         dataset, splits, indices = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         random.shuffle(indices)
-        loaders = [Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[:splits[0]]),
-        Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[splits[1]:]),
-        Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[splits[1]+splits[2]:]),
+        loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
+        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),
+        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:]),
         ]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
@@ -47,7 +47,7 @@ class Experiment(object):
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
         topk, indices = torch.topk(torch.mean(cluster_centers, dim=-1), 2)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"Result of k-means: {indices} samples remain, taken from top 2 clusters")
+        print(f"Result of k-means: {len(indices)} samples remain, taken from top 2 clusters")
 
         #@TODO add features selection here
         if train:
