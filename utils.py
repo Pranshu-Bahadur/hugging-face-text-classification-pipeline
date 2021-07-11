@@ -10,7 +10,7 @@ def chunkstring(x, length):
     return l
 
 class SpreadSheetNLPCustomDataset(Dataset):
-    def __init__(self, csv_path, tokenizer, library, long):
+    def __init__(self, csv_path, tokenizer, library):
         self.dataset = pd.read_csv(csv_path)
         self.long = long
         self.library = library
@@ -37,6 +37,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
+        print("Running K-means for outlier detection...")
+        
+
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}

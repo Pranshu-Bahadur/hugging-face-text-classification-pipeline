@@ -1,3 +1,4 @@
+from kmeans_pytorch import kmeans
 from sklearn.cluster import KMeans
 import numpy as np
 from model import NLPClassifier
@@ -34,7 +35,16 @@ class Experiment(object):
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library, self.classifier.long)
+        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library)
+        #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
+        X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
+        X = X.view(X.size(0), -1)
+        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=2, device=torch.device('cuda:0'))
+        best_cluster, _ = torch.mode(cluster_ids_x)
+        print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
+        dataSetFolder = dataSetFolder[cluster_ids_x==best_cluster]
+
+
         #@TODO add features selection here
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
