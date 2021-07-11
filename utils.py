@@ -26,7 +26,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("[a-z]|".join(types) + "[a-z]|".join(types).lower() + "[a-z]|".join(filter_links_phrases))]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("[0-9]|".join(types) + "[0-9]|".join(types).lower() + "[0-9]|".join(filter_links_phrases))]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types) + "|".join(types).lower() + "|".join(filter_links_phrases))]
-        self.dataset["posts"] = self.dataset["posts"].str.lower()
+        self.dataset.posts = self.dataset["posts"].str.lower()
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|[a-z]".join(types) + "|[a-z]".join(types).lower() + "|[a-z]".join(filter_links_phrases))]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|[0-9]".join(types) + "|[0-9]".join(types).lower() + "|[0-9]".join(filter_links_phrases))]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("[a-z]|".join(types) + "[a-z]|".join(types).lower() + "[a-z]|".join(filter_links_phrases))]
