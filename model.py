@@ -59,7 +59,7 @@ class NLPClassifier(object):
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
-            return model, AutoTokenizer.from_pretrained("julien-c/dummy-diff-tokenizer")
+            return model, AutoTokenizer.from_pretrained('squeezebert/squeezebert-uncased')
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
 
