@@ -41,7 +41,7 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             print(len(dataSetFolder), diff)
-            splits = torch.utils.data.random_split(dataSetFolder[:len(dataSetFolder)-1-diff], [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
+            splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             weights = []
             print("Data set has been randomly split and preprocessed")
             return splits, weights
