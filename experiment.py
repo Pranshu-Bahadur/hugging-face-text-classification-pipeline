@@ -45,7 +45,7 @@ class Experiment(object):
         topk, indices = torch.topk(torch.mean(cluster_centers, dim=-1), 8)
         print(indices)
         print("Result of k-means:",topk, cluster_centers[indices], cluster_ids_x)
-        dataSetFolder = dataSetFolder[(torch.cat([cluster_ids_x==i for i in indices])).nonzero(as_tuple=True)]
+        dataSetFolder = dataSetFolder[torch.cat([cluster_ids_x==i for i in indices])]
 
 
         #@TODO add features selection here
