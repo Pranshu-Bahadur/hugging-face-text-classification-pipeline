@@ -172,8 +172,7 @@ class NLPClassifier(object):
         f = copy.deepcopy(f)
         f.zero_grad()
         if self.library == "timm":
-            x = x["input_ids"].view(x["input_ids"].size(0), -1)
-            x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+            x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
             x[:,:,self.clusters_idx!=self.cluster_idx] = 0
             x.requires_grad = True
             preds = f(x)
