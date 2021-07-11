@@ -10,7 +10,6 @@ def chunkstring(string, length):
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
-        
         self.dataset = pd.read_csv(csv_path)
         self.long = long
         self.library = library

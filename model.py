@@ -39,7 +39,7 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            if not "long" in model_name:
+            if not "long" in model_name: #TODO convert fine-tuned weights
                 model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
@@ -83,11 +83,12 @@ class NLPClassifier(object):
         f1_val, acc_val, loss_val = self._validate(loaders[1])
         self.curr_epoch += 1
         return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
-
+    
+    #TODO Abstract _train & _validate functions
     def _train(self, loader):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #self._k_means_approximation_one_step(loader)
+        #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
             if self.library == "timm":
@@ -152,6 +153,7 @@ class NLPClassifier(object):
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
+    #TODO Make sure this is using kmeans++
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] if self.library != "timm" else data["input_ids"][:,0,:]  for data in loader][:-1])
         X = X.view(X.size(0), -1)
