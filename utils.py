@@ -12,7 +12,6 @@ def chunkstring(x, length):
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library):
         self.dataset = pd.read_csv(csv_path)
-        self.long = long
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
