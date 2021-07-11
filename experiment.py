@@ -14,10 +14,14 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        split, weights = self._preprocessing(dataset, True)
+        dataset, splits, indices = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        
+        random.shuffle(indices)
+        loaders = [Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[:splits[0]]),
+        Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[splits[1]:]),
+        Loader(dataset, self.classifier.bs, shuffle=True, num_workers=4, sampler=indices[splits[1]+splits[2]:]),
+        ]
+        print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
@@ -35,28 +39,22 @@ class Experiment(object):
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library)
+        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library, [])
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
         print("Running K-means for outlier detection...")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
-        print(torch.topk(cluster_centers, 2, dim=0))
-        topk, indices = torch.topk(torch.mean(cluster_centers, dim=-1), 8)
-        print(cluster_ids_x.size())
-        print("Result of k-means:",topk, cluster_centers[indices], cluster_ids_x)
-        print(torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).size(0))
-        dataSetFolder = dataSetFolder[torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()]
-
+        topk, indices = torch.topk(torch.mean(cluster_centers, dim=-1), 2)
+        indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+        print(f"Result of k-means: {indices} samples remain, taken from top 2 clusters")
 
         #@TODO add features selection here
         if train:
-            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
-            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
+            trainingValidationDatasetSize = int(0.6 * len(indices))
+            testDatasetSize = int(len(indices) - trainingValidationDatasetSize) // 2
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            print(len(dataSetFolder), diff)
-            splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
+            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             weights = []
-            print("Data set has been randomly split and preprocessed")
-            return splits, weights
+            return dataSetFolder ,splits, indices
         return dataSetFolder
