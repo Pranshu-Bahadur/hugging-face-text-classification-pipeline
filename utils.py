@@ -22,7 +22,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(filter_links_phrases))]
         self.dataset = self.dataset[self.dataset['posts'].str.split().str.len() > 32]
-        self.dataset = self.dataset[~self.dataset['posts'].isin(types)]
+        self.dataset = self.dataset[~self.dataset['posts'].str.lower().isin(types)]
         print(f"filter success {len(self.dataset)}")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=32, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
