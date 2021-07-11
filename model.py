@@ -145,6 +145,7 @@ class NLPClassifier(object):
     
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1])
+        X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster = selection_heuristic(cluster_ids_x)
         print(best_cluster)
