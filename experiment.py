@@ -39,7 +39,7 @@ class Experiment(object):
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
-        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=2, device=torch.device('cuda:0'))
+        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=16, device=torch.device('cuda:0'))
         best_cluster, _ = torch.mode(cluster_ids_x)
         print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
         dataSetFolder = dataSetFolder[cluster_ids_x==best_cluster]
