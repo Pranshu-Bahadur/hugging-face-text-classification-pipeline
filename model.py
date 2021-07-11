@@ -93,8 +93,8 @@ class NLPClassifier(object):
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                x = data["input_ids"].view(data["input_ids"].size(0), -1)
-                x[:,self.clusters_idx!=self.cluster_idx] = 0
+                x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                x[:,:,self.clusters_idx!=self.cluster_idx] = 0
                 data["input_ids"] = x.view(x.size(0),3, 64, 64)
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
@@ -128,8 +128,8 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    x = data["input_ids"].view(data["input_ids"].size(0), -1)
-                    x[:,self.clusters_idx!=self.cluster_idx] = 0
+                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                    x[:,:,self.clusters_idx!=self.cluster_idx] = 0
                     data["input_ids"] = x.view(x.size(0),3, 64, 64)
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
@@ -173,8 +173,8 @@ class NLPClassifier(object):
         f.zero_grad()
         if self.library == "timm":
             x = x["input_ids"].view(x["input_ids"].size(0), -1)
-            x[:,clusters_idx!=cluster_id] = 0
-            x = x.view(x.size(0),3, 64, 64)
+            x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+            x[:,:,self.clusters_idx!=self.cluster_idx] = 0
             x.requires_grad = True
             preds = f(x)
             preds.backward(torch.ones_like(preds).cuda())
