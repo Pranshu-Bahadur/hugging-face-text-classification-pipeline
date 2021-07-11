@@ -21,7 +21,12 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         self.dataset = self.dataset[self.dataset['posts'].str.split().str.len() > 32]
+        self.dataset = self.dataset[self.dataset['posts'].str.lower()]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|[a-z]".join(types) + "|[a-z]".join(types).lower() + "|[a-z]".join(filter_links_phrases))]
+        self.dataset = self.dataset[~self.dataset['posts'].str.contains("|[0-9]".join(types) + "|[0-9]".join(types).lower() + "|[0-9]".join(filter_links_phrases))]
+        self.dataset = self.dataset[~self.dataset['posts'].str.contains("[a-z]|".join(types) + "[a-z]|".join(types).lower() + "[a-z]|".join(filter_links_phrases))]
+        self.dataset = self.dataset[~self.dataset['posts'].str.contains("[0-9]|".join(types) + "[0-9]|".join(types).lower() + "[0-9]|".join(filter_links_phrases))]
+        self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types) + "|".join(types).lower() + "|".join(filter_links_phrases))]
         print(f"filter success {len(self.dataset)}")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=32, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
