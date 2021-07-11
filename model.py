@@ -147,8 +147,8 @@ class NLPClassifier(object):
         X = torch.cat([data["input_ids"] for data in loader][:-1])
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
-        best_cluster = selection_heuristic(cluster_ids_x)
-        print(best_cluster.item())
+        best_cluster, cluster_ids_x = selection_heuristic(cluster_ids_x)
+        #print(best_cluster)
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
@@ -163,17 +163,17 @@ class NLPClassifier(object):
         return torch.sum(torch.abs(corr_m).view(-1)).item()
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
-    def _jacobian(self, f, x):
+    def _jacobian(self, f, x, clusters_idx):
         f = copy.deepcopy(f)
         f.zero_grad()
         if self.library == "timm":
-            x["input_ids"].view(x["input_ids"].size(0), -1)[:,self.clusters_idx!=self.cluster_idx] = 0
+            x["input_ids"].view(x["input_ids"].size(0), -1)[:,self.clusters_idx] = 0
             preds = f(x["input_ids"])
             preds.backward(torch.ones_like(preds).cuda())
             print(J.size())
             J = x.grad
             return J
-        x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+        x["attention_mask"][:,self.clusters_idx] = 0
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
         preds = f(**x).logits
@@ -185,7 +185,7 @@ class NLPClassifier(object):
         print(J.size())
         return J
     
-    def _epe_nas_score(self, loader):
+    def _epe_nas_score(self, loader, clusters_idx):
         batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
         Y = torch.tensor([]).cuda()
         J = torch.tensor([]).cuda()
@@ -193,7 +193,7 @@ class NLPClassifier(object):
         score = 0
         for batch in batches:
             iterations+=1
-            J = torch.cat([J, self._jacobian(self.model, batch).view(self.bs, -1)])
+            J = torch.cat([J, self._jacobian(self.model, batch, clusters_idx).view(self.bs, -1)])
             Y = torch.cat([Y,batch["labels"]]).float()
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
@@ -206,11 +206,7 @@ class NLPClassifier(object):
     def _k_means_approximation_one_step(self, loader):
         best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
         if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
-            if self.score == 0:
-                self.cluster_idx = best_cluster
-                self.best_cluster_center = torch.mean(best_cluster_center.view(-1)) ##@?
-                self.clusters_idx = clusters_idx
-            score = self._epe_nas_score(loader)
+            score = self._epe_nas_score(loader,clusters_idx)
             if score > self.score:
                 self.cluster_idx = best_cluster
                 self.best_cluster_center = torch.mean(best_cluster_center.view(-1)) ##@?
