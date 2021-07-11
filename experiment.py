@@ -46,7 +46,7 @@ class Experiment(object):
         print(indices)
         print("Result of k-means:",topk, cluster_centers[indices], cluster_ids_x)
         print((cluster_ids_x==indices).nonzero(as_tuple=True).tolist())
-        dataSetFolder = dataSetFolder[(cluster_ids_x==indices).nonzero(as_tuple=True).tolist()]
+        dataSetFolder = dataSetFolder[(cluster_ids_x==i for i in indices).nonzero(as_tuple=True).tolist()]
 
 
         #@TODO add features selection here
