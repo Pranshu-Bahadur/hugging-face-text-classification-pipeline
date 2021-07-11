@@ -4,9 +4,10 @@ import pandas as pd
 from pandas import Series
 import re
 
-def chunkstring(string, length):
-    l = re.findall('.{%d}' % length, string)
-    return l[:len(l)//2]
+def chunkstring(x, length):
+    chunks = len(x)
+    l = [x[i:i+length] for i in range(0, chunks, length) ]
+    return l
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
