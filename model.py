@@ -31,8 +31,8 @@ class NLPClassifier(object):
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.final_epoch = config["epochs"]
-        self.best_cluster_center_score = 0
-        self.score = 0
+        self.best_cluster_center_score = float("-inf")
+        self.score = float("-inf")
         print("Generated model: {}".format(self.name))
 
         
