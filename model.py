@@ -46,7 +46,7 @@ class NLPClassifier(object):
             model.num_labels = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
-            timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
+            return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9), #, nesterov=True),#, nesterov=True),#
