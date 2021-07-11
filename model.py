@@ -93,16 +93,18 @@ class NLPClassifier(object):
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                data["input_ids"] = x.view(x.size(0),3, 128, 128)
+                if self.score != float("-inf"):
+                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                    x[:,:,self.clusters_idx!=self.cluster_idx] = 0
+                    data["input_ids"] = x.view(x.size(0),3, 128, 128)
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-                outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["input_ids"]).logits
+                if self.score != float("-inf"):
+                    data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+                outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             self.optimizer.zero_grad()
             loss.backward()
@@ -128,16 +130,18 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                    x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                    data["input_ids"] = x.view(x.size(0),3, 128, 128)
+                    if self.score != float("-inf"):
+                        x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
+                        x[:,:,self.clusters_idx!=self.cluster_idx] = 0
+                        data["input_ids"] = x.view(x.size(0),3, 128, 128)
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
                     shuffle_seed = torch.randperm(data["input_ids"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    data["attention_mask"][:,self.clusters_idx] = 0
-                    outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["input_ids"]).logits
+                    if self.score != float("-inf"):
+                        data["attention_mask"][:,self.clusters_idx] = 0
+                    outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 running_loss += loss.cpu().item()
                 y_ = torch.argmax(outputs, dim=1)
@@ -189,7 +193,7 @@ class NLPClassifier(object):
         x["labels"] = y
         J = x["attention_mask"].grad
         x["attention_mask"].requires_grad = False
-        x["attention_mask"][:,clusters_idx!=cluster_id] = 1
+        x["attention_mask"][:,clusters_idx!=cluster_idx] = 1
         print(J.size())
         return J
     
