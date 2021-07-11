@@ -168,7 +168,7 @@ class NLPClassifier(object):
         f = copy.deepcopy(f)
         f.zero_grad()
         if self.library == "timm":
-            x["input_ids"].view(x["input_ids"].size(0), -1)[:,clusters_idx!=cluster_id] = 0
+            x["input_ids"][:,clusters_idx!=cluster_id] = 0
             preds = f(x["input_ids"])
             preds.backward(torch.ones_like(preds).cuda())
             print(J.size())
