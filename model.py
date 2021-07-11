@@ -170,7 +170,9 @@ class NLPClassifier(object):
         if self.library == "timm":
             x = x["input_ids"].view(x["input_ids"].size(0), -1)
             x[:,clusters_idx!=cluster_id] = 0
-            preds = f(x.view(x.size(0),3, 64, 64))
+            x = x.view(x.size(0),3, 64, 64)
+            x.requires_grad = True
+            preds = f(x)
             preds.backward(torch.ones_like(preds).cuda())
             J = x.grad
             print(J.size())
