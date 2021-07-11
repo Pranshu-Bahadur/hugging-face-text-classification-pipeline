@@ -5,8 +5,12 @@ from pandas import Series
 import re
 
 def chunkstring(string, length):
+    string = string.split("|||")
     l = re.findall('.{%d}' % length, string)
-    return l[:len(l)//4]
+    return l[:len(l)//2]
+    """
+    ENTJ Hello my name is. chicka chicka slim shady
+    """
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, long):
