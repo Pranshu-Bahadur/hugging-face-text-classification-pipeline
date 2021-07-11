@@ -18,12 +18,12 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n.reverse()
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: not "https://" or ".com" or "http://" in p, row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        print(self.dataset.posts.map(lambda x: len(x)).max())
+        #print(self.dataset.posts.map(lambda x: len(x)).max())
         #cols_n = self.dataset.columns.tolist()
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
-        [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
+        #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         print(self.dataset.head())
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=512, truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=256, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
