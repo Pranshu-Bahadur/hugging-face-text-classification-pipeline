@@ -63,7 +63,7 @@ class NLPClassifier(object):
         return scheduler_dict[name]
 
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss(weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
+        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
                      "MSE": nn.MSELoss().cuda(),
                      "BCE": nn.BCELoss().cuda()
@@ -109,7 +109,7 @@ class NLPClassifier(object):
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 outputs = self.model.forward(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits
-                self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
+                #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             self.optimizer.zero_grad()
             loss.backward()
@@ -212,7 +212,7 @@ class NLPClassifier(object):
         for batch in batches:
             iterations+=1
             J_ = self._jacobian(self.model, batch, clusters_idx, cluster_idx)
-            J = torch.cat([J, J_.view(J_size(0), -1)])
+            J = torch.cat([J, J_.view(J_.size(0), -1)])
             Y = torch.cat([Y,batch["labels"]]).float()
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
