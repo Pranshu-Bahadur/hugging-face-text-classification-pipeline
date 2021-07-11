@@ -20,7 +20,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         filter_links_phrases = ["https://", ".com", "http://"]
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        self.dataset = self.dataset[self.dataset['posts'].map(len) >= 256//4 and self.dataset.posts.map(lambda phrase:~self.dataset['posts'].str.contains(phrase), filter_links_phrases)]
+        self.dataset = self.dataset[self.dataset['posts'].map(len) >= 256//4 and self.dataset.posts.map(lambda phrase:~self.dataset['posts'].str.contains(phrase), filter_links_phrases).all()]
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', max_length=256, truncation=True)
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
