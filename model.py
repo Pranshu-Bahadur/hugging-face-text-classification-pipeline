@@ -40,6 +40,7 @@ class NLPClassifier(object):
         if library == "hugging-face":
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.num_labels = num_classes
+            """
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
                     super().__init__()
@@ -47,6 +48,7 @@ class NLPClassifier(object):
                 def forward(self,x):
                     x = self.model(x)
                     return self.classifier(x)
+            """
             #model = ModelWrapper(model, num_classes)
             model.classifier = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
@@ -163,7 +165,7 @@ class NLPClassifier(object):
                     outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 running_loss += loss.cpu().item()
-                y_ = torch.argmax(outputs, dim=1)
+                y_ = torch.argmax(outputs, dim=-1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
                 f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
                 total += data["labels"].size(0)
