@@ -172,8 +172,8 @@ class NLPClassifier(object):
             x[:,clusters_idx!=cluster_id] = 0
             preds = f(x.view(x.size(0),3, 64, 64))
             preds.backward(torch.ones_like(preds).cuda())
-            print(J.size())
             J = x.grad
+            print(J.size())
             return J
         x["attention_mask"][:,self.clusters_idx] = 0
         x["attention_mask"].requires_grad = True
