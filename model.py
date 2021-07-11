@@ -89,7 +89,7 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
-        #self._k_means_approximation_one_step(loader)
+        self._k_means_approximation_one_step(loader)
         self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
@@ -180,7 +180,7 @@ class NLPClassifier(object):
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x, clusters_idx, cluster_idx):
         #f = copy.deepcopy(f)
-        f.zero_grad()
+        #f.zero_grad()
         if self.library == "timm":
             x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
             x[:,:,clusters_idx!=cluster_idx] = 0
