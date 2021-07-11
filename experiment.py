@@ -19,7 +19,7 @@ class Experiment(object):
         
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
-            print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
+            print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("Training Loss",loss_train, self.classifier.curr_epoch)
