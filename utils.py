@@ -16,7 +16,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: not "https://" or not ".com" in p or not "http://" in p, row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
+        filter_links_phrases = ["https://", ".com", "http://"]
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], list(filter(lambda p: filter_links_phrases not in p, row['posts'].split("|||")))) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         #print(self.dataset.posts.map(lambda x: len(x)).max())
         #cols_n = self.dataset.columns.tolist()
