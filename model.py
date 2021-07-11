@@ -87,7 +87,7 @@ class NLPClassifier(object):
     def _train(self, loader):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        self._k_means_approximation_one_step(loader)
+        #self._k_means_approximation_one_step(loader)
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
             if self.library == "timm":
