@@ -123,6 +123,7 @@ class NLPClassifier(object):
                 if self.library == "timm":
                     shuffle_seed = torch.randperm(data["attention_mask"].size(0))
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                    data["input_ids"].view(data["input_ids"].size(0), -1)[:,self.clusters_idx!=self.cluster_idx] = 0
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
@@ -141,7 +142,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
-        X = torch.cat([data["input_ids"] for data in loader][:-1])
+        X = torch.cat([data["input_ids"].view(data["input_ids"].size(0), -1) for data in loader][:-1])
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster = selection_heuristic(cluster_ids_x)
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
@@ -161,6 +162,12 @@ class NLPClassifier(object):
     def _jacobian(self, f, x):
         f = copy.deepcopy(f)
         f.zero_grad()
+        if self.library == "timm":
+            x["input_ids"].view(x["input_ids"].size(0), -1)[:,self.clusters_idx!=self.cluster_idx] = 0
+            preds = f(x["input_ids"])
+            preds.backward(torch.ones_like(preds).cuda())
+            J = x.grad
+            return J
         x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
