@@ -18,7 +18,6 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         cols_n = self.dataset.columns.tolist()
-        cols_n.reverse()
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         print(self.dataset.head())
