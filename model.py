@@ -38,7 +38,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModel.from_pretrained(model_name)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name)
             model.num_labels = num_classes
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
@@ -47,12 +47,13 @@ class NLPClassifier(object):
                 def forward(self,x):
                     x = self.model(x)
                     return self.classifier(x)
-            model = ModelWrapper(model, num_classes)
+            #model = ModelWrapper(model, num_classes)
+            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             """
             if "roberta" in model_name:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             elif not "long" in model_name: #TODO convert fine-tuned weights
-                model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
+                
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
