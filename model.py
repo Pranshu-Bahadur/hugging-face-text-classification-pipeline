@@ -89,6 +89,7 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
+        self._k_means_approximation_one_step(loader)
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
             if self.library == "timm":
@@ -126,6 +127,7 @@ class NLPClassifier(object):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #indices, k = self.clusters_idx, self.cluster_idx
+        #self._k_means_approximation_one_step(loader)
         with torch.no_grad():                
             for data in loader:
                 if self.library == "timm":
