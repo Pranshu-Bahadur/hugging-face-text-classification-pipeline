@@ -211,7 +211,8 @@ class NLPClassifier(object):
         score = 0
         for batch in batches:
             iterations+=1
-            J = torch.cat([J, self._jacobian(self.model, batch, clusters_idx, cluster_idx).view(self.bs, -1)])
+            J_ = self._jacobian(self.model, batch, clusters_idx, cluster_idx)
+            J = torch.cat([J, J_.view(J_size(0), -1)])
             Y = torch.cat([Y,batch["labels"]]).float()
             score += self._epe_nas_score_E(J, Y)
             print(f"{iterations}: accumluated score = {score}")
