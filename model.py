@@ -5,7 +5,7 @@ import copy
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, AutoTokenizerFast
 from sklearn.metrics import f1_score
 import numpy as np
 import timm
@@ -38,8 +38,11 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            model = AutoModel.from_pretrained(model_name)
             """
+            class ModelWrapper(nn.Module):
+                def __init__(self,num_classes):
+                    self.classifier =
             if "roberta" in model_name:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             elif not "long" in model_name: #TODO convert fine-tuned weights
@@ -48,7 +51,7 @@ class NLPClassifier(object):
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
             model.num_labels = num_classes
-            return model, AutoTokenizer.from_pretrained(model_name)
+            return model, AutoTokenizerFast.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained("bhadresh-savani/albert-base-v2-emotion")
 
