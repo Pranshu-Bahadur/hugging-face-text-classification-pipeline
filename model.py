@@ -13,7 +13,7 @@ from sklearn.metrics import f1_score
 import numpy as np
 import timm
 from fairscale.optim.grad_scaler import ShardedGradScaler
-from apex import amp
+#from apex import amp
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
@@ -163,8 +163,6 @@ class NLPClassifier(object):
                 #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             #print(outputs.size())
             self.scaler.scale(loss).backward()
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
             #loss.backward()
             running_loss += loss.cpu().item()
             self.optimizer.step()
