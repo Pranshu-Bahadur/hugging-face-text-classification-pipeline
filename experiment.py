@@ -47,8 +47,10 @@ class Experiment(object):
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
-        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        topk, indices = torch.topk(torch.mean(torch.cat([cluster_ids_x[cluster_ids_x==i] for i in range(8)])),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
+        Y = torch.tensor(torch.tensor(dataSetFolder.encodings["labels"])).cuda()
+        XY = torch.cat(X,Y)
+        cluster_ids_x, cluster_centers = kmeans(X=XY, num_clusters=8, device=torch.device('cuda:0'), distance='soft_dtw', tqdm_flag=False)
+        topk, indices = torch.topk(torch.mean(torch.cat([cluster_ids_x[cluster_ids_x==i] for i in range(8)]).float()),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 2 clusters\n\n")
 
