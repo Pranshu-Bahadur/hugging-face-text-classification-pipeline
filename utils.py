@@ -24,7 +24,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']<512]
+        self.dataset = self.dataset[self.dataset['total']<1024]
 
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
@@ -38,7 +38,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #print(mean(self.dataset['total'].map(len)))
         
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=256)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=1024)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
