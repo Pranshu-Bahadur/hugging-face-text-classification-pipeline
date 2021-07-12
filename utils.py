@@ -24,6 +24,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         print("Exploding posts and types...\n\n")
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset.rename(columns={k:cols_n[i] for i,k in enumerate(list(self.dataset.cols.values()))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
         self.dataset = self.dataset[self.dataset['posts']>30]
