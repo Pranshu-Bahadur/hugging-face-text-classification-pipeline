@@ -33,7 +33,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(self.dataset.total.value_counts())
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
-        print(f'Dataset distribution \n\n{self.dataset.type.value_counts()}')
+        print(f'Dataset distribution \n\n{dict(self.dataset.type.value_counts())}')
         self.dataset.drop(columns=['total'])
         #print(mean(self.dataset['total'].map(len)))
         

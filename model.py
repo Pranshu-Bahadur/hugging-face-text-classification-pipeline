@@ -81,6 +81,7 @@ class NLPClassifier(object):
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
 
     def _create_optimizer(self, name, model_params, lr):
+        weights_dict = {1105, 824, 810, 620, 393,     376,  206,  178, 136,   128,     100,      88,      59,   32,      15,      14}
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
                       "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5),
