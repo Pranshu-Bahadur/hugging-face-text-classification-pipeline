@@ -25,7 +25,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print("Exploding posts and types...\n")
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         print(list(self.dataset.columns), cols_n)
-        self.dataset = self.dataset.rename(index={i: cols_n[i] for i in range(2)})
+        print({k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         print(list(self.dataset.columns))
 
         self.dataset['total'] = self.dataset['posts'].str.split()
