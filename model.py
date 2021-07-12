@@ -52,7 +52,8 @@ class NLPClassifier(object):
             config.num_labels = num_classes
             config.n_layers = 1
             config.n_heads = 2
-            config.hidden_dim = 128
+            config.hidden_dim = 
+            config.activation = 'silu'
             config.dim = 64
             print(config)
             model = AutoModelForSequenceClassification.from_config(config)
