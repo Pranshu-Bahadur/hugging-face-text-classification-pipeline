@@ -11,6 +11,7 @@ import random
 
 class Experiment(object):
     def __init__(self, config: dict):
+        #TODO config.label2ids = 
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
@@ -23,7 +24,7 @@ class Experiment(object):
         ]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
-        self.classifier._k_means_approximation_one_step(loaders[0])
+        #self.classifier._k_means_approximation_one_step(loaders[0])
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
@@ -47,9 +48,9 @@ class Experiment(object):
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 2)
+        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 2 clusters\n\n")
+        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from the top clusters\n\n")
 
         #@TODO add features selection here
         if train:
