@@ -26,6 +26,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         print(list(self.dataset.columns), cols_n)
         self.dataset = self.dataset.rename(index={i: cols_n[i] for i in range(2)})
+        print(list(self.dataset.columns))
+
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
         self.dataset = self.dataset[self.dataset['posts']>30]
