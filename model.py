@@ -123,11 +123,7 @@ class NLPClassifier(object):
         logs = self.trainer.log()
         self.curr_epoch += 1
         return logs
-    
-    def _train_hug(self, splits):
-        
-        
-        
+            
         
     
     #TODO Abstract _train & _validate functions
