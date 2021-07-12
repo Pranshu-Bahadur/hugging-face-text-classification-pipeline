@@ -55,7 +55,14 @@ class NLPClassifier(object):
             config.hidden_dim = 64
             config.activation = 'relu'
             config.dim = 128
-            print(config)
+            config.hidden_size = 64
+            config.embedding_size = 32
+            config.num_hidden_layers = 1
+            config.num_attention_heads = 1
+            config.num_memory_blocks = 1
+            label_dict_instance = {'INFP': 28098, 'INFJ': 24620, 'INTP': 18822, 'INTJ': 17096, 'ENFP': 11580, 'ENTP': 10964, 'ISTP': 4698, 'ENTJ': 3786, 'ISFP': 3538, 'ENFJ': 3418, 'ISTJ': 3290, 'ISFJ': 2875, 'ESTP': 1252, 'ESFJ': 1039, 'ESTJ': 731, 'ESFP': 682}
+            config.id2label={k:i for i,k in enumerate(label_dict_instance)}
+            config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model = AutoModelForSequenceClassification.from_config(config)
             print(model)
             """
@@ -169,7 +176,7 @@ class NLPClassifier(object):
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 #data["labels"] = data["labels"].float()
-                _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False, ignore_keys=['labels'])
+                _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False)
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 #print(loss.size())
                 loss.requires_grad = True
@@ -214,7 +221,7 @@ class NLPClassifier(object):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     #
-                    _, outputs, _ = self.trainer.prediction_step(self.model, data,  prediction_loss_only=False, ignore_keys=['labels'])
+                    _, outputs, _ = self.trainer.prediction_step(self.model, data,  prediction_loss_only=False)
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
 
                 running_loss += loss.cpu().item()
