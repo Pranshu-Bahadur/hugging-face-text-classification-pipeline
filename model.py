@@ -61,6 +61,7 @@ class NLPClassifier(object):
             """
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
+            print(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
