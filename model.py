@@ -59,7 +59,7 @@ class NLPClassifier(object):
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
-            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
+            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
