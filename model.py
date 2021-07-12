@@ -1,3 +1,6 @@
+from transformers import TrainingArguments
+from transformers import Trainer
+from datasets import load_metric
 from math import log
 from torch.autograd.functional import jacobian
 from kmeans_pytorch import kmeans
@@ -33,6 +36,8 @@ class NLPClassifier(object):
         self.final_epoch = config["epochs"]
         self.best_cluster_center_score = float("-inf")
         self.score = float("-inf")
+        self.training_args = TrainingArguments(num_train_epochs=1, per_device_train_batch_size=self.bs, per_device_eval_batch_size=self.bs, warmup_steps=500,
+                                            weight_decay=0.01, logging_steps=1)
         print("Generated model: {}".format(self.name))
 
         
@@ -101,10 +106,27 @@ class NLPClassifier(object):
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
 
     def _run_epoch(self, loaders):
-        f1_train, acc_train, loss_train = self._train(loaders[0])
-        f1_val, acc_val, loss_val = self._validate(loaders[1])
+        #f1_train, acc_train, loss_train = self._train(loaders[0])
+        #f1_val, acc_val, loss_val = self._validate(loaders[1])
+        self.trainer.train()
+        self.trainer.evaluate()
+        logs = self.trainer.log()
         self.curr_epoch += 1
-        return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
+        return logs
+    
+    def _train_hug(self, splits):
+        metric = load_metric("accuracy")
+        def compute_metrics(eval_pred):
+            logits, labels = eval_pred
+            predictions = np.argmax(logits, axis=-1)
+            return metric.compute(predictions=predictions, references=labels)
+        self.trainer = Trainer(model=self.model, args=self.training_args,
+                         train_dataset=splits[0],
+                         eval_dataset=splits[1],
+                         compute_metrics=compute_metrics)
+        
+        
+        
     
     #TODO Abstract _train & _validate functions
     def _train(self, loader):
@@ -114,6 +136,7 @@ class NLPClassifier(object):
         #self._k_means_approximation_one_step(loader)
         #self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
         #indices, k = self.clusters_idx, self.cluster_idx
+        
         for data in loader:
             total += data["labels"].size(0)
             if self.library == "timm":

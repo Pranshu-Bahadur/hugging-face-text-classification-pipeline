@@ -18,14 +18,19 @@ class Experiment(object):
         dataset, splits, indices = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         random.shuffle(indices)
+        """
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
         Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),
         Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:]),
         ]
+        """
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
+            logs = self.classifier._run_epoch(splits[:-1])
+            print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
+            """
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
@@ -35,6 +40,7 @@ class Experiment(object):
             self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
             #loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
+            """
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print("Testing:...")
