@@ -18,14 +18,14 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         filter_links_phrases = ["https://", ".com", "http://", "youtube", "www"]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
-        [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        self.dataset.posts = self.dataset["posts"].str.lower()
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
+        #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
+        #self.dataset.posts = self.dataset["posts"].str.lower()
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(filter_links_phrases))]
-        self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
+        #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=32)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
