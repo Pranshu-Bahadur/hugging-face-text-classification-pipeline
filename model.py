@@ -52,6 +52,7 @@ class NLPClassifier(object):
             config.num_labels = num_classes
             config.n_layers = 2
             config.n_heads = 4
+            config.dim = 128
             print(config)
             model = AutoModelForSequenceClassification.from_config(config)
             """
