@@ -40,7 +40,7 @@ class NLPClassifier(object):
         if library == "hugging-face":
             #config = AutoConfig.from_pretrained(model_name)
             #config.max_position_embeddings = 32
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=16, max_position_embeddings=32)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=16)
             model.num_labels = num_classes
             """
             class ModelWrapper(nn.Module):
