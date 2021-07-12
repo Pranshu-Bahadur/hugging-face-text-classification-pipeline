@@ -51,7 +51,7 @@ class NLPClassifier(object):
             config.max_position_embeddings = 32
             config.num_labels = num_classes
             config.n_layers = 1
-            config.n_heads = 2
+            config.n_heads = 1
             config.dim = 128
             print(config)
             model = AutoModelForSequenceClassification.from_config(config)
