@@ -57,6 +57,7 @@ class NLPClassifier(object):
             config.dim = 128
             config.hidden_size = 64
             config.embedding_size = 32
+            config.intermediate_size = 256
             config.num_hidden_layers = 1
             config.num_attention_heads = 1
             config.num_memory_blocks = 1
