@@ -53,11 +53,10 @@ class NLPClassifier(object):
             config.n_layers = 1
             config.n_heads = 2
             config.hidden_dim = 64
-            config.activation = 'relu'
             config.dim = 128
             config.hidden_size = 64
             config.embedding_size = 32
-            config.intermediate_size = 256
+            config.intermediate_size = 128
             config.num_hidden_layers = 1
             config.num_attention_heads = 1
             config.num_memory_blocks = 1
@@ -65,7 +64,7 @@ class NLPClassifier(object):
             config.id2label={k:i for i,k in enumerate(label_dict_instance)}
             config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model = AutoModelForSequenceClassification.from_config(config)
-            print(model)
+            print(model.config)
             """
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
