@@ -152,7 +152,6 @@ class NLPClassifier(object):
     
     #TODO Abstract _train & _validate functions
     def _train(self, loader):
-        self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
         #self._k_means_approximation_one_step(loader)
@@ -160,7 +159,7 @@ class NLPClassifier(object):
         #indices, k = self.clusters_idx, self.cluster_idx
         
         for data in loader:
-            self.optimizer.zero_grad()
+            #self.optimizer.zero_grad()
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
@@ -177,6 +176,8 @@ class NLPClassifier(object):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 #data["labels"] = data["labels"].float()
                 _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False)
+                self.model.train()
+
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 #print(loss.size())
                 loss.requires_grad = True
@@ -184,14 +185,12 @@ class NLPClassifier(object):
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             #print(outputs.size())
-            self.scaler.scale(loss).backward()
-            #loss.backward()
+            #self.scaler.scale(loss).backward()
+            loss.backward()
             running_loss += loss.cpu().item()
             self.optimizer.step()
             self.scheduler.step()
             y_ = torch.argmax(outputs, dim=-1)
-            print(y_, data["labels"], torch.argmax(outputs, dim=0))
-            return
             total += data["labels"].size(0)
             correct += (y_.cpu()==data["labels"].cpu()).sum().item()
             f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
