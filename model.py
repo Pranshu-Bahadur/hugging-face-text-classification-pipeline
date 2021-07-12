@@ -68,6 +68,8 @@ class NLPClassifier(object):
             model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
             model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model.config.num_labels = num_classes
+            model.classifier = nn.Linear(in_features=768, out_features=16, bias=True)
+
 
             print(model.config)
             print(model)
