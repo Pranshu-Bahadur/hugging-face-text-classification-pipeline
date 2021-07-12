@@ -67,6 +67,7 @@ class Experiment(object):
             testDatasetSize = int(len(indices) - trainingValidationDatasetSize) // 2
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
-            weights = []
+            total = sum(list(dataSetFolder.distribution.values()))
+            weights = [float(v/total) for v in list(dataSetFolder.distribution.values())]
             return dataSetFolder ,splits, indices
         return dataSetFolder

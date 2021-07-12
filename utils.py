@@ -36,11 +36,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f'Dataset distribution \n\n{dict(self.dataset.type.value_counts())}')
         self.dataset.drop(columns=['total'])
         #print(mean(self.dataset['total'].map(len)))
-        
+        self.distribution = dict(self.dataset.type.value_counts())
         print(f"Tokenizing dataset...")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
         print(f"Tokenizing complete.\n\n")
-        self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
+        self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
         
