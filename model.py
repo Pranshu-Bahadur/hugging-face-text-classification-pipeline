@@ -151,7 +151,7 @@ class NLPClassifier(object):
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 #data["labels"] = data["labels"].float()
-                _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False)
+                _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False, ignore_keys=['labels'])
                 loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
                 #print(loss.size())
                 loss.requires_grad = True
