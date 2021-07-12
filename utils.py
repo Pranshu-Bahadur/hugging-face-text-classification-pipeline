@@ -38,7 +38,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #print(mean(self.dataset['total'].map(len)))
         
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=1024)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
