@@ -15,8 +15,9 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        dataset, splits, indices = self._preprocessing(dataset, True)
+        dataset, splits, indices, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
+        self.classifier.criterion.weight = torch.tensor(weights)
         random.shuffle(indices)
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
@@ -69,5 +70,5 @@ class Experiment(object):
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             total = sum(list(dataSetFolder.distribution.values()))
             weights = [float(v/total) for v in list(dataSetFolder.distribution.values())]
-            return dataSetFolder ,splits, indices
+            return dataSetFolder ,splits, indices, weights
         return dataSetFolder
