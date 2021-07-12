@@ -23,7 +23,7 @@ class NLPClassifier(object):
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         
-        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
+        self.model = self.model.cuda() #nn.DataParallel(self.model).cuda() if config["multi"] else
         #print(self.model)
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
@@ -114,7 +114,7 @@ class NLPClassifier(object):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             return metric.compute(predictions=predictions, references=labels)
-        self.trainer = Trainer(model=self.model, args=self.training_args,compute_metrics=compute_metrics)
+        self.trainer = Trainer(model=self.model, args=self.training_args,compute_metrics=None)
         metrics = [self._train(loaders[0])]
         metrics += [self._validate(loaders[1])]
         self.curr_epoch += 1
