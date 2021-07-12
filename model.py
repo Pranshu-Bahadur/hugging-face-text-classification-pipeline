@@ -115,7 +115,7 @@ class NLPClassifier(object):
             predictions = np.argmax(logits, axis=-1)
             return metric.compute(predictions=predictions, references=labels)
         self.trainer = Trainer(model=self.model, args=self.training_args,compute_metrics=compute_metrics)
-        metrics = [self.trainer(loaders[0])]
+        metrics = [self._train(loaders[0])]
         metrics += [self._validate(loaders[1])]
         self.curr_epoch += 1
         return metrics
