@@ -147,7 +147,7 @@ class NLPClassifier(object):
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-                loss, outputs, _ = self.trainer.prediction_step(self.model, data)
+                loss, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False)
                 #outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
@@ -189,7 +189,7 @@ class NLPClassifier(object):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-                    loss, outputs, _ = self.trainer.prediction_step(self.model, data)
+                    loss, outputs, _ = self.trainer.prediction_step(self.model, data,  prediction_loss_only=False)
 
                 running_loss += loss.cpu().item()
                 y_ = torch.argmax(outputs, dim=1)
