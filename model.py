@@ -12,6 +12,8 @@ from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSeque
 from sklearn.metrics import f1_score
 import numpy as np
 import timm
+from fairscale.optim.grad_scaler import ShardedGradScaler
+from apex import amp
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
@@ -40,6 +42,7 @@ class NLPClassifier(object):
                                             weight_decay=0.01, logging_dir='./logs', logging_steps=1)
         self.trainer = None
         print("Generated model: {}".format(self.name))
+        self.scaler = ShardedGradScaler() if self.sharded_dpp else torch.cuda.amp.GradScaler()
 
         
     def _create_model(self, library, model_name, num_classes):
@@ -159,7 +162,10 @@ class NLPClassifier(object):
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
                 #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             #print(outputs.size())
-            loss.backward()
+            self.scaler.scale(loss).backward()
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+            #loss.backward()
             running_loss += loss.cpu().item()
             self.optimizer.step()
             self.scheduler.step()
