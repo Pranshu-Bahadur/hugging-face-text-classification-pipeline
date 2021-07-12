@@ -20,15 +20,15 @@ class SpreadSheetNLPCustomDataset(Dataset):
         filter_links_phrases = ["https://", ".com", "http://", "youtube", "www"]
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        self.dataset['posts'] = self.dataset['posts'].str.replace('|||', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'^\b|||', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace('('+'|'.join(types)+')', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'(^(http|https)*\.com$', '') #|^(http|https))
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\bcom', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http*.com$', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http.*', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^https.*', '')
-        print(self.dataset['posts'].str.replace(r'(^(http|https)*.com$|^(http|https))', '').head())
-        print(self.dataset.head(), self.dataset['posts'].head())
+        #print(self.dataset['posts'].str.replace(r'(^(http|https)*.com$|^(http|https))', '').head())
+        #print(self.dataset.head(), self.dataset['posts'].head())
         #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
