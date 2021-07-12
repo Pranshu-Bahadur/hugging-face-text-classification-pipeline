@@ -48,9 +48,9 @@ class Experiment(object):
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
+        topk, indices = torch.topk(torch.mean(torch.cat([cluster_ids_x[cluster_ids_x==i] for i in range(8)])),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from the top clusters\n\n")
+        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 2 clusters\n\n")
 
         #@TODO add features selection here
         if train:
