@@ -48,14 +48,14 @@ class NLPClassifier(object):
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
             config = AutoConfig.from_pretrained(model_name)
-            config.max_position_embeddings = 32
+            config.max_position_embeddings = 48
             config.num_labels = num_classes
             config.n_layers = 1
             config.n_heads = 2
             config.hidden_dim = 64
             config.dim = 128
             config.hidden_size = 64
-            config.embedding_size = 32
+            config.embedding_size = 48
             config.intermediate_size = 128
             config.num_hidden_layers = 4
             config.num_attention_heads = 2

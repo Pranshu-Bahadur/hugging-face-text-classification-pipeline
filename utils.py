@@ -40,7 +40,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #print(mean(self.dataset['total'].map(len)))
         self.distribution = dict(self.dataset.type.value_counts())
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=32)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=48)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
