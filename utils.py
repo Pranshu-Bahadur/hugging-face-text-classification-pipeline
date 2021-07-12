@@ -21,6 +21,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[^A-Za-z0-9]', '')#[$&+,:;=?@#|'<>.^*()%!-]
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[$&,:;=?@#|<>.^*()%!-]', '')
+        self.dataset['posts'] = self.dataset['posts'].str.lower()
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|^\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\s$', '')
