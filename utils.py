@@ -19,9 +19,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'/^[\w]+$/', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'^\w.*\w', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|^\b'.join(types), '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*([a-z][A-Z][0-9])$ | /^[\w]+$/', '')
 
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\w$', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http*.com$', '')
