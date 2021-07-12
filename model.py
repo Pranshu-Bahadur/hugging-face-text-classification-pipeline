@@ -61,6 +61,7 @@ class NLPClassifier(object):
             """
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
+            model.max_position_embeddings = 32
             print(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
@@ -107,7 +108,7 @@ class NLPClassifier(object):
         self.model.train()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
-        #self._k_means_approximation_one_step(loader)
+        self._k_means_approximation_one_step(loader)
         #self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
         #indices, k = self.clusters_idx, self.cluster_idx
         for data in loader:
