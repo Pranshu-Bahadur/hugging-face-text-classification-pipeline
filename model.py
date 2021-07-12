@@ -106,16 +106,9 @@ class NLPClassifier(object):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
 
-    def _run_epoch(self, loaders):
+    def _run_epoch(self, splits):
         #f1_train, acc_train, loss_train = self._train(loaders[0])
         #f1_val, acc_val, loss_val = self._validate(loaders[1])
-        self.trainer.train()
-        self.trainer.evaluate()
-        logs = self.trainer.log()
-        self.curr_epoch += 1
-        return logs
-    
-    def _train_hug(self, splits):
         metric = load_metric("accuracy")
         def compute_metrics(eval_pred):
             logits, labels = eval_pred
@@ -125,6 +118,14 @@ class NLPClassifier(object):
                          train_dataset=splits[0],
                          eval_dataset=splits[1],
                          compute_metrics=compute_metrics)
+        self.trainer.train()
+        self.trainer.evaluate()
+        logs = self.trainer.log()
+        self.curr_epoch += 1
+        return logs
+    
+    def _train_hug(self, splits):
+        
         
         
         
