@@ -17,24 +17,12 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
-        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
-        #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
-        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[^A-Za-z0-9]', '')#[$&+,:;=?@#|'<>.^*()%!-]
-        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[$&,:;=?@#|<>.^*()%!-]', '')
         self.dataset['posts'] = self.dataset['posts'].str.lower()
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\b[$&+,:;=?@#|<>._()%!-]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
-
-
-        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\w$', '')
-        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http*.com$', '')
-        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^https.*', '')
-        #print(self.dataset['posts'].str.replace(r'(^(http|https)*.com$|^(http|https))', '').head())
         print(self.dataset.head())
-        #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
