@@ -59,7 +59,8 @@ class NLPClassifier(object):
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
-            return model, AutoTokenizer.from_pretrained("dslim/bert-base-NER")
+            model.num_classes = num_classes
+            return model, AutoTokenizer.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
 
