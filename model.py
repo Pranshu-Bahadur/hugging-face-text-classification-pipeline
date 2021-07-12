@@ -47,6 +47,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
+            """
             config = AutoConfig.from_pretrained(model_name)
             config.max_position_embeddings = 48
             config.num_labels = num_classes
@@ -61,11 +62,15 @@ class NLPClassifier(object):
             config.num_attention_heads = 2
             config.num_memory_blocks = 4
             config.classifier_dropout_prob = 0
+            """
             label_dict_instance = {'INFP': 28098, 'INFJ': 24620, 'INTP': 18822, 'INTJ': 17096, 'ENFP': 11580, 'ENTP': 10964, 'ISTP': 4698, 'ENTJ': 3786, 'ISFP': 3538, 'ENFJ': 3418, 'ISTJ': 3290, 'ISFJ': 2875, 'ESTP': 1252, 'ESFJ': 1039, 'ESTJ': 731, 'ESFP': 682}
-            config.id2label={k:i for i,k in enumerate(label_dict_instance)}
-            config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
-            model = AutoModelForSequenceClassification.from_config(config)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
+            model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
+            model.config.num_labels = num_classes
+
             print(model.config)
+            print(model)
             """
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
