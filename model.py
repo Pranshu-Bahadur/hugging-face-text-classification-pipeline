@@ -172,8 +172,8 @@ class NLPClassifier(object):
                 outputs = self.model(data["input_ids"])
                 loss = self.criterion(outputs, data["labels"])
             else:
-                shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                #shuffle_seed = torch.randperm(data["input_ids"].size(0))
+                #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
                 #data["labels"] = data["labels"].float()
@@ -216,8 +216,8 @@ class NLPClassifier(object):
                     outputs = self.model(data["input_ids"])
                     loss = self.criterion(outputs, data["labels"])
                 else:
-                    shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
+                    #shuffle_seed = torch.randperm(data["input_ids"].size(0))
+                    #data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                     if self.score != float("-inf"):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
