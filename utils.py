@@ -28,11 +28,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
         print(self.dataset['total'].mean())
-        print(self.dataset['total'].mode())
+        print(self.dataset.total.value_counts())
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
         print(f'Dataset distribution {self.dataset.type.value_counts()}')
-        self.dataset.drop('total')
+        self.dataset.drop(columns=['total'])
         #print(mean(self.dataset['total'].map(len)))
         
         print(f"Tokenizing dataset...")
