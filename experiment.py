@@ -22,6 +22,8 @@ class Experiment(object):
         Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:]),
         ]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
+        print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
+        self.classifier._k_means_approximation_one_step(loaders[0])
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
