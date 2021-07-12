@@ -15,7 +15,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.read_csv(csv_path)
         self.library = library
         cols_n = self.dataset.columns.tolist()
-        #cols_n.reverse()
+        cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         self.dataset['posts'] = self.dataset['posts'].str.lower()
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
@@ -23,7 +23,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         print("Exploding posts and types...\n")
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]))
         print(list(self.dataset.columns), cols_n)
         self.dataset.rename(columns={k:cols_n[i] for i,k in enumerate(self.dataset.columns.tolist())})
         self.dataset['total'] = self.dataset['posts'].str.split()
