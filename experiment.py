@@ -50,7 +50,7 @@ class Experiment(object):
         Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
         Y = Y.view(Y.size(0), -1).cuda()
         XY = torch.cat((X,Y), dim=1).cuda()
-        cluster_ids_x, cluster_centers = kmeans(X=XY, num_clusters=8, device=torch.device('cuda:0'), distance='soft_dtw')
+        cluster_ids_x, cluster_centers = kmeans(X=XY, num_clusters=8, device=torch.device('cuda:0'))
         topk, indices = torch.topk(torch.mean(torch.cat([cluster_ids_x[cluster_ids_x==i] for i in range(8)]).float()),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 2 clusters\n\n")
