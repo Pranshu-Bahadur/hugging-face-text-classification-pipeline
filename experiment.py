@@ -17,7 +17,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         dataset, splits, indices, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        self.classifier.criterion.weight = torch.tensor(weights)
+        self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         random.shuffle(indices)
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
