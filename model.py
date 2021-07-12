@@ -5,7 +5,7 @@ import copy
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification#, AutoTokenizerFast
+from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, PretrainedConfig#, AutoTokenizerFast
 from sklearn.metrics import f1_score
 import numpy as np
 import timm
@@ -38,7 +38,9 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, max_position_embeddings=32)
+            config = PretrainedConfig.from_pretrained(model_name)
+            config.max_position_embeddings = 32
+            model = AutoModelForSequenceClassification.from_config(config)
             model.num_labels = num_classes
             """
             class ModelWrapper(nn.Module):
@@ -61,7 +63,7 @@ class NLPClassifier(object):
             """
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
-            model.config.max_position_embeddings = 32
+            #model.config.max_position_embeddings = 32
             print(model.config)
             #model.update(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
