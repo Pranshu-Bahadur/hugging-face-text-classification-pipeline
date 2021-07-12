@@ -38,9 +38,9 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            config = AutoConfig.from_pretrained(model_name)
-            config.max_position_embeddings = 32
-            model = AutoModelForSequenceClassification.from_config(config, num_labels=16)
+            #config = AutoConfig.from_pretrained(model_name)
+            #config.max_position_embeddings = 32
+            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=16)
             model.num_labels = num_classes
             """
             class ModelWrapper(nn.Module):
@@ -61,10 +61,10 @@ class NLPClassifier(object):
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
-            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
+            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
             #model.config.max_position_embeddings = 32
-            print(model.config)
+            print(model.classifier)
             #model.update(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
