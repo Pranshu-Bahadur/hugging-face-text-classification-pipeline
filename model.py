@@ -53,10 +53,11 @@ class NLPClassifier(object):
             config.n_layers = 1
             config.n_heads = 2
             config.hidden_dim = 64
-            config.activation = 'silu'
+            config.activation = 'relu'
             config.dim = 128
             print(config)
             model = AutoModelForSequenceClassification.from_config(config)
+            print(model)
             """
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
