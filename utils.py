@@ -22,7 +22,6 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset.posts = self.dataset["posts"].str.lower()
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(filter_links_phrases))]
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
-        self.dataset = self.dataset[self.dataset['posts'].map(len) >= 128]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=32)
