@@ -28,7 +28,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http.*', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^https.*', '')
         #print(self.dataset['posts'].str.replace(r'(^(http|https)*.com$|^(http|https))', '').head())
-        #print(self.dataset.head(), self.dataset['posts'].head())
+        print(self.dataset.head())
         #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
