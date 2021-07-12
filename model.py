@@ -21,6 +21,8 @@ class NLPClassifier(object):
         self.nc = config["num_classes"]
         self.curr_epoch = config["curr_epoch"]
         self.final_epoch = config["epochs"]
+        self.bs = config["batch_size"]
+
         self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config["num_classes"])
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
@@ -33,7 +35,6 @@ class NLPClassifier(object):
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.name = "{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"], config["optimizer_name"], config["scheduler_name"], config["criterion_name"])
-        self.bs = config["batch_size"]
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.best_cluster_center_score = float("-inf")
