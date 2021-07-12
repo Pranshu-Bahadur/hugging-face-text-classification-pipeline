@@ -27,7 +27,7 @@ class NLPClassifier(object):
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         
-        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda() #
+        self.model = self.model.cuda()# nn.DataParallel(self.model).cuda() if config["multi"] else  #
         #print(self.model)
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
