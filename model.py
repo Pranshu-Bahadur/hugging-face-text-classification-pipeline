@@ -132,6 +132,7 @@ class NLPClassifier(object):
         #indices, k = self.clusters_idx, self.cluster_idx
         
         for data in loader:
+            self.optimizer.zero_grad()
             total += data["labels"].size(0)
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
@@ -157,7 +158,6 @@ class NLPClassifier(object):
             #print(outputs.size())
             loss.backward()
             running_loss += loss.cpu().item()
-            self.optimizer.zero_grad()
             self.optimizer.step()
             self.scheduler.step()
             y_ = torch.argmax(outputs, dim=-1)
