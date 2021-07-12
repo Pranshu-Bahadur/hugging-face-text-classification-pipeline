@@ -27,6 +27,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttps.*$', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\s\bhttp.*\s$', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\s\bhttps.*\s$', '')
+        self.dataset = self.dataset[~self.dataset['posts'].map(len)<32]
 
 
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\w$', '')
