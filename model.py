@@ -106,7 +106,7 @@ class NLPClassifier(object):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
 
-    def _run_epoch(self, splits):
+    def _run_epoch(self, loaders):
         #f1_train, acc_train, loss_train = self._train(loaders[0])
         #f1_val, acc_val, loss_val = self._validate(loaders[1])
         metric = load_metric("accuracy")
@@ -114,15 +114,11 @@ class NLPClassifier(object):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             return metric.compute(predictions=predictions, references=labels)
-        self.trainer = Trainer(model=self.model, args=self.training_args,
-                         train_dataset=splits[0],
-                         eval_dataset=splits[1],
-                         compute_metrics=compute_metrics)
-        self.trainer.train()
-        self.trainer.evaluate()
-        logs = self.trainer.log()
+        self.trainer = Trainer(model=self.model, args=self.training_args,compute_metrics=compute_metrics)
+        metrics = [self.trainer(loaders[0])]
+        metrics += [self._validate(loaders[1])]
         self.curr_epoch += 1
-        return logs
+        return metrics
             
         
     
@@ -151,9 +147,10 @@ class NLPClassifier(object):
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                 if self.score != float("-inf"):
                     data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-                outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
+                loss, outputs, _ = self.trainer.prediction_step(self.model, data)
+                #outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
                 #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
-                loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
+                #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
             #print(outputs.size())
             loss.backward()
             running_loss += loss.cpu().item()
@@ -190,8 +187,10 @@ class NLPClassifier(object):
                     data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
                     if self.score != float("-inf"):
                         data["attention_mask"][:,self.clusters_idx] = 0
-                    outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
-                    loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
+                    #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
+                    #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
+                    loss, outputs, _ = self.trainer.prediction_step(self.model, data)
+
                 running_loss += loss.cpu().item()
                 y_ = torch.argmax(outputs, dim=1)
                 correct += (y_.cpu()==data["labels"].cpu()).sum().item()
