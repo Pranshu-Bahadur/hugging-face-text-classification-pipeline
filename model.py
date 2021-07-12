@@ -157,9 +157,11 @@ class NLPClassifier(object):
         #self._k_means_approximation_one_step(loader)
         #self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
         #indices, k = self.clusters_idx, self.cluster_idx
-        
+        self.model.train()
+
         for data in loader:
-            #self.optimizer.zero_grad()
+            self.model.train()
+            self.optimizer.zero_grad()
             if self.library == "timm":
                 shuffle_seed = torch.randperm(data["input_ids"].size(0))
                 data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
