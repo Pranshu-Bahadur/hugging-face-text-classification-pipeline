@@ -23,13 +23,18 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         self.dataset['total'] = self.dataset['posts'].str.split()
+        self.dataset['total'] = self.dataset['total'].map(len)
+        print(self.dataset.head())
+        print(f"filter success {len(self.dataset)}")
+        print("Mean, mode, max, min lengths:\n")
+        print(self.dataset['total'].mean())
+        print(self.dataset['total'].mode())
         print(max(self.dataset['total'].map(len)))
         print(min(self.dataset['total'].map(len)))
         #print(mean(self.dataset['total'].map(len)))
-        print(self.dataset.head())
-        print(f"filter success {len(self.dataset)}")
+        
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=1802)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
