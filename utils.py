@@ -23,7 +23,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'^\w.*\w', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|^\b'.join(types), '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'(^(http|https)*\.com$', '') #|^(http|https))
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*([a-z]|[A-Z]|[0-9]|\w)$', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*([a-z]|[A-Z]|[0-9]|\w)$ | /^[\w]+$/', '')
 
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*\w$', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'^http*.com$', '')
