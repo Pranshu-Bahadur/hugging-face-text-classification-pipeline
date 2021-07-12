@@ -87,9 +87,19 @@ class NLPClassifier(object):
         return optim_dict[name]
     
     def _create_scheduler(self, name, optimizer):
+        def lr_lambda(current_step: int):
+            #Taken from hugging face src code
+            num_warmup_steps = 600
+            if current_step < num_warmup_steps:
+                return float(current_step) / float(max(1, num_warmup_steps))
+            approx_num_training_steps = self.final_epoch*(300000//self.bs)
+            return max(0.0, float(approx_num_training_steps - current_step) / float(max(1, approx_num_training_steps - num_warmup_steps)))
+
         scheduler_dict = {
             "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, step_size=2.4, gamma=0.97),
-            "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 600, 1)
+            "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 600, 1),
+            "LambdaLR" : torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, self.curr_epoch)
+
         }
         return scheduler_dict[name]
 
