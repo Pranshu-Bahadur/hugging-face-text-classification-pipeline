@@ -22,6 +22,10 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
+        self.dataset['total'] = self.dataset['posts'].str.split()
+        print(max(self.dataset['total'].map(len)))
+        print(min(self.dataset['total'].map(len)))
+        #print(mean(self.dataset['total'].map(len)))
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
