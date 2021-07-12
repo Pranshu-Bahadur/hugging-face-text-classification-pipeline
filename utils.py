@@ -23,6 +23,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset.posts = self.dataset["posts"].str.lower()
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|||', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\b^https://*.com$\b', '')
+        print(self.dataset.head())
         #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
