@@ -61,7 +61,7 @@ class NLPClassifier(object):
             """
             model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
             model.num_classes = num_classes
-            model.max_position_embeddings = 32
+            model.config.max_position_embeddings = 32
             print(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
