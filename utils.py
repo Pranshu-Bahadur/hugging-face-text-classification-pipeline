@@ -22,8 +22,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|||', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace('('+'|'.join(types)+')', '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'^https://*.com$', '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'^https://*.com$', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'^(http://|https://)*.com$', '')
         print(self.dataset.head())
         #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
