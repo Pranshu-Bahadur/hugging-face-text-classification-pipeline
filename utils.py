@@ -15,12 +15,13 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
-        types = list(self.dataset.type.unique())
+        types = list(self.dataset["type"].unique().apply(lambda x: x.lower()))
         filter_links_phrases = ["https://", ".com", "http://", "youtube", "www"]
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         self.dataset.posts = self.dataset["posts"].str.lower()
         self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(filter_links_phrases))]
+        self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         self.dataset = self.dataset[self.dataset['posts'].map(len) >= 128]
         print(f"filter success {len(self.dataset)}")
         print(f"Tokenizing dataset...")
