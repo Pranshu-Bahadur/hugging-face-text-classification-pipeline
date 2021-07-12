@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 from pandas import Series
 import re
+import numpy as np
 
 def chunkstring(x, length):
     chunks = len(x)
