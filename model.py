@@ -27,7 +27,7 @@ class NLPClassifier(object):
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         
-        self.model = self.model.cuda() #nn.DataParallel(self.model).cuda() if config["multi"] else
+        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda() #
         #print(self.model)
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
@@ -210,7 +210,7 @@ class NLPClassifier(object):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     #
-                    _, outputs, _ = self.trainer.prediction_step(self.model, data)
+                    _, outputs, _ = self.trainer.prediction_step(self.model, data,  prediction_loss_only=False)
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
 
                 running_loss += loss.cpu().item()
