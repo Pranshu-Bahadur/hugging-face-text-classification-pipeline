@@ -53,12 +53,13 @@ class NLPClassifier(object):
             #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             """
             if "roberta" in model_name:
-                model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
+                model.classifier.out_proj = 
             elif not "long" in model_name: #TODO convert fine-tuned weights
                 
             else:
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
+            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
             model.num_classes = num_classes
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
