@@ -22,9 +22,10 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
-        self.dataset = self.dataset[self.dataset['posts'].map(len)<256]
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
+        self.dataset = self.dataset[self.dataset['total'].map(len)<256]
+
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
