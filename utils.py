@@ -21,8 +21,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         #[self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
         #self.dataset.posts = self.dataset["posts"].str.lower()
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'|||', '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\b^https://*.com$\b', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'|||', ' ')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\b^https://*.com$\b', ' ')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\b^https://*.com$\b', ' ')
         print(self.dataset.head())
         #self.dataset = self.dataset[~self.dataset['posts'].str.contains("|".join(types))]
         print(f"filter success {len(self.dataset)}")
