@@ -24,14 +24,10 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         print("Exploding posts and types...\n")
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
-        print(list(self.dataset.columns), cols_n)
-        print({k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
-        print(list(self.dataset.columns))
-
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['posts']>30]
+        self.dataset = self.dataset[self.dataset['total']>30]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")

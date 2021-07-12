@@ -51,7 +51,7 @@ class NLPClassifier(object):
             config.max_position_embeddings = 32
             config.num_labels = num_classes
             print(config)
-            model = AutoModelForSequenceClassification.from_config(config)
+            model = nn.Linear(32, 16)#AutoModelForSequenceClassification.from_config(config)
             """
             class ModelWrapper(nn.Module):
                 def __init__(self, model, num_classes):
@@ -72,7 +72,6 @@ class NLPClassifier(object):
                 model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
             """
             #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
-            model.num_classes = num_classes
             #model.config.max_position_embeddings = 32
             print(model.classifier)
             #model.update(model.config)
