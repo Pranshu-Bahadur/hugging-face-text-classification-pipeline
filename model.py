@@ -42,7 +42,7 @@ class NLPClassifier(object):
                                             weight_decay=0.01, logging_dir='./logs', logging_steps=1)
         self.trainer = None
         print("Generated model: {}".format(self.name))
-        self.scaler = ShardedGradScaler() if self.sharded_dpp else torch.cuda.amp.GradScaler()
+        self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler()
 
         
     def _create_model(self, library, model_name, num_classes):
