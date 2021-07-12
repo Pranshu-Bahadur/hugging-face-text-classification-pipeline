@@ -63,6 +63,7 @@ class NLPClassifier(object):
             model.num_classes = num_classes
             model.config.max_position_embeddings = 32
             print(model.config)
+            model.update(model.config)
             return model, AutoTokenizer.from_pretrained(model_name)
         else:
             return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
