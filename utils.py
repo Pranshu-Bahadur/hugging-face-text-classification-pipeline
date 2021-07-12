@@ -22,6 +22,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
+        self.dataset = self.dataset[self.dataset['posts'].map(len)<256]
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
         print(self.dataset.head())
@@ -31,12 +32,12 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(self.dataset.total.value_counts())
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
-        print(f'Dataset distribution {self.dataset.type.value_counts()}')
+        print(f'Dataset distribution \n\n{self.dataset.type.value_counts()}')
         self.dataset.drop(columns=['total'])
         #print(mean(self.dataset['total'].map(len)))
         
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=1802)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=256)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.dataset.type.unique())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
