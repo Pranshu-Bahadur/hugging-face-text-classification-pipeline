@@ -57,9 +57,9 @@ class NLPClassifier(object):
             config.hidden_size = 64
             config.embedding_size = 32
             config.intermediate_size = 128
-            config.num_hidden_layers = 0
-            config.num_attention_heads = 1
-            config.num_memory_blocks = 0
+            config.num_hidden_layers = 4
+            config.num_attention_heads = 2
+            config.num_memory_blocks = 4
             config.classifier_dropout_prob = 0
             label_dict_instance = {'INFP': 28098, 'INFJ': 24620, 'INTP': 18822, 'INTJ': 17096, 'ENFP': 11580, 'ENTP': 10964, 'ISTP': 4698, 'ENTJ': 3786, 'ISFP': 3538, 'ENFJ': 3418, 'ISTJ': 3290, 'ISFJ': 2875, 'ESTP': 1252, 'ESFJ': 1039, 'ESTJ': 731, 'ESFP': 682}
             config.id2label={k:i for i,k in enumerate(label_dict_instance)}
