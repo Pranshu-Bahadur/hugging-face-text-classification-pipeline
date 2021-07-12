@@ -24,7 +24,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.lower()
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9/]$', '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[~self.dataset['posts'].map(len)<32]
 
 
