@@ -47,7 +47,7 @@ class NLPClassifier(object):
         
     def _create_model(self, library, model_name, num_classes):
         if library == "hugging-face":
-            config = AutoConfig.from_pretrained(model_name)
+            config = PretrainedConfig.from_pretrained(model_name)
             config.max_position_embeddings = 32
             model.num_labels = num_classes
             model = AutoModelForSequenceClassification.from_config(model_name)
