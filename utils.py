@@ -22,7 +22,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
-        print("Exploding posts and types...\n\n")
+        print("Exploding posts and types...\n")
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         self.dataset.rename(columns={k:cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
