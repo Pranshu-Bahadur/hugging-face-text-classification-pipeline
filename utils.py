@@ -31,6 +31,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(self.dataset['total'].mode())
         print(max(self.dataset['total'].map(len)))
         print(min(self.dataset['total'].map(len)))
+        print(f'Dataset distribution {self.dataset.type.value_counts()}')
+        self.dataset.drop('total')
         #print(mean(self.dataset['total'].map(len)))
         
         print(f"Tokenizing dataset...")
