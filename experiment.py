@@ -25,6 +25,7 @@ class Experiment(object):
          num_train_epochs=1,
          do_train=True,
          do_eval=True,
+         do_predict=True,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          label_names=list(dataset.labels.keys()),
@@ -67,7 +68,7 @@ class Experiment(object):
          
         
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
+            trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
             trainer.train()
             trainer.evaluate()
             self.classifier.curr_epoch += 1
