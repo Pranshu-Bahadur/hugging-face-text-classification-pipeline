@@ -32,7 +32,7 @@ class Experiment(object):
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
          gradient_accumulation_steps=1,
-         warmup_steps=500,
+         warmup_steps=100,
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
@@ -67,9 +67,10 @@ class Experiment(object):
         """
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            #self.classifier.model = trainer.model
-            #self.classifier.model.train()
-            #trainer.train()
+            self.classifier.model.train()
+            print(trainer.train().metrics)
+            self.classifier.model.eval()
+            print(trainer.evaluate().metrics)
             self.classifier.curr_epoch += 1
             #self.classifier.optimizer.zero_grad()
             """
@@ -88,7 +89,7 @@ class Experiment(object):
             
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-            """
+            
             print(f"Running inferences for epoch {self.classifier.curr_epoch}\n\n")
             metrics = list(self.classifier._validate(loaders[0], trainer))
             print("test\n")
@@ -96,6 +97,7 @@ class Experiment(object):
             metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
             metrics = {k:v for k,v in zip(metric_keys,metrics)}
             print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
+            """
         #print("Testing:...")
         print(self.classifier._validate(loaders[2], trainer))
         print("\nRun Complete.")

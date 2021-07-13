@@ -183,7 +183,7 @@ class NLPClassifier(object):
             f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
             iterations += 1
             torch.cuda.empty_cache()
-            print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
+            
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total)
 
 
@@ -210,7 +210,7 @@ class NLPClassifier(object):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     #
-                    _, outputs, _ = trainer.prediction_step(self.model, data,  prediction_loss_only=False)
+                    _, outputs, _ = trainer.prediction_step(self.model, data, prediction_loss_only=False, ignore_keys=['labels'])
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
 
                 running_loss += loss.cpu().item()
@@ -219,6 +219,7 @@ class NLPClassifier(object):
                 f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
                 total += data["labels"].size(0)
                 iterations += 1
+                print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
                 torch.cuda.empty_cache()
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
     
