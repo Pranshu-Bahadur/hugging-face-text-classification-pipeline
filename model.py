@@ -132,7 +132,7 @@ class NLPClassifier(object):
         self.curr_epoch += 1
         return metrics
             
-        
+    
     
     #TODO Abstract _train & _validate functions
     def _train(self, loader):
@@ -187,7 +187,7 @@ class NLPClassifier(object):
         return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total)
 
 
-    def _validate(self, loader):
+    def _validate(self, loader, trainer):
         self.model.eval()
         running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
         #indices, k = self.clusters_idx, self.cluster_idx
@@ -210,7 +210,7 @@ class NLPClassifier(object):
                         data["attention_mask"][:,self.clusters_idx] = 0
                     #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
                     #
-                    _, outputs, _ = self.trainer.prediction_step(self.model, data,  prediction_loss_only=False)
+                    _, outputs, _ = trainer.prediction_step(self.model, data,  prediction_loss_only=False)
                     loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
 
                 running_loss += loss.cpu().item()

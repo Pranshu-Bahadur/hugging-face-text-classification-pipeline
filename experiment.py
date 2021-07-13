@@ -35,7 +35,7 @@ class Experiment(object):
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=10,
+         logging_steps=100,
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -46,12 +46,11 @@ class Experiment(object):
         #weights = (1 - beta)/np.array(effective_num)
         #weights = weights/np.sum(weights)*self.classifier.nc
         #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
-        """
         loaders = [Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=#indices[:splits[0]]),
         Loader(splits[1], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]:]),
         Loader(splits[2], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]+splits[2]:]),
         ]
-        """
+        
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         metric = load_metric("accuracy")
         def compute_metrics(eval_pred):
@@ -62,15 +61,17 @@ class Experiment(object):
             return acc
         
         
-        
+        """
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
-         
+        """
         
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
+            self.classifier.model.train()
             trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
             trainer.train()
-            trainer.evaluate()
+            self.classifier.model.eval()
+            #trainer.evaluate()
             self.classifier.curr_epoch += 1
             """
             logs = self.classifier._run_epoch(loaders[:-1])
@@ -89,8 +90,15 @@ class Experiment(object):
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             """
+            print(f"Running inferences for epoch {self.classifier.curr_epoch}\n\n")
+            metrics = list(self.classifier._validate(loaders[0], trainer))
+            metrics += self.classifier._validate(loaders[1], trainer)
+            metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
+            metrics = {k:v for k,v in zip(metric_keys,metrics)}
+            print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
         #print("Testing:...")
-        #print(self.classifier._validate(loaders[2]))
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
+        print(self.classifier._validate(loaders[2], trainer))
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
