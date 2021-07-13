@@ -70,10 +70,12 @@ class Experiment(object):
         """
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            self.classifier.model.train()
+            trainer.model.train()
             print(trainer.train().metrics)
-            self.classifier.model.eval()
-            print(trainer.evaluate(metric_key_prefix="accuracy"))
+            trainer.model.eval()
+            self.classifier.model = trainer.model
+            self.classifier.optimizer = trainer.optimizer
+            self.classifier.scheduler = trainer.lr_scheduler
             self.classifier.curr_epoch += 1
             #self.classifier.optimizer.zero_grad()
             """
@@ -89,7 +91,7 @@ class Experiment(object):
             self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
             #loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
-            
+            """
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             
@@ -100,7 +102,10 @@ class Experiment(object):
             metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
             metrics = {k:v for k,v in zip(metric_keys,metrics)}
             print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
-            """
+            trainer.model = self.classifier.model
+            trainer.optimizer = self.classifier.optimizer
+            trainer.lr_scheduler = self.classifier.scheduler
+            
         #print("Testing:...")
         print(self.classifier._validate(loaders[2], trainer))
         print("\nRun Complete.")
