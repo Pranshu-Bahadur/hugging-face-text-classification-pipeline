@@ -24,8 +24,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
                 
         self.dataset['total_chars'] = self.dataset['posts'].map(len)
         self.dataset['total_words'] = self.dataset['posts'].str.split()
-        self.dataset['total_words'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>256]
+        self.dataset['total_words'] = self.dataset['total_words'].map(len)
+        self.dataset = self.dataset[self.dataset['total_words']>256]
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], row['total_chars']//row['total_words'])) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         self.dataset['total'] = self.dataset['posts'].str.split()
