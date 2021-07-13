@@ -26,15 +26,14 @@ class Experiment(object):
          do_train=True,
          do_eval=True,
          do_predict=True,
-         per_device_train_batch_size=self.classifier.bs//4,
-         per_device_eval_batch_size=self.classifier.bs//4,
+         per_device_train_batch_size=self.classifier.bs,
+         per_device_eval_batch_size=self.classifier.bs,
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=1,
          evaluation_strategy="epoch")
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
