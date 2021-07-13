@@ -43,7 +43,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
         min_size = self.distribution.min()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
-        lst = [self.dataset]
+        lst = []
         for class_index, group in self.dataset.groupby('type'):
             lst.append(group.sample(min_size, replace=False))
         self.dataset = pd.concat(lst)
