@@ -33,7 +33,7 @@ class Experiment(object):
          logging_dir='./logs',
          gradient_accumulation_steps=len(splits[0])//(2*self.classifier.bs),
          logging_strategy="steps",
-         logging_steps=len(splits[0])//(2*self.classifier.bs),
+         logging_steps=1,
          evaluation_strategy="epoch")
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
