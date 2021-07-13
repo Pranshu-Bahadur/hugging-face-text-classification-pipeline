@@ -65,10 +65,10 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            config.max_position_embeddings = 48
-            config.embedding_size = 48
-            config.num_hidden_layers = 3
-            config.num_attention_heads = 3
+            config.max_position_embeddings = 40
+            config.embedding_size = 40
+            config.num_hidden_layers = 2
+            config.num_attention_heads = 2
             config.hidden_act = "relu"
             print(config)
             return config

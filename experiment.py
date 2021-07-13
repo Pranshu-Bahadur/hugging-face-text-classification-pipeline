@@ -82,7 +82,7 @@ class Experiment(object):
                 self.classifier.model.zero_grad()
                 total += y.size(0)
                 correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
-                print(i+1, sum(losses)/i+1, correct/total)
+                print(i+1, sum(losses)/(i+1), correct/total)
             print("Training Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n")
             losses = []
             correct, total = 0,0
@@ -96,7 +96,7 @@ class Experiment(object):
                     losses.append(loss.cpu().item())
                     total += y.size(0)
                     correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
-                    print(i+1, sum(losses)/i+1, correct/total)
+                    print(i+1, sum(losses)/(i+1), correct/total)
             print("Validation Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n\n====================")
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))

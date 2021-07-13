@@ -28,7 +28,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>30]
+        self.dataset = self.dataset[self.dataset['total']>=30]
+        self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -51,7 +52,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=48)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=40)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
