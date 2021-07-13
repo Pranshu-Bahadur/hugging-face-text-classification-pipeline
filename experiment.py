@@ -34,7 +34,9 @@ class Experiment(object):
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         evaluation_strategy="steps")
+         evaluation_strategy="steps",
+         eval_steps=self.classifier.bs,
+         )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         #random.shuffle(indices)
