@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import pandas as pd
+import numpy as np
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer):
@@ -8,7 +9,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
-        types = list(self.dataset.type.unique())
+        types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         filter_links_phrases = ["https://", ".com", "http://", "youtube", "www"]
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         [self.dataset.rename(columns = {name:cols_n[i]}, inplace = True) for i,name in enumerate(self.dataset.columns.tolist())]
