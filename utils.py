@@ -6,9 +6,7 @@ import re
 import numpy as np
 
 def chunkstring(x, length):
-    chunks = len(x)
-    l = [x[i:i+length] for i in range(0, chunks, length) ]
-    return l
+    return re.findall(r'.*', length)
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, indices):
@@ -23,12 +21,14 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         #print("Exploding posts and types...\n")
-        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
+                
+        self.dataset['total_chars'] = self.dataset['posts'].map(len)
+        self.dataset['total_words'] = self.dataset['posts'].str.split()
+        self.dataset['total_words'] = self.dataset['total'].map(len)
+        self.dataset = self.dataset[self.dataset['total']>256]
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], row['total_chars']//row['total_words'])) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
-        self.dataset['total'] = self.dataset['posts'].str.split()
-        self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>256]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -37,7 +37,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
         print(f'Dataset distribution \n\n{dict(self.dataset.type.value_counts())}')
-        self.dataset.drop(columns=['total'])
+        self.dataset.drop(columns=['total_words', 'total_chars'])
         #print(mean(self.dataset['total'].map(len)))
         self.distribution = dict(self.dataset.type.value_counts())
         print(f"Tokenizing dataset...")
