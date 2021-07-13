@@ -27,8 +27,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['total_words'] = self.dataset['total'].map(len)
         self.dataset = self.dataset[self.dataset['total']>256]
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], row['total_chars']//row['total_words'])) for _, row in self.dataset.iterrows()]).reset_index())
-        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset['total'] = self.dataset['posts'].str.split()
+        self.dataset['total'] = self.dataset['total'].map(len)
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -37,7 +38,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
         print(f'Dataset distribution \n\n{dict(self.dataset.type.value_counts())}')
-        self.dataset.drop(columns=['total_words', 'total_chars'])
+        self.dataset.drop(columns=['total'])#,'total_words', 'total_chars'])
+        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+
         #print(mean(self.dataset['total'].map(len)))
         self.distribution = dict(self.dataset.type.value_counts())
         print(f"Tokenizing dataset...")
