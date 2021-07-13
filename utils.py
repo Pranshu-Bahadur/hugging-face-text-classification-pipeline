@@ -39,11 +39,18 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(self.dataset.total.value_counts())
         print(max(self.dataset['total']))
         print(min(self.dataset['total']))
-        print(f'Dataset distribution \n\n{dict(self.dataset.type.value_counts())}')
-        self.dataset.drop(columns=['total'])#,'total_words', 'total_chars'])
+        self.dataset.drop(columns=['total'])
 
-        #print(mean(self.dataset['total'].map(len)))
+        self.distribution = self.dataset.type.value_counts()
+        print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
+        max_size = self.distribution.max()
+        #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
+        lst = [self.dataset]
+        for class_index, group in self.dataset.groupby('type'):
+            lst.append(group.sample(max_size-len(group), replace=True))
+        self.dataset = pd.concat(lst)
         self.distribution = dict(self.dataset.type.value_counts())
+        print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
         print(f"Tokenizing dataset...")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
         print(f"Tokenizing complete.\n\n")
