@@ -73,7 +73,7 @@ class NLPClassifier(object):
             config.embedding_size = 48
             config.classifier_dropout_prob = 0
             config.num_labels = num_classes
-            config.num_attention_heads = 4
+            config.num_attention_heads = 2
             config.num_hidden_layers = 4
             config.hidden_dim = 64
             config.dim = 128
