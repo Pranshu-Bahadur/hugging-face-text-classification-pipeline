@@ -28,6 +28,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
+        self.dataset = self.dataset[self.dataset['total']>32]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
