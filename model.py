@@ -23,9 +23,9 @@ class NLPClassifier(object):
         self.curr_epoch = config["curr_epoch"]
         self.final_epoch = config["epochs"]
         self.bs = config["batch_size"]
+        self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], {i:i for i in range(16)})
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer, self.library)
-        self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_config(self.model_config)
         self.model = self.model.cuda() #nn.DataParallel(self.model).cuda() if config["multi"] else
         if config["train"]:
@@ -62,7 +62,7 @@ class NLPClassifier(object):
             config.num_memory_blocks = 4
             config.classifier_dropout_prob = 0
             """
-            config = AutoConfig.from_pretrained(model_name, num_labels = num_classes)
+            config = AutoConfig.from_pretrained(model_name, num_labels =num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
             config.max_position_embeddings = 48
