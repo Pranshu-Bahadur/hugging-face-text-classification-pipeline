@@ -22,23 +22,22 @@ class Experiment(object):
         dataset, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
         random.shuffle(indices)
         init_epoch = self.classifier.curr_epoch
-        """
+        
         training_args = TrainingArguments(output_dir='./results',
-         num_train_epochs=self.classifier.final_epoch - init_epoch,
          do_train=True,
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
          gradient_accumulation_steps=1,
+         per_device_train_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=1,
+         logging_steps=int((splits[0]//self.classifier.bs)*0.1),
          #evaluation_strategy="steps",
          #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
          #eval_accumulation_steps = 1
          )
-         """
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         #random.shuffle(indices)
@@ -65,31 +64,9 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=None)
+        trainer = Trainer(model=self.classifier.model, args=training_args)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            self.classifier.curr_epoch += 1
-            print(f"Running epoch {self.classifier.curr_epoch}\n")
-            running_loss, correct, total, iterations = 0,0,0,0
-            self.classifier.model.train()
-            for _,data in enumerate(loaders[0]):
-                iterations += 1
-                data = {k: v.cuda() for k, v in data.items()}
-                y = data['labels']
-                loss, logits = self.classifier.model(**data)
-                #self.classifier.scaler.scale(loss).backward()
-                loss.backward()
-                if iterations%10:
-                    self.classifier.optimizer.zero_grad()
-                self.classifier.optimizer.step()
-                self.classifier.scheduler.step()
-                y_ = torch.argmax(logits, dim=-1)
-                running_loss += loss.cpu().item()
-                total += y.size(0)
-                correct += (y_.cpu()==y.cpu()).sum().item()
-                print(iterations, float(correct/float(total))*100, float(running_loss/iterations))
-                del data, y_
-                torch.cuda.empty_cache()
-            print("Epoch", self.classifier.curr_epoch, "training results", float(correct/float(total))*100, float(running_loss/iterations))
+            trainer.train()
             with torch.no_grad():
                 trainer.model = self.classifier.model
                 trainer.model.eval()
