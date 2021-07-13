@@ -76,12 +76,12 @@ class Experiment(object):
                 print(iterations)
                 data = {k: v.cuda() for k, v in data.items()}
                 y = data['labels']
-                self.classifier.optimizer.zero_grad()
                 loss, logits = self.classifier.model(**data)
                 self.classifier.scaler.scale(loss).backward()
-                if iterations%100:
-                    self.classifier.optimizer.step()
-                    self.classifier.scheduler.step()
+                if iterations%10:
+                    self.classifier.optimizer.zero_grad()
+                self.classifier.optimizer.step()
+                self.classifier.scheduler.step()
                 y_ = torch.argmax(logits, dim=-1)
                 running_loss += loss.cpu().item()
                 total += y.size(0)
