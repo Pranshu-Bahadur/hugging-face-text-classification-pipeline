@@ -45,7 +45,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
-            lst.append(group.sample(abs(min_size-len(group)), replace=False))
+            lst.append(group.sample(min_size, replace=False))
         self.dataset = pd.concat(lst)
         self.distribution = dict(self.dataset.type.value_counts())
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
