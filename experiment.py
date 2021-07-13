@@ -76,7 +76,7 @@ class Experiment(object):
                 logits = self.classifier.model(**data).logits
                 loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
                 losses.append(loss.mean().cpu().item())
-                loss.backward()
+                self.classifier.scaler.scale(loss).backward()
                 self.classifier.optimizer.step()
                 self.classifier.scheduler.step()
                 self.classifier.model.zero_grad()

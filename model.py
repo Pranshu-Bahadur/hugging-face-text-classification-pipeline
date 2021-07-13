@@ -67,9 +67,8 @@ class NLPClassifier(object):
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
             config.max_position_embeddings = 40
             config.embedding_size = 40
-            config.num_hidden_layers = 2
-            config.num_attention_heads = 2
-            config.hidden_act = "relu"
+            config.num_hidden_layers = 6
+            config.num_attention_heads = 6
             print(config)
             return config
         else:

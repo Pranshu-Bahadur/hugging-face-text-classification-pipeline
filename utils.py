@@ -28,8 +28,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>=30]
-        self.dataset = self.dataset[self.dataset['total']<=40]
+        #self.dataset = self.dataset[self.dataset['total']>=30]
+        #self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -41,11 +41,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
 
         self.distribution = self.dataset.type.value_counts()
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
-        max_size = self.distribution.max()        
+        min_size = self.distribution.min()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
-            lst.append(group.sample(max_size-len(group), replace=True))
+            lst.append(group.sample(abs(min_size-len(group)), replace=False))
         self.dataset = pd.concat(lst)
         self.distribution = dict(self.dataset.type.value_counts())
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
