@@ -20,7 +20,7 @@ class Experiment(object):
 
     def _run(self, dataset, config: dict):
         dataset, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
-        indices.shuffle()
+        random.shuffle(indices)
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
          num_train_epochs=self.classifier.final_epoch - init_epoch,
