@@ -66,6 +66,7 @@ class NLPClassifier(object):
             config.classifier_dropout_prob = 0
             """
             config = AutoConfig.from_pretrained(model_name, num_labels = num_classes)
+            print(config)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
             config.max_position_embeddings = 48
