@@ -30,6 +30,7 @@ class Experiment(object):
          per_device_eval_batch_size=self.classifier.bs,
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
+         gradient_accumulation_steps=0,
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
