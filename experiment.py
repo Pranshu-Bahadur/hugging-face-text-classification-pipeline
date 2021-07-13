@@ -120,11 +120,11 @@ class Experiment(object):
         indices = []
         #@TODO add features selection here
         if train:
-            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder[:100]))
-            testDatasetSize = int(len(dataSetFolder[:100]) - trainingValidationDatasetSize) // 2
+            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
+            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             #diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize+1])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize+1]
-            splits = torch.utils.data.dataset.random_split(dataSetFolder[:100], splits)
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             #total = sum(list(dataSetFolder.distribution.values()))
             return dataSetFolder ,splits, indices#, Y
         return dataSetFolder

@@ -49,10 +49,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
         print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=48)
+        print("Debug mode.")
+        self.encodings = tokenizer(list(self.dataset['posts'][:100].values), padding='max_length', truncation=True, max_length=48)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
-        self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
+        self.dataset['type'] = self.dataset['type'][:100].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
         
 
