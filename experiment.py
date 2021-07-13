@@ -37,7 +37,7 @@ class Experiment(object):
          logging_strategy="steps",
          evaluation_strategy="steps",
          logging_steps=10,
-         eval_steps=self.classifier.bs,
+         eval_steps=10,
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
