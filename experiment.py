@@ -75,7 +75,7 @@ class Experiment(object):
             for data in loaders[1]:
                 trainer.model.train()
                 trainer.optimizer.zero_grad()
-                loss, logits, y = trainer.prediction_step(trainer.model, f"{iterations}",prediction_loss_only=False)
+                loss, logits, y = trainer.prediction_step(trainer.model, data, prediction_loss_only=False)
                 trainer.scaler.scale(loss).backward()
                 trainer.optimizer.step()
                 trainer.lr_scheduler.step()
