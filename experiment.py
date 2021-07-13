@@ -68,7 +68,9 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=None, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=None)
+        self.classifier.optimizer = trainer.optimizer
+        self.classifier.scheduler = trainer.lr_scheduler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             trainer.model.train()
             print(trainer.train().metrics)
@@ -104,8 +106,6 @@ class Experiment(object):
             metrics = {k:v for k,v in zip(metric_keys,metrics)}
             print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
             trainer.model = self.classifier.model
-            trainer.optimizer = self.classifier.optimizer
-            trainer.lr_scheduler = self.classifier.scheduler
             
         #print("Testing:...")
         print(self.classifier._validate(loaders[2], trainer))
