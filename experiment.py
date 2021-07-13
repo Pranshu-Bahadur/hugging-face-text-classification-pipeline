@@ -60,8 +60,8 @@ class Experiment(object):
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
         trainer = Trainer(model=self.classifier.model, args=training_args)
-        self.classifier.optimizer = trainer.optimizer()
-        self.classifier.scheduler = trainer.lr_scheduler()
+        self.classifier.optimizer = trainer.optimizer
+        self.classifier.scheduler = trainer.lr_scheduler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             print(f"Epoch {self.classifier.curr_epoch}:\n\n")
