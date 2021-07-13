@@ -30,13 +30,13 @@ class Experiment(object):
          per_device_eval_batch_size=self.classifier.bs,
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
-         gradient_accumulation_steps=0,
+         gradient_accumulation_steps=len(splits[0])//self.classifier.bs,
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
          evaluation_strategy="steps",
-         logging_steps=self.classifier.bs//4,
+         logging_steps=len(splits[0])//self.classifier.bs,
          eval_steps=self.classifier.bs,
          )
         #weights.reverse()
