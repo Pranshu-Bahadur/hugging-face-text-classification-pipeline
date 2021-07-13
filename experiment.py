@@ -65,16 +65,10 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], compute_metrics=compute_m)
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0],eval_dataset=splits[1], compute_metrics=compute_m)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             trainer.train()
-            with torch.no_grad():
-                trainer.model.eval()
-                trainer.compute_metrics = compute_m
-                trainer.state.epoch = self.classifier.curr_epoch
-                metrics = trainer.evaluate(splits[1])
-                print(metrics)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
