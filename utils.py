@@ -16,14 +16,16 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         self.dataset['posts'] = self.dataset['posts'].str.lower()
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
+        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         print("Exploding posts and types...\n")
         #self.dataset = self.dataset[self.dataset['total_words']>256]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 32*180//2)) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
         self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 32*180//2)) for _, row in self.dataset.iterrows()]).reset_index())
+        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
         print(self.dataset.head())
@@ -47,7 +49,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.distribution = dict(self.dataset.type.value_counts())
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=48)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
