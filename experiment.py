@@ -22,22 +22,19 @@ class Experiment(object):
         dataset, splits = self._preprocessing(dataset, True)#, indices, Y_ 
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
-         num_train_epochs=self.classifier.final_epoch - init_epoch,
+         num_train_epochs=1,
          do_train=True,
          do_eval=True,
-         do_predict=True,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          label_names=list(dataset.labels.keys()),
-         #label_smoothing_factor = 0.1,
+         label_smoothing_factor = 0.1,
          gradient_accumulation_steps=1,
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         evaluation_strategy="steps",
-         logging_steps=10,
-         eval_steps=10,
+         logging_steps=1,
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -62,16 +59,19 @@ class Experiment(object):
             acc = metric.compute(predictions=predictions, references=labels)
             print(acc/labels.size(0))
             return acc
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
-        trainer.train()
-        trainer.evaluate()
+        
         
         
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
          
-        """
+        
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
+            trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
+            trainer.train()
+            trainer.evaluate()
+            self.classifier.curr_epoch += 1
+            """
             logs = self.classifier._run_epoch(loaders[:-1])
             print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
             
@@ -87,7 +87,7 @@ class Experiment(object):
             
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-        """
+            """
         #print("Testing:...")
         #print(self.classifier._validate(loaders[2]))
         print("\nRun Complete.")
