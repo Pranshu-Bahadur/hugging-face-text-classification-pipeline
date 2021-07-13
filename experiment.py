@@ -49,9 +49,9 @@ class Experiment(object):
         #weights = weights/np.sum(weights)*self.classifier.nc
         #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
         #splits = [dataset[:indices]]
-        loaders = [Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
-        Loader(splits[1], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),#, sampler=indices[splits[1]:]),
-        Loader(splits[2], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:])#, sampler=indices[splits[1]+splits[2]:]),
+        loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
+        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),#, sampler=indices[splits[1]:]),
+        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:])#, sampler=indices[splits[1]+splits[2]:]),
         ]
         
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
@@ -65,14 +65,14 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args,compute_metrics=compute_metrics)
+        trainer = Trainer(model=self.classifier.model, args=training_args)
         self.classifier.optimizer = trainer.optimizer
         self.classifier.scheduler = trainer.lr_scheduler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch += 1
             print(f"Running epoch {self.classifier.curr_epoch}\n\n")
             running_loss, correct, total, iterations = 0,0,0,0
-            for data in loaders[1]:
+            for data in loaders[0]:
                 trainer.model.train()
                 trainer.optimizer.zero_grad()
                 loss, logits, y = trainer.prediction_step(trainer.model, data, prediction_loss_only=False)
