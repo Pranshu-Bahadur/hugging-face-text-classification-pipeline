@@ -28,7 +28,6 @@ class Experiment(object):
          num_train_epochs=self.classifier.final_epoch - self.classifier.curr_epoch,
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
-         label_smoothing_factor=0.1,
          warmup_steps=500,
          weight_decay=1e-5,
          _n_gpu=4
@@ -68,9 +67,11 @@ class Experiment(object):
             correct, total = 0,0
             trainer.model.train()
             for i, data in enumerate(loaders[0]):
-                #data = {k:v.cuda() for k,v in list(data.items())} 
+                data = {k:v.cuda() for k,v in list(data.items())}
                 loss, logits, y = trainer.prediction_step(trainer.model,data,False)
-                print(":pred done")
+                print(loss)
+                loss, logits, y = trainer.prediction_step(nn.DataParallel(self.classifier.model).cuda(),data,False)
+                print(loss)
                 losses.append(loss.cpu().item())
                 loss.backward()
                 trainer.optimizer.step()
