@@ -70,6 +70,7 @@ class Experiment(object):
             with torch.no_grad():
                 trainer.model.eval()
                 trainer.compute_metrics = compute_m
+                trainer.state.epoch = self.classifier.curr_epoch
                 metrics = trainer.evaluate(splits[1])
                 print(metrics)
             if self.classifier.curr_epoch%config["save_interval"]==0:
