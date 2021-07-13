@@ -29,7 +29,7 @@ class Experiment(object):
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          label_names=list(dataset.labels.keys()),
-         label_smoothing_factor = 0.1,
+         #label_smoothing_factor = 0.1,
          gradient_accumulation_steps=1,
          warmup_steps=500,
          weight_decay=0.01,
@@ -59,8 +59,10 @@ class Experiment(object):
         def compute_metrics(eval_pred):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
-            return metric.compute(predictions=predictions, references=labels)
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
+            acc = metric.compute(predictions=predictions, references=labels)
+            print(acc)
+            return acc
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, log)
         trainer.train()
         trainer.evaluate()
         
