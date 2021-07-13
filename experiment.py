@@ -66,7 +66,7 @@ class Experiment(object):
             self.classifier.curr_epoch +=1
             losses = []
             correct, total = 0,0
-            self.classifier.model.train()
+            trainer.model.train()
             for i, data in enumerate(loaders[0]):
                 #data = {k:v.cuda() for k,v in list(data.items())} 
                 loss, logits, y = trainer.prediction_step(trainer.model,data,False)
