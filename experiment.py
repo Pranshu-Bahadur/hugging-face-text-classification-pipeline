@@ -67,11 +67,11 @@ class Experiment(object):
         """
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            
-            self.classifier.model.train()
-            trainer.train()
+            #self.classifier.model = trainer.model
+            #self.classifier.model.train()
+            #trainer.train()
             self.classifier.curr_epoch += 1
-            self.classifier.optimizer.zero_grad()
+            #self.classifier.optimizer.zero_grad()
             """
             logs = self.classifier._run_epoch(loaders[:-1])
             print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
