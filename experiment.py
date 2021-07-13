@@ -74,8 +74,8 @@ class Experiment(object):
 
         #@TODO add features selection here
         if train:
-            trainingValidationDatasetSize = int(0.6 * len(indices))
-            testDatasetSize = int(len(indices) - trainingValidationDatasetSize) // 2
+            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
+            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
