@@ -33,9 +33,8 @@ class Experiment(object):
          per_device_eval_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
-         #evaluation_strategy="steps",
-         #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
-         #eval_accumulation_steps = 1
+         logging_strategy="no",
+         save_strategy="no"
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -55,7 +54,7 @@ class Experiment(object):
         
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         metric = load_metric("accuracy")
-        def compute_metrics(eval_pred):
+        def compute_m(eval_pred):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             return metric.compute(predictions=predictions, references=labels)
@@ -64,12 +63,14 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], compute_metrics=compute_metrics,)
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], compute_metrics=compute_m)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             trainer.train()
             with torch.no_grad():
-                print(trainer.evaluation_loop(Loader(splits[1], batch_size=self.classifier.bs,num_workers=4, shuffle=True),"validation..."))
+                trainer.model.eval()
+                trainer.compute_metrics = compute_m
+                trainer.evaluate(splits[1])
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
@@ -91,7 +92,7 @@ class Experiment(object):
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
         topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
+        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from the top cluster(s)\n\n")
     
         #X_ = X[indices]
         #dist = [Y_[indices].cpu().size(0) for i in Y_.unique()]
@@ -102,7 +103,7 @@ class Experiment(object):
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
-            diff = len(dataSetFolder) - splits
+            diff = len(dataSetFolder) - sum(splits)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
             return dataSetFolder ,splits, indices#, Y
         return dataSetFolder
