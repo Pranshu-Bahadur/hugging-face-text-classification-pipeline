@@ -31,6 +31,7 @@ class Experiment(object):
          label_smoothing_factor=0.1,
          warmup_steps=500,
          weight_decay=1e-5,
+         _n_gpu=4
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -87,7 +88,7 @@ class Experiment(object):
                 trainer.model.eval()
                 for i, data in enumerate(loaders[0]):
                     data = {k:v.cuda() for k,v in list(data.items())} 
-                    loss, logits, y = trainer.prediction_step(self.classifier.model,data,False)
+                    loss, logits, y = trainer.prediction_step(trainer.model,data,False)
                     losses.append(loss.cpu().item())
                     total += y.size(0)
                     correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
