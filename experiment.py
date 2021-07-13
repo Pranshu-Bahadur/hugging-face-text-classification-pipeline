@@ -76,7 +76,8 @@ class Experiment(object):
                 data = {k: v.cuda() for k, v in data.items()}
                 y = data['labels']
                 loss, logits = self.classifier.model(**data)
-                self.classifier.scaler.scale(loss).backward()
+                #self.classifier.scaler.scale(loss).backward()
+                loss.backward()
                 if iterations%10:
                     self.classifier.optimizer.zero_grad()
                 self.classifier.optimizer.step()
