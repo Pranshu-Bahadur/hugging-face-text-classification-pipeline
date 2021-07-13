@@ -19,7 +19,7 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        dataset, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
+        dataset, splits, _ = self._preprocessing(dataset, True)#, indices, Y_ 
         #indices.shuffle()
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
@@ -34,7 +34,7 @@ class Experiment(object):
          weight_decay=1e-5,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=int((len(splits[0])//self.classifier.bs)*0.01),
+         logging_steps=int((len(splits[0])//self.classifier.bs)*0.25),
          #evaluation_strategy="steps",
          #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
          #eval_accumulation_steps = 1
@@ -60,7 +60,6 @@ class Experiment(object):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             return metric.compute(predictions=predictions, references=labels)
-        
         
         """
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
