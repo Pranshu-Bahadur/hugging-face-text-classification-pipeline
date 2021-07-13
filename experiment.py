@@ -22,7 +22,7 @@ class Experiment(object):
         _, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
         #random.shuffle(indices)
         init_epoch = self.classifier.curr_epoch
-        
+        """
         training_args = TrainingArguments(output_dir='./results',
          label_names=list(self.classifier.dataset.labels.keys()),
          num_train_epochs=self.classifier.final_epoch - self.classifier.curr_epoch,
@@ -32,6 +32,7 @@ class Experiment(object):
          weight_decay=1e-5,
          do_train=True
          )
+         """
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         #random.shuffle(indices)
@@ -58,10 +59,11 @@ class Experiment(object):
         """
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
-        """
+        
         trainer = Trainer(model=self.classifier.model, args=training_args)
         self.classifier.optimizer = trainer.optimizer
         self.classifier.scheduler = trainer.lr_scheduler
+        """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             print(f"Epoch {self.classifier.curr_epoch}:\n\n")
@@ -74,7 +76,7 @@ class Experiment(object):
                 logits = self.classifier.model(**data).logits
                 loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
                 losses.append(loss.mean().cpu().item())
-                self.classifier.scaler.scale(loss).backward()
+                loss.backward()
                 self.classifier.optimizer.step()
                 self.classifier.scheduler.step()
                 self.classifier.model.zero_grad()
@@ -101,7 +103,7 @@ class Experiment(object):
             #trainer.state.num_train_epochs = 1
         
         print("\n\n")
-        print(trainer.evaluate(splits[2]))
+        #print(trainer.evaluate(splits[2]))
         print("\nRun Complete.\n\n")
 
     def _preprocessing(self, directory, train):
