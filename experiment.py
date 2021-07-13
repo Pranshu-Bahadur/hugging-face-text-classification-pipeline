@@ -25,7 +25,7 @@ class Experiment(object):
         
         training_args = TrainingArguments(output_dir='./results',
          do_train=True,
-         label_names=list(dataset.labels.keys()),
+         label_names=list(self.classifier.dataset.labels.keys()),
          label_smoothing_factor = 0.1,
          num_train_epochs=1,
          gradient_accumulation_steps=1,
