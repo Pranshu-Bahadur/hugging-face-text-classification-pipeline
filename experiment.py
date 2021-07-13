@@ -30,7 +30,6 @@ class Experiment(object):
          per_device_train_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
-         _n_gpu=4
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -70,7 +69,7 @@ class Experiment(object):
                 data = {k:v.cuda() for k,v in list(data.items())}
                 loss, logits, y = trainer.prediction_step(trainer.model,data,False)
                 print(loss)
-                loss, logits, y = trainer.prediction_step(nn.DataParallel(self.classifier.model).cuda(),data,False)
+                loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
                 print(loss)
                 losses.append(loss.cpu().item())
                 loss.backward()
