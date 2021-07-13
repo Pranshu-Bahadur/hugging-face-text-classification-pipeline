@@ -66,7 +66,7 @@ class Experiment(object):
         """
         trainer = Trainer(model=self.classifier.model, args=training_args)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            trainer.train()
+            trainer.train(loader=loaders[0])
             with torch.no_grad():
                 trainer.model = self.classifier.model
                 trainer.model.eval()
