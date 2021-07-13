@@ -78,9 +78,5 @@ class Experiment(object):
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             total = sum(list(dataSetFolder.distribution.values()))
-            beta = 0.999
-            effective_num = 1.0 - np.power(beta, dist)
-            weights = (1 - beta)/np.array(effective_num)
-            weights = weights/np.sum(weights)*self.classifier.nc
             return dataSetFolder ,splits, indices, Y
         return dataSetFolder
