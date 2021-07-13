@@ -75,12 +75,9 @@ class Experiment(object):
             trainer.model.train()
             print(trainer.train().metrics)
             trainer.model.eval()
-            self.classifier.model = trainer.model
-            self.classifier.optimizer = trainer.optimizer
-            self.classifier.scheduler = trainer.lr_scheduler
-            self.classifier.curr_epoch += 1
-            self.classifier.optimizer.zero_grad()
+            trainer.optimizer.zero_grad()
             torch.cuda.empty_cache()
+            self.classifier.curr_epoch += 1
             """
             logs = self.classifier._run_epoch(loaders[:-1])
             print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
@@ -105,7 +102,6 @@ class Experiment(object):
             metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
             metrics = {k:v for k,v in zip(metric_keys,metrics)}
             print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
-            trainer.model = self.classifier.model
             
         #print("Testing:...")
         print(self.classifier._validate(loaders[2], trainer))
