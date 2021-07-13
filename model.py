@@ -64,17 +64,17 @@ class NLPClassifier(object):
             config.num_memory_blocks = 4
             config.classifier_dropout_prob = 0
             """
-            label_dict_instance = {'INFP': 28098, 'INFJ': 24620, 'INTP': 18822, 'INTJ': 17096, 'ENFP': 11580, 'ENTP': 10964, 'ISTP': 4698, 'ENTJ': 3786, 'ISFP': 3538, 'ENFJ': 3418, 'ISTJ': 3290, 'ISFJ': 2875, 'ESTP': 1252, 'ESFJ': 1039, 'ESTJ': 731, 'ESFP': 682}
+            #label_dict_instance = {'INFJ': 1737, 'ESFP': 1737, 'ENFP': 1737, 'ESTP': 1737, 'ISTJ': 1737, 'INTP': 1737, 'ESTJ': 1737, 'INFP': 1737, 'ENTJ': 1737, 'ISTP': 1737, 'ESFJ': 1737, 'ISFJ': 1737, 'ENFJ': 1737, 'ENTP': 1737, 'ISFP': 1737, 'INTJ': 1737}
             model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels = num_classes)
-            model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
-            model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
+            #model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
+            #model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model.num_labels = num_classes
             model.config.max_position_embeddings = 256
             model.batch_size = self.bs
             #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=16, bias=False)
 
 
-            print(model.config)
+            #print(model.config)
             print(model)
             """
             class ModelWrapper(nn.Module):
