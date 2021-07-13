@@ -17,7 +17,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         dataset, splits, indices, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
-        #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
+        self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         random.shuffle(indices)
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
@@ -58,7 +58,7 @@ class Experiment(object):
         #Y = Y.view(Y.size(0), -1).cuda()
         #XY = torch.cat((X,Y), dim=1).cuda()
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 4)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
+        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
 

@@ -203,7 +203,7 @@ class NLPClassifier(object):
             self.optimizer.step()
             self.scheduler.step()
             y_ = torch.argmax(outputs, dim=-1)
-            print(torch.max(y_))
+            #print(torch.max(y_))
             total += data["labels"].size(0)
             correct += (y_.cpu()==data["labels"].cpu()).sum().item()
             f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
