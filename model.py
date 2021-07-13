@@ -71,7 +71,7 @@ class NLPClassifier(object):
             model.num_labels = num_classes
             model.config.max_position_embeddings = 512
             model.batch_size = self.bs
-            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=16, bias=True)
+            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=16, bias=True)
 
 
             print(model.config)
