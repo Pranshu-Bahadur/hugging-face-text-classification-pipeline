@@ -23,7 +23,7 @@ class Experiment(object):
         #indices.shuffle()
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
-         num_train_epochs=1,
+         num_train_epochs=self.classifier.final_epoch - init_epoch,
          do_train=True,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
@@ -72,10 +72,10 @@ class Experiment(object):
             self.classifier.curr_epoch += 1
             print(f"Running epoch {self.classifier.curr_epoch}\n\n")
             trainer.model.train()
-            trainer.train()
+            print(trainer.prediction_loop(loaders[1],"batch training...", False,metric_key_prefix="training"))
             trainer.model.eval()
             trainer.optimizer.zero_grad()
-            print(trainer.evaluation_loop(loaders[0],description="Train split evaluation",prediction_loss_only=False))
+            #print(trainer.evaluation_loop(loaders[0],description="Train split evaluation",prediction_loss_only=False))
             print(trainer.evaluation_loop(loaders[1],description="Validation split evaluation",prediction_loss_only=False))
             torch.cuda.empty_cache()
             if self.classifier.curr_epoch%config["save_interval"]==0:
