@@ -103,6 +103,6 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - splits
-            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits + diff)
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
             return dataSetFolder ,splits, indices#, Y
         return dataSetFolder
