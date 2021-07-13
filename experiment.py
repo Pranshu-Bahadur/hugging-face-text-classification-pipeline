@@ -68,7 +68,7 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=None, optimizers=(self.classifier.optimizer,self.classifier.scheduler))
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             trainer.model.train()
             print(trainer.train().metrics)
@@ -77,7 +77,8 @@ class Experiment(object):
             self.classifier.optimizer = trainer.optimizer
             self.classifier.scheduler = trainer.lr_scheduler
             self.classifier.curr_epoch += 1
-            #self.classifier.optimizer.zero_grad()
+            self.classifier.optimizer.zero_grad()
+            torch.cuda.empty_cache()
             """
             logs = self.classifier._run_epoch(loaders[:-1])
             print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
