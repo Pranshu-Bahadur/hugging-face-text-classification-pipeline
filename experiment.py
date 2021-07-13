@@ -48,11 +48,11 @@ class Experiment(object):
         #weights = weights/np.sum(weights)*self.classifier.nc
         #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
         #splits = [dataset[:indices]]
-        """
-        loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
-        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),#, sampler=indices[splits[1]:]),
-        Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:])#, sampler=indices[splits[1]+splits[2]:]),
-        ]"""
+        
+        loaders = [Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4),
+        Loader(splits[1], self.classifier.bs, shuffle=True, num_workers=4),
+        Loader(splits[2], self.classifier.bs, shuffle=True, num_workers=4),
+        ]
         
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         def compute_m(eval_pred):
@@ -66,14 +66,35 @@ class Experiment(object):
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0],eval_dataset=splits[1], compute_metrics=compute_m)
-        trainer.train()
-        """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
-            trainer.train()
+            losses = []
+            correct, total = 0,0
+            trainer.model.train()
+            for i, data in enumerate(loaders[0]):
+                #data = {k:v.cuda() for k,v in list(data.items())} 
+                losses.append(trainer.training_step(trainer.model,data))
+                _, logits, y = trainer.prediction_step(self.classifier.model,data,False)
+                total += y.size(0)
+                correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
+                print(i+1, sum(losses)/i+1, correct/total)
+            trainer.state.epoch += 1
+            print(trainer.state)
+            print("Training Metrics:", sum(losses)/i+1, correct/total)
+            losses = []
+            correct, total = 0,0
+            with torch.no_grad():
+                trainer.model.eval()
+                for i, data in enumerate(loaders[0]):
+                    #data = {k:v.cuda() for k,v in list(data.items())} 
+                    loss, logits, y = trainer.prediction_step(self.classifier.model,data,False)
+                    losses.append(loss)
+                    total += y.size(0)
+                    correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
+                    print(i+1, sum(losses)/i+1, correct/total)
+            print("Validation Metrics:", sum(losses)/i+1, correct/total)
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-            trainer.state.epoch = 0
             #trainer.state.num_train_epochs = 1
         """
         print("\n\n")
