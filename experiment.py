@@ -57,11 +57,7 @@ class Experiment(object):
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer, self.classifier.library, [])
-        label_dict_instance = dataSetFolder.labels
-        self.classifier.model.config.id2label= {k:i for i,k in enumerate(label_dict_instance)}
-        self.classifier.model.config.label2id= {str(i):k for i,k in enumerate(label_dict_instance)}
-        print(self.classifier.model.config)
+        dataSetFolder = self.classifier.dataset       
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()

@@ -13,6 +13,7 @@ from sklearn.metrics import f1_score
 import numpy as np
 import timm
 from fairscale.optim.grad_scaler import ShardedGradScaler
+from utils import SpreadSheetNLPCustomDataset
 #from apex import amp
 
 class NLPClassifier(object):
@@ -22,15 +23,14 @@ class NLPClassifier(object):
         self.curr_epoch = config["curr_epoch"]
         self.final_epoch = config["epochs"]
         self.bs = config["batch_size"]
-
-        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config["num_classes"])
+        self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
+        self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer, self.library)
+        self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
+        self.model = AutoModelForSequenceClassification.from_config(self.model_config).cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
-        
-        self.model = self.model.cuda()# nn.DataParallel(self.model).cuda() if config["multi"] else  #
-        #print(self.model)
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
@@ -46,7 +46,7 @@ class NLPClassifier(object):
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler()
 
         
-    def _create_model(self, library, model_name, num_classes):
+    def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
             """
             config = AutoConfig.from_pretrained(model_name)
@@ -64,43 +64,13 @@ class NLPClassifier(object):
             config.num_memory_blocks = 4
             config.classifier_dropout_prob = 0
             """
-            #label_dict_instance = {'INFJ': 1737, 'ESFP': 1737, 'ENFP': 1737, 'ESTP': 1737, 'ISTJ': 1737, 'INTP': 1737, 'ESTJ': 1737, 'INFP': 1737, 'ENTJ': 1737, 'ISTP': 1737, 'ESFJ': 1737, 'ISFJ': 1737, 'ENFJ': 1737, 'ENTP': 1737, 'ISFP': 1737, 'INTJ': 1737}
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels = num_classes)
-            #model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
-            #model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
-            model.num_labels = num_classes
-            model.config.max_position_embeddings = 256
-            model.batch_size = self.bs
-            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=16, bias=False)
-
-
-            #print(model.config)
-            print(model)
-            """
-            class ModelWrapper(nn.Module):
-                def __init__(self, model, num_classes):
-                    super().__init__()
-                    self.classifier = nn.Linear(in_features=model.pooler.dense.in_features, out_features=num_classes, bias=True)
-                def forward(self,x):
-                    x = self.model(x)
-                    return self.classifier(x)
-            """
-            #model = ModelWrapper(model, num_classes)
-            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
-            """
-            if "roberta" in model_name:
-                model.classifier.out_proj = 
-            elif not "long" in model_name: #TODO convert fine-tuned weights
-                
-            else:
-                model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
-            """
-            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
-            #model.config.max_position_embeddings = 32
-            #model.update(model.config)
-            return model, AutoTokenizer.from_pretrained(model_name)
+            config = AutoConfig.from_pretrained(model_name, num_labels = num_classes)
+            config.id2label= {k:i for i,k in enumerate(labels_dict)}
+            config.label2id= {str(i):k for i,k in enumerate(labels_dict)}
+            config.num_labels = num_classes
+            return config
         else:
-            return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
+            return timm.create_model(model_name, pretrained=True, num_classes=num_classes)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),

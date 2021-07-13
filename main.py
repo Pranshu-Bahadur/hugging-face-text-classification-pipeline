@@ -14,6 +14,7 @@ def _model_config(args):
         "optimizer_name": args.optimizer,
         "criterion_name": args.loss,
         "scheduler_name": args.scheduler,
+        "dataset_directory":args.dataset_directory,
         "batch_size": int(args.batch_size),
         "learning_rate": float(args.learning_rate),
         "checkpoint": args.checkpoint if args.checkpoint else "",

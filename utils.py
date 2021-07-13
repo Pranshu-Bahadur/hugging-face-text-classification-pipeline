@@ -9,7 +9,7 @@ def chunkstring(x, length):
     return re.findall('.{%d}'%length, x)
 
 class SpreadSheetNLPCustomDataset(Dataset):
-    def __init__(self, csv_path, tokenizer, library, indices):
+    def __init__(self, csv_path, tokenizer, library):#, tokenizer, library, indices
         self.dataset = pd.read_csv(csv_path)
         self.library = library
         cols_n = self.dataset.columns.tolist()
