@@ -30,6 +30,7 @@ class Experiment(object):
          per_device_train_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
+         do_train=True
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -59,41 +60,42 @@ class Experiment(object):
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
         trainer = Trainer(model=self.classifier.model, args=training_args)
-        trainer.scaler = self.classifier.scaler
+        self.classifier.optimizer = trainer.optimizer()
+        self.classifier.scheduler = trainer.lr_scheduler()
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
+            print(f"Epoch {self.classifier.curr_epoch}:\n\n")
             losses = []
             correct, total = 0,0
-            trainer.model.train()
+            self.classifier.model.train()
             for i, data in enumerate(loaders[0]):
                 data = {k:v.cuda() for k,v in list(data.items())}
-                loss, logits, y = trainer.prediction_step(trainer.model,data,False)
-                print(loss)
+                y = data.pop("labels")
+                logits = self.classifier.model(**data).logits
                 loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
-                print(loss)
-                losses.append(loss.cpu().item())
-                loss.backward()
-                trainer.optimizer.step()
-                trainer.lr_scheduler.step()
-                trainer.model.zero_grad()
+                losses.append(loss.mean().cpu().item())
+                self.classifier.scaler.scale(loss).backward()
+                self.classifier.optimizer.step()
+                self.classifier.scheduler.step()
+                self.classifier.model.zero_grad()
                 total += y.size(0)
                 correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                 print(i+1, sum(losses)/i+1, correct/total)
-            trainer.state.epoch += 1
-            print(trainer.state)
-            print("Training Metrics:", torch.mean(torch.tensor(losses)), correct/total)
+            print("Training Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n")
             losses = []
             correct, total = 0,0
             with torch.no_grad():
-                trainer.model.eval()
+                self.classifier.model.eval()
                 for i, data in enumerate(loaders[0]):
-                    data = {k:v.cuda() for k,v in list(data.items())} 
-                    loss, logits, y = trainer.prediction_step(trainer.model,data,False)
+                    data = {k:v.cuda() for k,v in list(data.items())}
+                    y = data.pop("labels")
+                    logits = self.classifier.model(**data).logits
+                    loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
                     losses.append(loss.cpu().item())
                     total += y.size(0)
                     correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                     print(i+1, sum(losses)/i+1, correct/total)
-            print("Validation Metrics:", torch.mean(torch.tensor(losses)), correct/total)
+            print("Validation Metrics:", torch.mean(torch.tensor(losses)), correct/total, ," \n\n")
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             #trainer.state.num_train_epochs = 1
