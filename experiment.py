@@ -26,15 +26,17 @@ class Experiment(object):
         training_args = TrainingArguments(output_dir='./results',
          do_train=True,
          label_names=list(self.classifier.dataset.labels.keys()),
-         label_smoothing_factor = 0.1,
-         num_train_epochs=1,
+         num_train_epochs=11,
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
          logging_strategy="no",
-         save_strategy="no"
+         save_strategy="no",
+         evaluation_strategy="epoch",
+         do_predict=True,
+         do_eval=True
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -56,8 +58,8 @@ class Experiment(object):
         metric = load_metric("accuracy")
         def compute_m(eval_pred):
             logits, labels = eval_pred
-            predictions = np.argmax(logits, axis=-1)
-            return metric.compute(predictions=predictions, references=labels)
+            y_ = torch.argmax(logits, dim=-1)
+            return (y_.cpu()==labels.cpu()).sum().item()/labels.size(0)
         
         """
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
