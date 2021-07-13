@@ -71,18 +71,21 @@ class Experiment(object):
             print(f"Running epoch {self.classifier.curr_epoch}\n\n")
             running_loss, correct, total, iterations = 0,0,0,0
             for data in loaders[0]:
+                data = {k: v.cuda() for k, v in data.items()}
                 self.classifier.model.train()
                 self.classifier.optimizer.zero_grad()
-                loss, logits, y = trainer.prediction_step(self.classifier.model, data, prediction_loss_only=False)
+                loss, logits, y = self.classifier.model(data)
                 trainer.scaler.scale(loss).backward()
-                self.classifier.optimizer.step()
-                self.classifier.scheduler.step()
+                if iterations%100:
+                    self.classifier.optimizer.step()
+                    self.classifier.scheduler.step()
                 y_ = torch.argmax(logits, dim=-1)
                 running_loss += loss.cpu().item()
                 total += y.size(0)
                 correct += (y_.cpu()==y.cpu()).sum().item()
                 iterations += 1
                 print(iterations, float(correct/float(total))*100, float(running_loss/iterations))
+                del data, y_
                 torch.cuda.empty_cache()
             print("Epoch", self.classifier.curr_epoch, "training results", float(correct/float(total))*100, float(running_loss/iterations))
             with torch.no_grad():
