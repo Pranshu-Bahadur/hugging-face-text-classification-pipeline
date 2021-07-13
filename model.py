@@ -65,7 +65,7 @@ class NLPClassifier(object):
             config.classifier_dropout_prob = 0
             """
             label_dict_instance = {'INFP': 28098, 'INFJ': 24620, 'INTP': 18822, 'INTJ': 17096, 'ENFP': 11580, 'ENTP': 10964, 'ISTP': 4698, 'ENTJ': 3786, 'ISFP': 3538, 'ENFJ': 3418, 'ISTJ': 3290, 'ISFJ': 2875, 'ESTP': 1252, 'ESFJ': 1039, 'ESTJ': 731, 'ESFP': 682}
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels = num_classes)
             model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
             model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model.num_labels = num_classes
