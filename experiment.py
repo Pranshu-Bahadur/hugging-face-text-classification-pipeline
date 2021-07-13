@@ -60,7 +60,7 @@ class Experiment(object):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             acc = metric.compute(predictions=predictions, references=labels)
-            print(acc)
+            print(acc/labels.size(0))
             return acc
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
         trainer.train()
