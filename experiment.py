@@ -69,7 +69,7 @@ class Experiment(object):
             self.classifier.curr_epoch +=1
             trainer.train()
             with torch.no_grad():
-                print(f'Actual Epoch: {self.classifier.curr_epoch}\n\n',trainer.evaluate(splits[1], compute_metrics=compute_metrics))
+                print(trainer.evaluation_loop(Loader(splits[1], batch_size=self.classifier.bs,num_workers=4, shuffle=True),"validation..."))
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
