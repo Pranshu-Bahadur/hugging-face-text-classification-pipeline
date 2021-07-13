@@ -28,7 +28,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>512]
+        self.dataset = self.dataset[self.dataset['total']>256]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -41,7 +41,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #print(mean(self.dataset['total'].map(len)))
         self.distribution = dict(self.dataset.type.value_counts())
         print(f"Tokenizing dataset...")
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=1024)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=512)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
