@@ -71,7 +71,7 @@ class Experiment(object):
             self.classifier.curr_epoch +=1
             trainer.train()
             with torch.no_grad():
-                print(trainer.evaluate(splits[1]))
+                print(f'{self.classifier.curr_epoch}',trainer.evaluate(splits[1]))
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
