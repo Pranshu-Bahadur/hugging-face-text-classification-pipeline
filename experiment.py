@@ -26,13 +26,13 @@ class Experiment(object):
         training_args = TrainingArguments(output_dir='./results',
          do_train=True,
          label_names=list(self.classifier.dataset.labels.keys()),
-         num_train_epochs=11,
+         num_train_epochs=self.classifier.final_epoch - self.classifier.curr_epoch,
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
-         logging_strategy="no",
+         logging_strategy="epoch",
          save_strategy="no",
          evaluation_strategy="epoch",
          do_predict=True,
@@ -55,17 +55,19 @@ class Experiment(object):
         ]"""
         
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
-        metric = load_metric("accuracy")
         def compute_m(eval_pred):
             logits, labels = eval_pred
-            y_ = torch.argmax(logits, dim=-1)
-            return (y_.cpu()==labels.cpu()).sum().item()/labels.size(0)
+            y_ = np.argmax(logits, axis=-1)
+            metric = load_metric("accuracy")
+            return metric.compute(predictions=y_,references=labels)
         
         """
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
         trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0],eval_dataset=splits[1], compute_metrics=compute_m)
+        trainer.train()
+        """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             trainer.train()
@@ -73,6 +75,7 @@ class Experiment(object):
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
             #trainer.state.num_train_epochs = 1
+        """
         print("\n\n")
         print(trainer.evaluate(splits[2]))
         print("\nRun Complete.\n\n")
