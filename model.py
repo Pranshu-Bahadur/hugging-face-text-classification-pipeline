@@ -68,6 +68,7 @@ class NLPClassifier(object):
             config.max_position_embeddings = 48
             config.embedding_size = 48
             config.num_hidden_layers = 3
+            config.num_attention_heads = 3
             print(config)
             return config
         else:

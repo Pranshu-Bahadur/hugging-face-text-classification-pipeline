@@ -68,11 +68,11 @@ class Experiment(object):
         trainer = Trainer(model=self.classifier.model, args=training_args)
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch += 1
-            print(f"Running epoch {self.classifier.curr_epoch}\n\n")
+            print(f"Running epoch {self.classifier.curr_epoch}\n")
             running_loss, correct, total, iterations = 0,0,0,0
+            self.classifier.model.train()
             for data in loaders[0]:
                 data = {k: v.cuda() for k, v in data.items()}
-                self.classifier.model.train()
                 self.classifier.optimizer.zero_grad()
                 loss, logits, y = self.classifier.model(data)
                 trainer.scaler.scale(loss).backward()
