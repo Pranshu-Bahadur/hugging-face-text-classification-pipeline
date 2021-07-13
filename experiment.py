@@ -25,8 +25,6 @@ class Experiment(object):
         training_args = TrainingArguments(output_dir='./results',
          num_train_epochs=1,
          do_train=True,
-         do_eval=True,
-         do_predict=True,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
          label_names=list(dataset.labels.keys()),
