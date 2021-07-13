@@ -34,7 +34,7 @@ class Experiment(object):
          weight_decay=1e-5,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=int((len(splits[0])//self.classifier.bs)*0.25),
+         logging_steps=1,
          #evaluation_strategy="steps",
          #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
          #eval_accumulation_steps = 1
