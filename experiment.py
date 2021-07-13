@@ -35,7 +35,7 @@ class Experiment(object):
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=1,
+         logging_steps=10,
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
