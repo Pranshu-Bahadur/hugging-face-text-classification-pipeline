@@ -69,9 +69,9 @@ class NLPClassifier(object):
             model.config.id2label={k:i for i,k in enumerate(label_dict_instance)}
             model.config.label2id={str(i):k for i,k in enumerate(label_dict_instance)}
             model.num_labels = num_classes
-            model.config.max_position_embeddings = 48
+            model.config.max_position_embeddings = 1024
             model.batch_size = self.bs
-            model.classifier = nn.Linear(in_features=1536, out_features=16, bias=True)
+            model.classifier = nn.Linear(in_features=768, out_features=16, bias=True)
 
 
             print(model.config)
