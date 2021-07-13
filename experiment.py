@@ -62,7 +62,7 @@ class Experiment(object):
             acc = metric.compute(predictions=predictions, references=labels)
             print(acc)
             return acc
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics, log)
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
         trainer.train()
         trainer.evaluate()
         
