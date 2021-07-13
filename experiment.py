@@ -66,19 +66,17 @@ class Experiment(object):
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
         trainer = Trainer(model=self.classifier.model, args=training_args)
-        self.classifier.optimizer = trainer.optimizer
-        self.classifier.scheduler = trainer.lr_scheduler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch += 1
             print(f"Running epoch {self.classifier.curr_epoch}\n\n")
             running_loss, correct, total, iterations = 0,0,0,0
             for data in loaders[0]:
-                trainer.model.train()
-                trainer.optimizer.zero_grad()
-                loss, logits, y = trainer.prediction_step(trainer.model, data, prediction_loss_only=False)
+                self.classifier.model.train()
+                self.classifier.optimizer.zero_grad()
+                loss, logits, y = trainer.prediction_step(self.classifier.model, data, prediction_loss_only=False)
                 trainer.scaler.scale(loss).backward()
-                trainer.optimizer.step()
-                trainer.lr_scheduler.step()
+                self.classifier.optimizer.step()
+                self.classifier.scheduler.step()
                 y_ = torch.argmax(logits, dim=-1)
                 running_loss += loss.cpu().item()
                 total += y.size(0)
@@ -88,6 +86,7 @@ class Experiment(object):
                 torch.cuda.empty_cache()
             print("Epoch", self.classifier.curr_epoch, "training results", float(correct/float(total))*100, float(running_loss/iterations))
             with torch.no_grad():
+                trainer.model = self.classifier.model
                 trainer.model.eval()
                 print(trainer.evaluation_loop(loaders[1],description="Validation split evaluation",prediction_loss_only=False))
             if self.classifier.curr_epoch%config["save_interval"]==0:
