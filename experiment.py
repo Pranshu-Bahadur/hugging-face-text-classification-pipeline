@@ -1,3 +1,4 @@
+from datasets import load_metric
 from kmeans_pytorch import kmeans
 from sklearn.cluster import KMeans
 import numpy as np
@@ -9,6 +10,8 @@ from torch import nn as nn
 from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
 import random
+from transformers import TrainingArguments
+from transformers import Trainer
 
 class Experiment(object):
     def __init__(self, config: dict):
@@ -18,6 +21,19 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         dataset, splits = self._preprocessing(dataset, True)#, indices, Y_ 
         init_epoch = self.classifier.curr_epoch
+        training_args = TrainingArguments(output_dir='./results',
+         num_train_epochs=self.classifier.final_epoch - self.classifier.curr_epoch,
+         do_train=True,
+         per_device_train_batch_size=self.classifier.bs//4,
+         per_device_eval_batch_size=self.classifier.bs//4,
+         label_names=list(dataset.labels.keys()),
+         label_smoothing_factor = 0.1,
+         warmup_steps=500,
+         weight_decay=0.01,
+         logging_dir='./logs',
+         gradient_accumulation_steps=len(splits[0])//2*self.classifier.bs,
+         logging_strategy="epoch",
+         evaluation_strategy="epoch")
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         #random.shuffle(indices)
@@ -27,19 +43,31 @@ class Experiment(object):
         #weights = (1 - beta)/np.array(effective_num)
         #weights = weights/np.sum(weights)*self.classifier.nc
         #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
-        
+        """
         loaders = [Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=#indices[:splits[0]]),
         Loader(splits[1], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]:]),
         Loader(splits[2], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]+splits[2]:]),
         ]
-        
+        """
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
-        print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
+        metric = load_metric("accuracy")
+        def compute_metrics(eval_pred):
+            logits, labels = eval_pred
+            predictions = np.argmax(logits, axis=-1)
+            return metric.compute(predictions=predictions, references=labels)
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
+        trainer.train()
+        trainer.evaluate()
+        
+        
+        #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
+         
+        """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             logs = self.classifier._run_epoch(loaders[:-1])
             print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
-            """
+            
             f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
             print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
             self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
@@ -49,9 +77,10 @@ class Experiment(object):
             self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
             self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
             #loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
-            """
+            
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
+        """
         print("Testing:...")
         print(self.classifier._validate(loaders[2]))
         print("\nRun Complete.")
