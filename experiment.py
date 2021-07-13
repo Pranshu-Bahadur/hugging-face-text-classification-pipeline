@@ -96,10 +96,10 @@ class Experiment(object):
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             
             print(f"Running inferences for epoch {self.classifier.curr_epoch}\n\n")
-            metrics = list(self.classifier._validate(loaders[0], trainer))
-            print("test\n")
-            metrics += self.classifier._validate(loaders[1], trainer)
-            metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
+            #metrics = list(self.classifier._validate(loaders[0], trainer))
+            #print("test\n")
+            metrics = list(self.classifier._validate(loaders[1], trainer))#"F1 Train:", "Training Accuracy:", "Training Loss:",
+            metric_keys = ["F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
             metrics = {k:v for k,v in zip(metric_keys,metrics)}
             print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
             
