@@ -12,13 +12,13 @@ class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library):#, tokenizer, library, indices
         self.dataset = pd.read_csv(csv_path)
         self.library = library
-        cols_n = self.dataset.columns.tolist()
-        cols_n.reverse()
-        types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
-        self.dataset['posts'] = self.dataset['posts'].str.lower()
+        #cols_n = self.dataset.columns.tolist()
+        #cols_n.reverse()
+        #types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
+        #self.dataset['posts'] = self.dataset['posts'].str.lower()
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         #self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
+        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         #print("Exploding posts and types...\n")
         #self.dataset = self.dataset[self.dataset['total_words']>256]
