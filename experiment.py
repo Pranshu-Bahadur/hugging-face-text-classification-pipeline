@@ -18,7 +18,7 @@ class Experiment(object):
         dataset, splits, indices, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         #weights.reverse()
-        #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
+        self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         random.shuffle(indices)
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
@@ -70,6 +70,9 @@ class Experiment(object):
             diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             total = sum(list(dataSetFolder.distribution.values()))
-            weights = [float(v/total) for v in list(dataSetFolder.distribution.values())]
+            beta = 0.999
+            effective_num = 1.0 - np.power(beta, list(dataSetFolder.distribution.values()))
+            weights = (1 - beta)/np.array(effective_num)
+            weights = weights/np.sum(weights)*self.classifier.nc
             return dataSetFolder ,splits, indices, weights
         return dataSetFolder
