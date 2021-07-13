@@ -33,9 +33,6 @@ class Experiment(object):
          per_device_eval_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
-         logging_dir='./logs',
-         logging_strategy="steps",
-         logging_steps=int((len(splits[0])//self.classifier.bs)*0.1),
          #evaluation_strategy="steps",
          #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
          #eval_accumulation_steps = 1
@@ -72,7 +69,7 @@ class Experiment(object):
             self.classifier.curr_epoch +=1
             trainer.train()
             with torch.no_grad():
-                print(f'{self.classifier.curr_epoch}',trainer.evaluate(splits[1]))
+                print(f'Actual Epoch: {self.classifier.curr_epoch}\n\n',trainer.evaluate(splits[1], compute_metrics=compute_metrics))
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             trainer.state.epoch = 0
