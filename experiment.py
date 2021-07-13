@@ -95,7 +95,7 @@ class Experiment(object):
                     total += y.size(0)
                     correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                     print(i+1, sum(losses)/i+1, correct/total)
-            print("Validation Metrics:", torch.mean(torch.tensor(losses)), correct/total, ," \n\n")
+            print("Validation Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n\n====================")
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             #trainer.state.num_train_epochs = 1
