@@ -36,7 +36,10 @@ class Experiment(object):
          weight_decay=0.01,
          logging_dir='./logs',
          logging_strategy="steps",
-         logging_steps=100,
+         logging_steps=int((len(splits[0])//self.classifier.bs)*0.1),
+         #evaluation_strategy="steps",
+         #eval_steps=int((len(splits[1])//self.classifier.bs)*0.1),
+         #eval_accumulation_steps = 1
          )
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -70,7 +73,7 @@ class Experiment(object):
             self.classifier.model.train()
             print(trainer.train().metrics)
             self.classifier.model.eval()
-            print(trainer.evaluate().metrics)
+            print(trainer.evaluate(metric_key_prefix="accuracy"))
             self.classifier.curr_epoch += 1
             #self.classifier.optimizer.zero_grad()
             """
