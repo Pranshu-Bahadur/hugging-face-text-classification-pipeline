@@ -36,7 +36,7 @@ class Experiment(object):
          logging_dir='./logs',
          logging_strategy="steps",
          evaluation_strategy="steps",
-         logging_steps=100,
+         logging_steps=(self.classifier.final_epoch - init_epoch)//1000,
          eval_steps=self.classifier.bs,
          )
         #weights.reverse()
