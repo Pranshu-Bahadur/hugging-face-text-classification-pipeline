@@ -31,7 +31,6 @@ class Experiment(object):
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
-         gradient_accumulation_steps=len(splits[0])//(2*self.classifier.bs),
          logging_strategy="steps",
          logging_steps=1,
          evaluation_strategy="epoch")
