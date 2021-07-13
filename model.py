@@ -26,7 +26,8 @@ class NLPClassifier(object):
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer, self.library)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
-        self.model = AutoModelForSequenceClassification.from_config(self.model_config).cuda()
+        self.model = AutoModelForSequenceClassification.from_config(self.model_config)
+        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)

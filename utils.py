@@ -37,7 +37,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
 
         self.distribution = self.dataset.type.value_counts()
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
-        max_size = self.distribution.max()
+        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
+        max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
