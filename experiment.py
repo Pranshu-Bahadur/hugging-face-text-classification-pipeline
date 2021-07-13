@@ -17,6 +17,7 @@ class Experiment(object):
     def _run(self, dataset, config: dict):
         dataset, splits, indices, weights = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
+        weights.reverse()
         self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         random.shuffle(indices)
         
