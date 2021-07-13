@@ -22,7 +22,7 @@ class Experiment(object):
         dataset, splits = self._preprocessing(dataset, True)#, indices, Y_ 
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
-         num_train_epochs=self.classifier.final_epoch - self.classifier.curr_epoch,
+         num_train_epochs=self.classifier.final_epoch - init_epoch,
          do_train=True,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
@@ -31,8 +31,9 @@ class Experiment(object):
          warmup_steps=500,
          weight_decay=0.01,
          logging_dir='./logs',
-         gradient_accumulation_steps=len(splits[0])//2*self.classifier.bs,
-         logging_strategy="epoch",
+         gradient_accumulation_steps=len(splits[0])//(2*self.classifier.bs),
+         logging_strategy="steps",
+         logging_steps=len(splits[0])//(2*self.classifier.bs),
          evaluation_strategy="epoch")
         #weights.reverse()
         #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
@@ -81,8 +82,8 @@ class Experiment(object):
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         """
-        print("Testing:...")
-        print(self.classifier._validate(loaders[2]))
+        #print("Testing:...")
+        #print(self.classifier._validate(loaders[2]))
         print("\nRun Complete.")
 
     def _preprocessing(self, directory, train):
