@@ -35,6 +35,7 @@ class Experiment(object):
          logging_dir='./logs',
          logging_strategy="steps",
          evaluation_strategy="steps",
+         logging_steps=self.classifier.bs//4,
          eval_steps=self.classifier.bs,
          )
         #weights.reverse()
