@@ -55,13 +55,16 @@ class Experiment(object):
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
-        #Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
-        #Y = Y.view(Y.size(0), -1).cuda()
+        Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
+        Y = Y.view(Y.size(0), -1).cuda()
         #XY = torch.cat((X,Y), dim=1).cuda()
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
         topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
+        X_ = X[indices]
+        Y_ = Y[indices]
+        dist = [Y_[indices].size(0) for i in Y_.unique()]
 
         #@TODO add features selection here
         if train:
@@ -71,7 +74,7 @@ class Experiment(object):
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             total = sum(list(dataSetFolder.distribution.values()))
             beta = 0.999
-            effective_num = 1.0 - np.power(beta, list(dataSetFolder.distribution.values()))
+            effective_num = 1.0 - np.power(beta, dist)
             weights = (1 - beta)/np.array(effective_num)
             weights = weights/np.sum(weights)*self.classifier.nc
             return dataSetFolder ,splits, indices, weights
