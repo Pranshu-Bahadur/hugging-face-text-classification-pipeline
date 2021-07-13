@@ -67,6 +67,10 @@ class NLPClassifier(object):
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
             config.max_position_embeddings = 48
             config.embedding_size = 48
+            config.hidden_size = 256
+            config.intermediate_size = 512
+            config.num_hidden_layers = 6
+            config.num_attention_heads = 6
             print(config)
             return config
         else:
