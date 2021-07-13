@@ -41,7 +41,7 @@ class NLPClassifier(object):
         self.best_cluster_center_score = float("-inf")
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
-        #self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler()
+        self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler()
 
         
     def _create_model_config(self, library, model_name, num_classes, labels_dict):

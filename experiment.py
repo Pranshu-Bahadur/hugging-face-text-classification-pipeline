@@ -75,9 +75,10 @@ class Experiment(object):
                 iterations += 1
                 print(iterations)
                 data = {k: v.cuda() for k, v in data.items()}
+                y = data['labels']
                 self.classifier.optimizer.zero_grad()
-                loss, logits, y = self.classifier.model(**data)
-                trainer.scaler.scale(loss).backward()
+                loss, logits = self.classifier.model(**data)
+                self.classifier.scaler.scale(loss).backward()
                 if iterations%100:
                     self.classifier.optimizer.step()
                     self.classifier.scheduler.step()
