@@ -26,7 +26,7 @@ class Experiment(object):
         effective_num = 1.0 - np.power(beta, dist)
         weights = (1 - beta)/np.array(effective_num)
         weights = weights/np.sum(weights)*self.classifier.nc
-        self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
+        #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
         Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),

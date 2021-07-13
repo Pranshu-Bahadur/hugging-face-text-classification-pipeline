@@ -21,13 +21,9 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         #print("Exploding posts and types...\n")
-                
-        self.dataset['total_chars'] = self.dataset['posts'].map(len)
-        self.dataset['total_words'] = self.dataset['posts'].str.split()
-        self.dataset['total_words'] = self.dataset['total_words'].map(len)
-        self.dataset = self.dataset[self.dataset['total_words']>256]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 32*180//2)) for _, row in self.dataset.iterrows()]).reset_index())
-        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        #self.dataset = self.dataset[self.dataset['total_words']>256]
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 32*180//2)) for _, row in self.dataset.iterrows()]).reset_index())
+        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
 
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], row['posts'].split("|||")) for _, row in self.dataset.iterrows()]).reset_index())
         self.dataset['total'] = self.dataset['posts'].str.split()
