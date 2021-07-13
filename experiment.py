@@ -19,7 +19,7 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        dataset, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
+        _, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
         #random.shuffle(indices)
         init_epoch = self.classifier.curr_epoch
         
@@ -81,7 +81,7 @@ class Experiment(object):
     def _preprocessing(self, directory, train):
         dataSetFolder = self.classifier.dataset       
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
-        """
+        
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
@@ -92,11 +92,12 @@ class Experiment(object):
         topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
-        """
+    
         #X_ = X[indices]
         #dist = [Y_[indices].cpu().size(0) for i in Y_.unique()]
-        indices = []
         #@TODO add features selection here
+        dataSetFolder = torch.utils.data.dataset.Subset(dataSetFolder,indices=indices)
+
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
