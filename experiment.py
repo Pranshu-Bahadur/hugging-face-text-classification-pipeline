@@ -15,11 +15,17 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        dataset, splits, indices, weights = self._preprocessing(dataset, True)
+        dataset, splits, indices, Y_ = self._preprocessing(dataset, True)
         init_epoch = self.classifier.curr_epoch
         #weights.reverse()
-        self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
+        #self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         random.shuffle(indices)
+        dist = [Y_[indices[:splits[0]]].size(0) for i in Y_.unique()]
+        beta = 0.999
+        effective_num = 1.0 - np.power(beta, dist)
+        weights = (1 - beta)/np.array(effective_num)
+        weights = weights/np.sum(weights)*self.classifier.nc
+        self.classifier.criterion.weight = torch.tensor(weights).float().cuda()
         
         loaders = [Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
         Loader(dataset, self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),
@@ -77,5 +83,5 @@ class Experiment(object):
             effective_num = 1.0 - np.power(beta, dist)
             weights = (1 - beta)/np.array(effective_num)
             weights = weights/np.sum(weights)*self.classifier.nc
-            return dataSetFolder ,splits, indices, weights
+            return dataSetFolder ,splits, indices, Y
         return dataSetFolder
