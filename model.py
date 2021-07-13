@@ -69,6 +69,7 @@ class NLPClassifier(object):
             config.embedding_size = 48
             config.num_hidden_layers = 3
             config.num_attention_heads = 3
+            config.hidden_act = "relu"
             print(config)
             return config
         else:
