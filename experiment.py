@@ -73,7 +73,6 @@ class Experiment(object):
             self.classifier.model.train()
             for _,data in enumerate(loaders[0]):
                 iterations += 1
-                print(iterations)
                 data = {k: v.cuda() for k, v in data.items()}
                 y = data['labels']
                 loss, logits = self.classifier.model(**data)
