@@ -19,8 +19,8 @@ class Experiment(object):
         self.classifier = NLPClassifier(config)
 
     def _run(self, dataset, config: dict):
-        dataset, splits, _ = self._preprocessing(dataset, True)#, indices, Y_ 
-        #indices.shuffle()
+        dataset, splits, indices = self._preprocessing(dataset, True)#, indices, Y_ 
+        indices.shuffle()
         init_epoch = self.classifier.curr_epoch
         training_args = TrainingArguments(output_dir='./results',
          num_train_epochs=self.classifier.final_epoch - init_epoch,
@@ -49,9 +49,9 @@ class Experiment(object):
         #weights = weights/np.sum(weights)*self.classifier.nc
         #self.classifier.criterion = nn.CrossEntropyLoss(weight= torch.tensor(weights).float().cuda()).cuda()
         #splits = [dataset[:indices]]
-        loaders = [Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=#indices[:splits[0]]),
-        Loader(splits[1], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]:]),
-        Loader(splits[2], self.classifier.bs, shuffle=True, num_workers=4),#, sampler=indices[splits[1]+splits[2]:]),
+        loaders = [Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[:splits[0]]),
+        Loader(splits[1], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]:]),#, sampler=indices[splits[1]:]),
+        Loader(splits[2], self.classifier.bs, shuffle=False, num_workers=4, sampler=indices[splits[1]+splits[2]:])#, sampler=indices[splits[1]+splits[2]:]),
         ]
         
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
@@ -88,26 +88,25 @@ class Experiment(object):
     def _preprocessing(self, directory, train):
         dataSetFolder = self.classifier.dataset       
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
-        #print("\n\nRunning K-means for outlier detection...\n\n")
-        #X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
-        #X = X.view(X.size(0), -1)
+        print("\n\nRunning K-means for outlier detection...\n\n")
+        X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
+        X = X.view(X.size(0), -1)
         #Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
         #Y = Y.view(Y.size(0), -1)
         #XY = torch.cat((X,Y), dim=1).cuda()
-        #cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        #topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
-        #indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        #print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
+        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
+        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 2)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
+        indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from top 7 cluster(s)\n\n")
         #X_ = X[indices]
         #dist = [Y_[indices].cpu().size(0) for i in Y_.unique()]
-        indices = []
         #@TODO add features selection here
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             #diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize+1])
-            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize+1]
-            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
+            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
+            #splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             #total = sum(list(dataSetFolder.distribution.values()))
             return dataSetFolder ,splits, indices#, Y
         return dataSetFolder
