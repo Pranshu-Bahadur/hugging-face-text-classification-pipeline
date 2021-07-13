@@ -76,10 +76,10 @@ class Experiment(object):
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
-            diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
+            diff = len(dataSetFolder) - sum([trainingValidationDatasetSize, testDatasetSize, testDatasetSize+1])
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             print(len(dataSetFolder), diff)
-            splits = torch.utils.data.dataset.random_split(dataSetFolder[:-1], splits)
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             total = sum(list(dataSetFolder.distribution.values()))
             return dataSetFolder ,splits#, indices, Y
         return dataSetFolder
