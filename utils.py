@@ -6,7 +6,7 @@ import re
 import numpy as np
 
 def chunkstring(x, length):
-    return re.findall(r'.*', length)
+    return re.findall(r'(*)', length)
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer, library, indices):
