@@ -71,16 +71,27 @@ class Experiment(object):
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch += 1
             print(f"Running epoch {self.classifier.curr_epoch}\n\n")
-            trainer.model.train()
-            print(trainer.prediction_loop(loaders[1],"batch training...", False,metric_key_prefix="training"))
-            trainer.model.eval()
-            trainer.optimizer.zero_grad()
-            #print(trainer.evaluation_loop(loaders[0],description="Train split evaluation",prediction_loss_only=False))
-            print(trainer.evaluation_loop(loaders[1],description="Validation split evaluation",prediction_loss_only=False))
-            torch.cuda.empty_cache()
+            running_loss, correct, total, iterations = 0,0,0,0
+            for data in loaders[1]:
+                trainer.model.train()
+                trainer.optimizer.zero_grad()
+                loss, logits, y = trainer.prediction_step(trainer.model, f"{iterations}",prediction_loss_only=False)
+                trainer.scaler.scale(loss).backward()
+                trainer.optimizer.step()
+                trainer.lr_scheduler.step()
+                y_ = torch.argmax(logits, dim=-1)
+                running_loss += loss.cpu().item()
+                total += y.size(0)
+                correct += (y_.cpu()==y.cpu()).sum().item()
+                iterations += 1
+                print(iterations, float(correct/float(total))*100, float(running_loss/iterations))
+                torch.cuda.empty_cache()
+            print("Epoch", self.classifier.curr_epoch, "training results", float(correct/float(total))*100, float(running_loss/iterations))
+            with torch.no_grad():
+                trainer.model.eval()
+                print(trainer.evaluation_loop(loaders[1],description="Validation split evaluation",prediction_loss_only=False))
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-            
         print("\n\n")
         print(trainer.evaluation_loop(loaders[0],description="Test split evaluation",prediction_loss_only=False))
         print("\nRun Complete.\n\n")
