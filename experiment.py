@@ -36,7 +36,7 @@ class Experiment(object):
          logging_dir='./logs',
          logging_strategy="steps",
          evaluation_strategy="steps",
-         logging_steps=len(splits[0])//(self.classifier.bs*100),
+         logging_steps=100,
          eval_steps=self.classifier.bs,
          )
         #weights.reverse()
