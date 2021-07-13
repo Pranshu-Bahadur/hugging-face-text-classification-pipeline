@@ -30,6 +30,7 @@ class Experiment(object):
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
          per_device_eval_batch_size=self.classifier.bs//4,
+         label_smoothing_factor=0.1,
          warmup_steps=500,
          weight_decay=1e-5,
          logging_strategy="epoch",
@@ -65,16 +66,21 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0],eval_dataset=splits[1], compute_metrics=compute_m)
+        trainer = Trainer(model=self.classifier.model, args=training_args)
+        trainer.scaler = self.classifier.scaler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
             losses = []
             correct, total = 0,0
             trainer.model.train()
             for i, data in enumerate(loaders[0]):
-                #data = {k:v.cuda() for k,v in list(data.items())} 
-                losses.append(trainer.training_step(trainer.model,data))
-                _, logits, y = trainer.prediction_step(self.classifier.model,data,False)
+                data = {k:v.cuda() for k,v in list(data.items())} 
+                loss, logits, y = trainer.prediction_step(trainer.model,data,False)
+                print(":pred done")
+                trainer.scaler.scale(loss).backward()
+                trainer.optimizer.step()
+                trainer.lr_scheduler.step()
+                trainer.model.zero_grad()
                 total += y.size(0)
                 correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                 print(i+1, sum(losses)/i+1, correct/total)
@@ -86,7 +92,7 @@ class Experiment(object):
             with torch.no_grad():
                 trainer.model.eval()
                 for i, data in enumerate(loaders[0]):
-                    #data = {k:v.cuda() for k,v in list(data.items())} 
+                    data = {k:v.cuda() for k,v in list(data.items())} 
                     loss, logits, y = trainer.prediction_step(self.classifier.model,data,False)
                     losses.append(loss)
                     total += y.size(0)
