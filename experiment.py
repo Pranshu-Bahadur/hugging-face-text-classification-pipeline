@@ -30,6 +30,7 @@ class Experiment(object):
          num_train_epochs=1,
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
+         per_device_eval_batch_size=self.classifier.bs//4,
          warmup_steps=500,
          weight_decay=1e-5,
          logging_dir='./logs',
