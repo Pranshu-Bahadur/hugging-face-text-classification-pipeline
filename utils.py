@@ -39,7 +39,6 @@ class SpreadSheetNLPCustomDataset(Dataset):
 
         self.distribution = self.dataset.type.value_counts()
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
-        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
         max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         lst = [self.dataset]
@@ -48,6 +47,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.concat(lst)
         self.distribution = dict(self.dataset.type.value_counts())
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
+        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
         print(f"Tokenizing dataset...")
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding='max_length', truncation=True, max_length=48)
         print(f"Tokenizing complete.\n\n")

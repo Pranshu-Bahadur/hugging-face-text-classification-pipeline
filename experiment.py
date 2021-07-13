@@ -36,7 +36,7 @@ class Experiment(object):
          logging_dir='./logs',
          logging_strategy="steps",
          evaluation_strategy="steps",
-         logging_steps=len(splits[0])//self.classifier.bs,
+         logging_steps=len(splits[0])//(self.classifier.bs*100),
          eval_steps=self.classifier.bs,
          )
         #weights.reverse()
@@ -93,7 +93,7 @@ class Experiment(object):
     def _preprocessing(self, directory, train):
         dataSetFolder = self.classifier.dataset       
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
-        #print("\n\nRunning K-means for outlier detection...\n\n")
+        print("\n\nRunning K-means for outlier detection...\n\n")
         #X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         #X = X.view(X.size(0), -1)
         #Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
