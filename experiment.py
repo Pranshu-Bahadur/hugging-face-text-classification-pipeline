@@ -66,44 +66,25 @@ class Experiment(object):
         #print("\nRunning dimensoniality reduction...\nRunning training loop...\n")
         #self.classifier._k_means_approximation_one_step(loaders[0])
         """
-        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=None)
+        trainer = Trainer(model=self.classifier.model, args=training_args, train_dataset=splits[0], eval_dataset=splits[1], compute_metrics=compute_metrics)
         self.classifier.optimizer = trainer.optimizer
         self.classifier.scheduler = trainer.lr_scheduler
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
+            self.classifier.curr_epoch += 1
+            print(f"Running epoch {self.classifier.curr_epoch}\n\n")
             trainer.model.train()
-            print(trainer.train().metrics)
+            trainer.train()
             trainer.model.eval()
             trainer.optimizer.zero_grad()
+            print(trainer.evaluation_loop(loaders[0],description="Train split evaluation",prediction_loss_only=False))
+            print(trainer.evaluation_loop(loaders[1],description="Validation split evaluation",prediction_loss_only=False))
             torch.cuda.empty_cache()
-            self.classifier.curr_epoch += 1
-            """
-            logs = self.classifier._run_epoch(loaders[:-1])
-            print(f"Epoch {self.classifier.curr_epoch} Results {logs}\n\n")
-            
-            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders)
-            print("Epoch {} Results: | Features Score {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, self.classifier.score, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
-            self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Training Loss",loss_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Validation Loss",loss_val, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
-            #loaders[0] = Loader(split[0], self.classifier.bs, shuffle=True, num_workers=4)
-            """
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             
-            print(f"Running inferences for epoch {self.classifier.curr_epoch}\n\n")
-            #metrics = list(self.classifier._validate(loaders[0], trainer))
-            #print("test\n")
-            metrics = list(self.classifier._validate(loaders[1], trainer))#"F1 Train:", "Training Accuracy:", "Training Loss:",
-            metric_keys = ["F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
-            metrics = {k:v for k,v in zip(metric_keys,metrics)}
-            print(f"Results: {self.classifier.curr_epoch} Results {metrics}\n\n")
-            
-        #print("Testing:...")
-        print(self.classifier._validate(loaders[2], trainer))
-        print("\nRun Complete.")
+        print("\n\n")
+        print(trainer.evaluation_loop(loaders[0],description="Test split evaluation",prediction_loss_only=False))
+        print("\nRun Complete.\n\n")
 
     def _preprocessing(self, directory, train):
         dataSetFolder = self.classifier.dataset       
