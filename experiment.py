@@ -27,6 +27,7 @@ class Experiment(object):
          do_train=True,
          label_names=list(dataset.labels.keys()),
          label_smoothing_factor = 0.1,
+         num_train_epochs=1,
          gradient_accumulation_steps=1,
          per_device_train_batch_size=self.classifier.bs//4,
          warmup_steps=500,
@@ -73,7 +74,8 @@ class Experiment(object):
                 print(trainer.evaluate(splits[1]))
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-            trainer.state.epoch = self.classifier.curr_epoch
+            trainer.state.epoch = 0
+            trainer.state.num_train_epochs = 1
         print("\n\n")
         print(trainer.evaluate(splits[2]))
         print("\nRun Complete.\n\n")
