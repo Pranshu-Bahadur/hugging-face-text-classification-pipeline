@@ -24,7 +24,7 @@ class NLPClassifier(object):
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"], use_fast=True)
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
-        self.model = AutoModelForSequenceClassification.from_config(config=self.model_config)#.from_pretrained(config["model_name"], config=self.model_config)##
+        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config)##.from_config(config=self.model_config)#.
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
@@ -49,9 +49,6 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            config.max_embedding_size = 128
-            #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
-            print("Model config:\n\n",config)
             return config
 
     def _create_optimizer(self, name, model_params, lr):
@@ -91,10 +88,10 @@ class NLPClassifier(object):
             total += y.size(0)
             x.pop("labels")
             outputs = self.model(**x)
-            logits = outputs.logits
-            #loss, logits = outputs.loss.mean(), outputs.logits
-            logits = torch.nn.functional.dropout2d(logits, 0.2)
-            loss = self.criterion(logits.view(logits.size(0), -1), y)
+            #logits = outputs.logits
+            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
+            #loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
