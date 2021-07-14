@@ -91,7 +91,7 @@ class NLPClassifier(object):
                 self.scaler.scale(loss).backward()
                 self.optimizer.step()
                 self.scheduler.step()
-                gradient_accumulation_steps = int(len(loader.dataset)*0.1)
+                gradient_accumulation_steps = int((len(loader.dataset)/(self.bs-1))*0.1)
                 if (i+1)%gradient_accumulation_steps==0:
                     print(f"Grad accumulation step check {gradient_accumulation_steps}\n")
                     self.model.zero_grad()
