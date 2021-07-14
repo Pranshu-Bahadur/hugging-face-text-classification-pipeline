@@ -90,7 +90,7 @@ class Experiment(object):
             correct, total = 0,0
             
             with torch.no_grad():
-                self.classifier.model.eval()
+                #self.classifier.model.eval()
                 for i, data in enumerate(loaders[0]):
                     data = {k:v.cuda() for k,v in list(data.items())}
                     y = data.pop("labels")
@@ -136,6 +136,7 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - sum(splits)
-            splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
+            #splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
+            splits = [dataSetFolder, dataSetFolder, dataSetFolder]
             return dataSetFolder ,splits, []#, Y
         return dataSetFolder
