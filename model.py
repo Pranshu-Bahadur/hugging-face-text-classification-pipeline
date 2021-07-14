@@ -89,9 +89,9 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            logits = self.model(**x).logits
-            #loss, logits = outputs.loss.mean(), outputs.logits
-            loss = self.criterion(logits.view(logits.size(0), -1), y)
+            outputs = self.model(**x)
+            loss, logits = outputs.loss.mean(), outputs.logits
+            #loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
