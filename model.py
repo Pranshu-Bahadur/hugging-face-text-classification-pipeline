@@ -21,7 +21,7 @@ class NLPClassifier(object):
         self.bs = config["batch_size"]
         self.save_interval = config["save_interval"]
         self.save_directory = config["save_directory"]
-        self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
+        self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"], use_fast=True)
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"],config=self.model_config)
@@ -45,7 +45,6 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            config = {k: 32 if "embedding" in k else v for _,k,v in enumerate(config)}
             #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
             print("Model config:\n\n",config)
             return config
