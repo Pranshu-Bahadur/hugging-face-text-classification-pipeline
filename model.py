@@ -49,8 +49,6 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            config.attention_probs_dropout_prob = 0.1
-            config.hidden_dropout_prob = 0.1
             config.max_embedding_size = 128
             #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
             print("Model config:\n\n",config)
@@ -95,7 +93,7 @@ class NLPClassifier(object):
             outputs = self.model(**x)
             logits = outputs.logits
             #loss, logits = outputs.loss.mean(), outputs.logits
-            #logits = torch.nn.functional.dropout2d(logits, 0.2)
+            logits = torch.nn.functional.dropout2d(logits, 0.2)
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
