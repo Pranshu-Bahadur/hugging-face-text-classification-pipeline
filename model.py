@@ -33,7 +33,7 @@ class NLPClassifier(object):
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
-        self.name = "{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"], config["optimizer_name"], "CosineAnnealing", config["criterion_name"])
+        self.name = "CCELossTest-{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"], config["optimizer_name"], "CosineAnnealing", config["criterion_name"])
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.best_cluster_center_score = float("-inf")
@@ -52,7 +52,7 @@ class NLPClassifier(object):
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999), eps=1e-8),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8, amsgrad=True),
         }
         return optim_dict[name]
 
@@ -84,8 +84,9 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = self.model(**x).logits
+            #loss, logits = outputs.loss.mean(), outputs.logits
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
