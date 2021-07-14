@@ -58,7 +58,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
-        self.encodings = tokenizer(list(self.dataset['posts'].values))
+        self.encodings = tokenizer(list(self.dataset['posts'].values), truncation=True)
         print(f"Tokenizing complete.\n\n")
         keep_these_keys = ["input_ids", "attention_mask"]
         self.encodings = {k:v for k,v in list(self.encodings.items()) if k in keep_these_keys}
