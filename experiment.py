@@ -90,7 +90,7 @@ class Experiment(object):
             correct, total = 0,0
             
             with torch.no_grad():
-                #self.classifier.model.eval()
+                self.classifier.model.eval()
                 for i, data in enumerate(loaders[0]):
                     data = {k:v.cuda() for k,v in list(data.items())}
                     y = data.pop("labels")
