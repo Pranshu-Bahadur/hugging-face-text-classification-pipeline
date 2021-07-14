@@ -40,12 +40,16 @@ class NLPClassifier(object):
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
+
+
+
+
     def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            config.max_position_embeddings = 128
+            #config.max_position_embeddings = 128
             #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
             print("Model config:\n\n",config)
             return config
