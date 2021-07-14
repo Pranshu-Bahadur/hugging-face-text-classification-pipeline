@@ -90,7 +90,6 @@ class Experiment(object):
             
             losses = []
             correct, total = 0,0
-            
             with torch.no_grad():
                 self.classifier.model.eval()
                 for i, data in enumerate(loaders[1]):
@@ -106,9 +105,21 @@ class Experiment(object):
             if self.classifier.curr_epoch%config["save_interval"]==0:
                 self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
             #trainer.state.num_train_epochs = 1
-        
-        print("\n\n")
-        #print(trainer.evaluate(splits[2]))
+        print("\n Running inference... \n\n")
+        losses = []
+        correct, total = 0,0
+        with torch.no_grad():
+            self.classifier.model.eval()
+            for i, data in enumerate(loaders[2]):
+                data = {k:v.cuda() for k,v in list(data.items())}
+                y = data.pop("labels")
+                logits = self.classifier.model(**data).logits
+                loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
+                losses.append(loss.cpu().item())
+                total += y.size(0)
+                correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
+                print(i+1, sum(losses)/(i+1), correct/total)
+        print("Test Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n\n====================")
         print("\nRun Complete.\n\n")
 
     def _preprocessing(self, directory, train):
@@ -116,20 +127,20 @@ class Experiment(object):
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
         
         print("\n\nRunning K-means for outlier detection...\n\n")
-        """
+        
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         #Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
         #Y = Y.view(Y.size(0), -1)
         #XY = torch.cat((X,Y), dim=1).cuda()
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
+        topk, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)#torch.tensor([torch.mean(cluster_centers[i].float()).float() for i in range(8)]),2)#torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} samples remain, taken from the top cluster(s)\n\n")
+        print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from the top cluster(s)\n\n")
     
         #X_ = X[indices]
         #dist = [Y_[indices].cpu().size(0) for i in Y_.unique()]
-        """
+        
         #@TODO add features selection here
         #dataSetFolder = torch.utils.data.dataset.Subset(dataSetFolder,indices=indices)
 
@@ -138,7 +149,7 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - sum(splits)
-            #splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
-            splits = [dataSetFolder, dataSetFolder, dataSetFolder]
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
+            #splits = [dataSetFolder, dataSetFolder, dataSetFolder]
             return dataSetFolder ,splits, []#, Y
         return dataSetFolder
