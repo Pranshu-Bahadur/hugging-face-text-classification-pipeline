@@ -15,20 +15,20 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
         self.dataset['posts'] = self.dataset['posts'].str.lower()
-        self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
+        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
         #print("Exploding posts and types...\n")
         #self.dataset = self.dataset[self.dataset['total_words']>256]
-        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
-        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
+        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 32*180//2)) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
-        #self.dataset = self.dataset[self.dataset['total']>=30]
-        #self.dataset = self.dataset[self.dataset['total']<=40]
+        self.dataset = self.dataset[self.dataset['total']>=30]
+        self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
         print("Mean, mode, max, min lengths:\n")
@@ -53,7 +53,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values),max_length=32,padding="max_length",truncation=True)# padding=True, truncation=True)
         print(f"Tokenizing complete.\n\n")
         keep_these_keys = ["input_ids", "attention_mask"]
         self.encodings = {k:v for k,v in list(self.encodings.items()) if k in keep_these_keys}

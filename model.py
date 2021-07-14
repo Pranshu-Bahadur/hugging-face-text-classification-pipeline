@@ -23,8 +23,8 @@ class NLPClassifier(object):
         self.save_directory = config["save_directory"]
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
-       # self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
-        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"],num_labels=16)
+        self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
+        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"],config=self.model_config)
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
@@ -45,13 +45,15 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
+            config = {k: 32 if "embedding" in k else v for _,k,v in enumerate(config)}
+            #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
             print("Model config:\n\n",config)
             return config
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999), eps=1e-8),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8, amsgrad=True),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8),
         }
         return optim_dict[name]
 
@@ -125,18 +127,6 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x, clusters_idx, cluster_idx):
-        #f = copy.deepcopy(f)
-        #f.zero_grad()
-        if self.library == "timm":
-            x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
-            x[:,:,clusters_idx!=cluster_idx] = 0
-            x = x.view(x.size(0), x.size(1), 128,128)
-            x.requires_grad = True
-            preds = f(x)
-            preds.backward(torch.ones_like(preds).cuda())
-            J = x.grad
-            #print(J.size())
-            return J
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 0
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
@@ -146,7 +136,6 @@ class NLPClassifier(object):
         J = x["attention_mask"].grad
         x["attention_mask"].requires_grad = False
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 1
-        #print(J.size())
         return J
     
     def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
