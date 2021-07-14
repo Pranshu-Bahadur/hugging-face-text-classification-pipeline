@@ -44,7 +44,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         
-        lst = []
+        lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
             lst.append(group.sample(max_size - len(group), replace=True))
         self.dataset = pd.concat(lst)
