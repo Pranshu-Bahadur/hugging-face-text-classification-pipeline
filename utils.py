@@ -5,8 +5,10 @@ from pandas import Series
 import re
 import numpy as np
 
-def chunkstring(x, length):
-    return re.findall('.{%d}'%length, x)
+def chunkstring(x, j):
+    post = x.split()
+    chunks = len(post)//j
+    return [' '.join(post[i*j:(i*j)+j]) for i in range(chunks)]
 
 class SpreadSheetNLPCustomDataset(Dataset):
     def __init__(self, csv_path, tokenizer):
@@ -19,14 +21,17 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
         self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
         self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
-        #print("Exploding posts and types...\n")
         #self.dataset = self.dataset[self.dataset['total_words']>256]
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 128)) for _, row in self.dataset.iterrows()]).reset_index())
+        word_lengths = self.dataset['posts'].str.split()
+        word_lengths = word_lengths.map(len)
+        print("Exploding posts and types for large posts...\n")
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 128)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 128]).reset_index())
         self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
+
         #self.dataset = self.dataset[self.dataset['total']>=30]
         #self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
