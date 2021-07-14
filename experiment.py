@@ -52,5 +52,5 @@ class Experiment(object):
             diff = len(dataSetFolder) - sum(splits)
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
-            return splits
+            return splits[:-1]
         return dataSetFolder
