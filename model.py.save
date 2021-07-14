@@ -9,7 +9,6 @@ from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSeque
 import numpy as np
 from fairscale.optim.grad_scaler import ShardedGradScaler
 from utils import SpreadSheetNLPCustomDataset
-import transformers
 #from apex import amp
 
 class NLPClassifier(object):
@@ -28,7 +27,7 @@ class NLPClassifier(object):
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)
+            self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
@@ -39,7 +38,7 @@ class NLPClassifier(object):
         self.best_cluster_center_score = float("-inf")
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
-        self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
+        self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScale
     def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
@@ -54,6 +53,23 @@ class NLPClassifier(object):
                       "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8, amsgrad=True),
         }
         return optim_dict[name]
+    
+   ''' def _create_scheduler(self, name, optimizer):
+        def lr_lambda(current_step: int):
+            #Taken from hugging face src code
+            num_warmup_steps = 100
+            if current_step < num_warmup_steps:
+                return float(current_step) / float(max(1, num_warmup_steps))
+            approx_num_training_steps = self.final_epoch*(int(len(self.dataset)*0.6)//self.bs)
+            return max(0.0, float(approx_num_training_steps - current_step) / float(max(1, approx_num_training_steps - num_warmup_steps)))
+
+        scheduler_dict = {
+            "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, step_size=2.4, gamma=0.97),
+         self.model = AutoModelForSequenceClassification.from_config(self.model_config)   "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 600, 1),
+            "LambdaLR" : torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, self.curr_epoch)
+
+        }
+        return scheduler_dict[name]'''
 
     def _create_criterion(self, name):
         loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
@@ -73,7 +89,7 @@ class NLPClassifier(object):
     
     
     #TODO Abstract _train & _validate functions
-    def run_epoch_step(self, loader, mode, e_num):
+    def run_epoch_step(self, loader, mode):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
@@ -89,12 +105,10 @@ class NLPClassifier(object):
                 self.scaler.scale(loss).backward()
                 self.optimizer.step()
                 self.scheduler.step()
-                if (i+1)%4==0:
+                if (i+1) % int((len(loader)//self.bs)*0.1):
                     self.model.zero_grad()
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
-        self.writer.add_scalar("Loss per Train",metrics['train-loss'],e_num)
-        self.writer.flush()
         return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
