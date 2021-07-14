@@ -66,31 +66,33 @@ class Experiment(object):
         """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
-            print(f"Test on entire set {self.classifier.curr_epoch}:\n\n")
-            """
+            print(f"Train on entire seEpoch {self.classifier.curr_epoch}:\n\n")
+            
             losses = []
             correct, total = 0,0
             self.classifier.model.train()
             for i, data in enumerate(loaders[0]):
-                data = {k:v.cuda() for k,v in list(data.items())}
+                shuffle_seed = torch.randperm(data["input_ids"].size(0))
+                data = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
                 y = data.pop("labels")
                 logits = self.classifier.model(**data).logits
                 loss = self.classifier.criterion(logits.view(y.size(0), -1), y)
                 losses.append(loss.mean().cpu().item())
                 self.classifier.scaler.scale(loss).backward()
                 self.classifier.optimizer.step()
-                self.classifier.scheduler.step()
-                self.classifier.model.zero_grad()
+                if i%2==0:
+                    self.classifier.scheduler.step()
+                    self.classifier.model.zero_grad()
                 total += y.size(0)
                 correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                 print(i+1, sum(losses)/(i+1), correct/total)
             print("Training Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n")
-            """
+            
             losses = []
             correct, total = 0,0
             
             with torch.no_grad():
-                self.classifier.model.train()
+                self.classifier.model.eval()
                 for i, data in enumerate(loaders[1]):
                     data = {k:v.cuda() for k,v in list(data.items())}
                     y = data.pop("labels")
