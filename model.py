@@ -45,6 +45,7 @@ class NLPClassifier(object):
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
+            config.max_position_embeddings = 128
             #config = {k: 64 if "hidden" in k else v for _,k,v in enumerate(config)}
             print("Model config:\n\n",config)
             return config
