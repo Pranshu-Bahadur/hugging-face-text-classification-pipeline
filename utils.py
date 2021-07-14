@@ -24,11 +24,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = self.dataset[self.dataset['total_words']>256]
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
-        word_lengths = self.dataset['posts'].str.split()
-        word_lengths = word_lengths.map(len)
-        print("Exploding posts and types for large posts...\n")
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 128)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 128]).reset_index())
-        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        #word_lengths = self.dataset['posts'].str.split()
+        #word_lengths = word_lengths.map(len)
+        #print("Exploding posts and types for large posts...\n")
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 128)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 128]).reset_index())
+        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
 
@@ -58,7 +58,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
-        self.encodings = tokenizer(list(self.dataset['posts'].values), truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
         print(f"Tokenizing complete.\n\n")
         keep_these_keys = ["input_ids", "attention_mask"]
         self.encodings = {k:v for k,v in list(self.encodings.items()) if k in keep_these_keys}
