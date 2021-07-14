@@ -84,10 +84,8 @@ class NLPClassifier(object):
             y = x["labels"]
             total += y.size(0)
             outputs = self.model(**x)
-            print(outputs)
-            loss, logits = outputs.loss, outputs.logits
-            print(loss)
-            metrics[f"{mode}-loss"].append(loss.mean().cpu().item())
+            loss, logits = outputs.loss.mean(), outputs.logits
+            metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train":
                 self.scaler.scale(loss).backward()
