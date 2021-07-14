@@ -56,4 +56,4 @@ if __name__ == "__main__":
     config = _model_config(args)
     experiment = Experiment(config)
     if args.train:
-        experiment._run(args.dataset_directory, config)
+        experiment._run()

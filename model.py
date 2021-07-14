@@ -1,6 +1,3 @@
-from transformers import TrainingArguments
-from transformers import Trainer
-from datasets import load_metric
 from math import log
 from torch.autograd.functional import jacobian
 from kmeans_pytorch import kmeans
@@ -9,9 +6,7 @@ import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, PretrainedConfig#, AutoTokenizerFast
-from sklearn.metrics import f1_score
 import numpy as np
-import timm
 from fairscale.optim.grad_scaler import ShardedGradScaler
 from utils import SpreadSheetNLPCustomDataset
 #from apex import amp
@@ -23,8 +18,10 @@ class NLPClassifier(object):
         self.curr_epoch = config["curr_epoch"]
         self.final_epoch = config["epochs"]
         self.bs = config["batch_size"]
+        self.save_interval = config["save_interval"]
+        self.save_directory = config["save_directory"]
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
-        self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer, self.library)
+        self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_config(self.model_config)
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
@@ -46,33 +43,11 @@ class NLPClassifier(object):
         
     def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
-            """
-            config = AutoConfig.from_pretrained(model_name)
-            config.max_position_embeddings = 48
-            config.num_labels = num_classes
-            config.n_layers = 1
-            config.n_heads = 2
-            config.hidden_dim = 64
-            config.dim = 128
-            config.hidden_size = 64
-            config.embedding_size = 48
-            config.intermediate_size = 128
-            config.num_hidden_layers = 4
-            config.num_attention_heads = 2
-            config.num_memory_blocks = 4
-            config.classifier_dropout_prob = 0
-            """
             config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
-            #config.max_position_embeddings = 40
-            #config.embedding_size = 40
-            #config.num_hidden_layers = 6
-            #config.num_attention_heads = 6
-            print(config)
+            print("Model config:\n\n",config)
             return config
-        else:
-            return timm.create_model(model_name, pretrained=True, num_classes=num_classes)
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
@@ -84,10 +59,10 @@ class NLPClassifier(object):
     def _create_scheduler(self, name, optimizer):
         def lr_lambda(current_step: int):
             #Taken from hugging face src code
-            num_warmup_steps = 600
+            num_warmup_steps = 100
             if current_step < num_warmup_steps:
                 return float(current_step) / float(max(1, num_warmup_steps))
-            approx_num_training_steps = self.final_epoch*(300000//self.bs)
+            approx_num_training_steps = self.final_epoch*(int(len(self.dataset)*0.6)//self.bs)
             return max(0.0, float(approx_num_training_steps - current_step) / float(max(1, approx_num_training_steps - num_warmup_steps)))
 
         scheduler_dict = {
@@ -113,114 +88,33 @@ class NLPClassifier(object):
     def _save(self, directory, name):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
-
-    def _run_epoch(self, loaders):
-        #f1_train, acc_train, loss_train = self._train(loaders[0])
-        #f1_val, acc_val, loss_val = self._validate(loaders[1])
-        metric = load_metric("accuracy")
-        def compute_metrics(eval_pred):
-            logits, labels = eval_pred
-            predictions = np.argmax(logits, axis=-1)
-            return metric.compute(predictions=predictions, references=labels)
-        self.trainer = Trainer(model=self.model, args=self.training_args,compute_metrics=None)
-        metrics = list(self._train(loaders[0]))
-        metrics += self._validate(loaders[1])
-        metric_keys = ["F1 Train:", "Training Accuracy:", "Training Loss:", "F1 Validation:", "Validation Accuracy:", "Validation Loss:"]
-        metrics = {k:v for k,v in zip(metric_keys,metrics)}
-        self.curr_epoch += 1
-        return metrics
-            
     
     
     #TODO Abstract _train & _validate functions
-    def _train(self, loader):
-        running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
-        #self._k_means_approximation_one_step(loader)
-        #self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
-        #indices, k = self.clusters_idx, self.cluster_idx
-        self.model.train()
-
-        for data in loader:
-            self.model.train()
-            self.optimizer.zero_grad()
-            if self.library == "timm":
-                shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                if self.score != float("-inf"):
-                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                    x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                    data["input_ids"] = x.view(x.size(0),3, 128, 128)
-                outputs = self.model(data["input_ids"])
-                loss = self.criterion(outputs, data["labels"])
-            else:
-                #shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                data = {k: v.cuda() for k, v in data.items()}
-                if self.score != float("-inf"):
-                    data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-                #data["labels"] = data["labels"].float()
-                _, outputs, _ = self.trainer.prediction_step(self.model, data, prediction_loss_only=False)
-                self.model.train()
-
-                loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-                #print(loss.size())
-                loss.requires_grad = True
-                #outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
-                #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
-                #loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-            #print(outputs.size())
-            self.scaler.scale(loss).backward()
-            #loss.backward()
-            running_loss += loss.cpu().item()
-            self.optimizer.step()
-            self.scheduler.step()
-            y_ = torch.argmax(outputs, dim=-1)
-            print(data["labels"].size(), y_.size())
-            total += data["labels"].size(0)
-            correct += (y_.cpu()==data["labels"].cpu()).sum().item()
-            f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
-            iterations += 1
-            torch.cuda.empty_cache()
-            
-        return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total)
-
-
-    def _validate(self, loader, trainer):
-        trainer.model.eval()
-        running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #indices, k = self.clusters_idx, self.cluster_idx
-        #self._k_means_approximation_one_step(loader)
-        with torch.no_grad():                
-            for data in loader:
-                if self.library == "timm":
-                    shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    if self.score != float("-inf"):
-                        x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                        x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                        data["input_ids"] = x.view(x.size(0),3, 128, 128)
-                    outputs = self.model(data["input_ids"])
-                    loss = self.criterion(outputs, data["labels"])
-                else:
-                    #shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                    data = {k: v.cuda() for k, v in data.items()}
-                    if self.score != float("-inf"):
-                        data["attention_mask"][:,self.clusters_idx] = 0
-                    #outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
-                    #
-                    _, outputs, _ = trainer.prediction_step(trainer.model, data, prediction_loss_only=False, ignore_keys=['labels'])
-                    loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-
-                running_loss += loss.cpu().item()
-                y_ = torch.argmax(outputs, dim=1)
-                correct += (y_.cpu()==data["labels"].cpu()).sum().item()
-                f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
-                total += data["labels"].size(0)
-                iterations += 1
-                print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
-                torch.cuda.empty_cache()
-        return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
-    
+    def run_epoch_step(self, loader, mode):
+        total = 0
+        metrics = ["accuracy","loss"]
+        metrics = {f"{mode}-{metric}": [] for metric in metrics}
+        self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
+        for i,data in enumerate(loader):
+            x,y = {k:v.cuda() for k,v in list(data[0].items())}, data[1].cuda()
+            total += y.size(0)
+            logits = self.model(**x).logits
+            loss = self.criterion(logits.view(y.size(0), -1), y)
+            metrics[f"{mode}-loss"].append(loss.mean().cpu().item())
+            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+            if mode == "train":
+                self.scaler.scale(loss).backward()
+                self.optimizer.step()
+                self.scheduler.step()
+                if (i+1) % int((len(loader)//self.bs)*0.1):
+                    self.model.zero_grad()
+                    print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
+        metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
+        return metrics
+    """
+        Un-Implemented code (EPENAS/NAS-WOT) from this point....
+    """
     #TODO Make sure this is using kmeans++
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()

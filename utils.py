@@ -9,9 +9,8 @@ def chunkstring(x, length):
     return re.findall('.{%d}'%length, x)
 
 class SpreadSheetNLPCustomDataset(Dataset):
-    def __init__(self, csv_path, tokenizer, library):#, tokenizer, library, indices
+    def __init__(self, csv_path, tokenizer):
         self.dataset = pd.read_csv(csv_path)
-        self.library = library
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
@@ -56,23 +55,16 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #TODO add a Debug mode.
         self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
         print(f"Tokenizing complete.\n\n")
+        keep_these_keys = ["input_ids", "attention_mask"]
+        self.encodings = {k:v for k,v in list(self.encodings.items()) if k in keep_these_keys}
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
-        
-
 
     def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self._labels[idx])
-        if self.library == "timm":
-            AA = item["input_ids"]
-            AA = AA.view(AA.size(0), -1).float()
-            AA -= AA.min(1, keepdim=True)[0].clamp(1e-2)
-            AA /= AA.max(1, keepdim=True)[0].clamp(1e-2)
-            AA = torch.stack([AA for i in range(96)], dim=1)
-            item["input_ids"] = AA.view(3, 128, 128)
-        return item
+        x = {k: torch.tensor(val[idx]) for k, v in self.encodings.items()}
+        y = torch.tensor(self._labels[idx])
+        return x, y
     
     def __len__(self):
         return len(self._labels)
