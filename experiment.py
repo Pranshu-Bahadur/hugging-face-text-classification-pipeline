@@ -66,7 +66,8 @@ class Experiment(object):
         """
         while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
             self.classifier.curr_epoch +=1
-            print(f"Epoch {self.classifier.curr_epoch}:\n\n")
+            print(f"Test on entire set {self.classifier.curr_epoch}:\n\n")
+            """
             losses = []
             correct, total = 0,0
             self.classifier.model.train()
@@ -84,8 +85,10 @@ class Experiment(object):
                 correct += (torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()
                 print(i+1, sum(losses)/(i+1), correct/total)
             print("Training Metrics:", torch.mean(torch.tensor(losses)), correct/total," \n")
+            """
             losses = []
             correct, total = 0,0
+            
             with torch.no_grad():
                 self.classifier.model.eval()
                 for i, data in enumerate(loaders[0]):
@@ -111,6 +114,7 @@ class Experiment(object):
         #loader = Loader(dataSetFolder, self.classifier.bs, shuffle=False, num_workers=4)
         
         print("\n\nRunning K-means for outlier detection...\n\n")
+        """
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         #Y = torch.tensor(np.asarray(dataSetFolder.dataset["type"].values))
@@ -123,8 +127,9 @@ class Experiment(object):
     
         #X_ = X[indices]
         #dist = [Y_[indices].cpu().size(0) for i in Y_.unique()]
+        """
         #@TODO add features selection here
-        dataSetFolder = torch.utils.data.dataset.Subset(dataSetFolder,indices=indices)
+        #dataSetFolder = torch.utils.data.dataset.Subset(dataSetFolder,indices=indices)
 
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
@@ -132,5 +137,5 @@ class Experiment(object):
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - sum(splits)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize, diff])
-            return dataSetFolder ,splits, indices#, Y
+            return dataSetFolder ,splits, []#, Y
         return dataSetFolder
