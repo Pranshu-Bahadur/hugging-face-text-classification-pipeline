@@ -83,7 +83,7 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            loss, logits = self.model.forward(**x)
+            loss, logits = self.model(**x)
             print(loss)
             metrics[f"{mode}-loss"].append(loss.mean().cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
