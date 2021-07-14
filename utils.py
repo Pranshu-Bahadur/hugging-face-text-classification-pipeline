@@ -62,7 +62,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self._labels = list(self.dataset['type'].values)
 
     def __getitem__(self, idx):
-        x = {k: torch.tensor(val[idx]) for k, v in self.encodings.items()}
+        x = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
         y = torch.tensor(self._labels[idx])
         return x, y
     
