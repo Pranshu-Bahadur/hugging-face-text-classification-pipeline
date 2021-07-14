@@ -55,6 +55,7 @@ class NLPClassifier(object):
         }
         return optim_dict[name]
 
+    #TODO Add SOP loss
     def _create_criterion(self, name):
         loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
@@ -73,28 +74,30 @@ class NLPClassifier(object):
     
     
     #TODO Abstract _train & _validate functions
-    def run_epoch_step(self, loader, mode, e_num):
+    def run_epoch_step(self, loader, mode):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
         for i,data in enumerate(loader):
-            x,y = {k:v.cuda() for k,v in list(data[0].items())}, data[1].cuda()
+            x = {k:v.cuda() for k,v in list(data[0].items())}
+            y = x["labels"]
             total += y.size(0)
-            logits = self.model(**x).logits
-            loss = self.criterion(logits.view(y.size(0), -1), y)
+            loss, logits = self.model.forward(**x)
             metrics[f"{mode}-loss"].append(loss.mean().cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train":
                 self.scaler.scale(loss).backward()
                 self.optimizer.step()
                 self.scheduler.step()
-                if (i+1)%4==0:
+                gradient_accumulation_steps = int((self.bs-1)*len(loader.dataset)*0.1)
+                if (i+1)%gradient_accumulation_steps==0:
+                    print(f"Grad accumulation step check {gradient_accumulation_steps}\n")
                     self.model.zero_grad()
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
-        self.writer.add_scalar("Loss per Train",metrics['train-loss'],e_num)
-        self.writer.flush()
+        for k,v in list(metrics.items()):
+            self.writer.add_scalar(k,v,self.curr_epoch)
         return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
