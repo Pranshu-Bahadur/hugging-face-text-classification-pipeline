@@ -86,7 +86,7 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            x.pop("labels")
+            #x.pop("labels")
             outputs = self.model(**x)
             #logits = outputs.logits
             loss, logits = outputs.loss.mean(), outputs.logits
