@@ -90,20 +90,20 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits
-            logits = torch.nn.functional.dropout2d(logits, 0.2)
-            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            #outputs = self.model(**x)
+            #loss, logits = outputs.loss.mean(), outputs.logits
+
+            logits = torch.nn.functional.dropout2d(self.model(**x).logits, 0.2)
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
                 self.scaler.scale(loss).backward()
                 self.optimizer.step()
                 self.scheduler.step()
+                self.model.zero_grad()
                 gradient_accumulation_steps = int(len(loader)*0.1)
                 if (i+1)%gradient_accumulation_steps==0:
-                    print(f"Grad accumulation step check {gradient_accumulation_steps}\n")
-                    self.model.zero_grad()
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
         for k,v in list(metrics.items()):
