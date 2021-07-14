@@ -84,6 +84,7 @@ class NLPClassifier(object):
             y = x["labels"]
             total += y.size(0)
             outputs = self.model(**x)
+            print(outputs)
             loss, logits = outputs.loss, outputs.logits
             print(loss)
             metrics[f"{mode}-loss"].append(loss.mean().cpu().item())
