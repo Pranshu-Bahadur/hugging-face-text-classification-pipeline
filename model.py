@@ -90,10 +90,11 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            #outputs = self.model(**x)
+            x.pop("labels")
+            outputs = self.model(**x)
+            logits = outputs.logits
             #loss, logits = outputs.loss.mean(), outputs.logits
-
-            logits = torch.nn.functional.dropout2d(self.model(**x).logits, 0.2)
+            logits = torch.nn.functional.dropout2d(logits, 0.2)
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
