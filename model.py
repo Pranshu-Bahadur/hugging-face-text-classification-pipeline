@@ -87,11 +87,11 @@ class NLPClassifier(object):
             loss, logits = outputs.loss.mean(), outputs.logits
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
-            if mode == "train":
+            if mode == "train": #TODO fix grad acc
                 self.scaler.scale(loss).backward()
                 self.optimizer.step()
                 self.scheduler.step()
-                gradient_accumulation_steps = int((len(loader.dataset)/(self.bs-1))*0.1)
+                gradient_accumulation_steps = int(len(loader)*0.1)
                 if (i+1)%gradient_accumulation_steps==0:
                     print(f"Grad accumulation step check {gradient_accumulation_steps}\n")
                     self.model.zero_grad()
