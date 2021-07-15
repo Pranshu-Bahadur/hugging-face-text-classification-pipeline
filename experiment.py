@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
 import random
 import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score
 
 class Experiment(object):
     def __init__(self, config):
@@ -43,18 +44,23 @@ class Experiment(object):
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         wcss = []
+        sil_scores = []
 
         for i in range(1, 20):
-            kmeans = kmeans(n_clusters = i, init = 'k-means++', 
+            kmean = kmeans(n_clusters = i, init = 'k-means++', 
                     max_iter = 300, n_init = 10, random_state = 0)
-            kmeans.fit()
-            wcss.append(kmeans.inertia_)
+            kmean.fit(X)
+            label = kmean.labels_
+            wcss.append(kmean.inertia_)
+            sil_scores.append(silhouette_score(X,label,metric='euclidean'))
+
         plt.plot(range(1, 11), wcss)
         plt.title('The elbow method')
         plt.xlabel('Number of clusters')
         plt.ylabel('WCSS') # Within cluster sum of squares
         plt.show()
-        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
+        best_k = sil_scores.index(max(sil_scores))
+        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=best_k, device=torch.device('cuda:0'))
         _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 7 cluster(s) according to mode.\n\n")
