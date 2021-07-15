@@ -51,7 +51,7 @@ class Experiment(object):
             X = torch.cat([x["token_type_ids"] for x in k_means_loader]).cuda()
             X = X.view(X.size(0), -1)
             cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 2)
+            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 1)
             indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
             print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 2 cluster(s) according to mode.\n\n")
             return splits[:-1]
