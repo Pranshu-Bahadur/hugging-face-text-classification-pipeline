@@ -41,4 +41,3 @@ class SpreadSheetNLPCustomDataset(Dataset):
     
     def __len__(self):
         return len(self._labels)
-
