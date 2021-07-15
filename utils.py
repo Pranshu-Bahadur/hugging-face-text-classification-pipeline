@@ -4,6 +4,7 @@ import pandas as pd
 from pandas import Series
 import re
 import numpy as np
+from imblearn.over_sampling import SMOTE
 
 def chunkstring(x, length):
     return re.findall('.{%d}'%length, x)
@@ -42,6 +43,11 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
         max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
+        Y = self.dataset["type"]
+        X = self.dataset.drop(["type"], axis=1)
+        smt = SMOTE(random_state=0)
+        X_train_SMOTE, y_train_SMOTE = smt.fit_resample(X, Y)
+        print(X_train_SMOTE, y_train_SMOTE)
         
         lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
