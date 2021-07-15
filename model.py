@@ -83,13 +83,11 @@ class NLPClassifier(object):
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
         for i,data in enumerate(loader):
-            print(data.keys())
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
             #x.pop("labels")
             outputs = self.model(**x)
-            #logits = outputs.logits
             loss, logits = outputs.loss.mean(), outputs.logits
             logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
             #loss = self.criterion(logits.view(logits.size(0), -1), y)
