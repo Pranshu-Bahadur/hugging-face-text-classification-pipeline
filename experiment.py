@@ -9,7 +9,12 @@ from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
 import random
 import matplotlib.pyplot as plt
+import math
 from sklearn.metrics import silhouette_score
+
+def distance_calculation(x1, y1, a, b, c):
+    distance = abs((a*x1 + b*y1 + c))/(math.sqrt(a*a + b*b))
+    return distance
 
 class Experiment(object):
     def __init__(self, config):
@@ -43,23 +48,27 @@ class Experiment(object):
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
-        wcss = []
+        score = []
         sil_scores = []
+        num_clusters = range(1,20)
 
-        for i in range(1, 20):
+        for i in num_clusters:
             kmean = kmeans(n_clusters = i, init = 'k-means++', 
                     max_iter = 300, n_init = 10, random_state = 0)
             kmean.fit(X)
             label = kmean.labels_
-            wcss.append(kmean.inertia_)
+            score.append(kmean.inertia_)
             sil_scores.append(silhouette_score(X,label,metric='euclidean'))
 
-        plt.plot(range(1, 11), wcss)
-        plt.title('The elbow method')
-        plt.xlabel('Number of clusters')
-        plt.ylabel('WCSS') # Within cluster sum of squares
-        plt.show()
-        best_k = sil_scores.index(max(sil_scores))
+        a = score[0] - score[19]
+        b = num_clusters[0] - num_clusters[19]
+        c1 = num_clusters[0] * score[19]
+        c2 = num_clusters[19] * score[0]
+        c = c1 - c2
+        dist_from_line = []
+        for i in range(20):
+            dist_from_line.append(distance_calculation(num_clusters[i], score[i], a, b, c))
+        best_k = dist_from_line.index(max(dist_from_line))+1
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=best_k, device=torch.device('cuda:0'))
         _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
