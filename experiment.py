@@ -10,7 +10,7 @@ from utils import SpreadSheetNLPCustomDataset
 import random
 import matplotlib.pyplot as plt
 import math
-from sklearn.metrics import silhouette_score
+
 
 def distance_calculation(x1, y1, a, b, c):
     distance = abs((a*x1 + b*y1 + c))/(math.sqrt(a*a + b*b))
@@ -49,16 +49,13 @@ class Experiment(object):
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
         score = []
-        sil_scores = []
         num_clusters = range(1,20)
 
         for i in num_clusters:
             kmean = kmeans(n_clusters = i, init = 'k-means++', 
                     max_iter = 300, n_init = 10, random_state = 0)
             kmean.fit(X)
-            label = kmean.labels_
             score.append(kmean.inertia_)
-            sil_scores.append(silhouette_score(X,label,metric='euclidean'))
 
         a = score[0] - score[19]
         b = num_clusters[0] - num_clusters[19]
