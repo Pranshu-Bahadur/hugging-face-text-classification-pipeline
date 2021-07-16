@@ -22,22 +22,22 @@ class Experiment(object):
 
     def finding_k(self, X):
         score = []
-        num_clusters = range(1,20)
+        n_clusters = range(1,20)
 
-        for i in num_clusters:
+        for i in n_clusters:
             kmean = kmeans(num_clusters = i, init = 'k-means++', 
                     max_iter = 300, n_init = 10, random_state = 0)
             kmean.fit(X)
             score.append(kmean.inertia_)
 
         a = score[0] - score[19]
-        b = num_clusters[0] - num_clusters[19]
-        c1 = num_clusters[0] * score[19]
-        c2 = num_clusters[19] * score[0]
+        b = n_clusters[0] - n_clusters[19]
+        c1 = n_clusters[0] * score[19]
+        c2 = n_clusters[19] * score[0]
         c = c1 - c2
         dist_from_line = []
         for i in range(20):
-            dist_from_line.append(self.distance_calculation(num_clusters[i], score[i], a, b, c))
+            dist_from_line.append(self.distance_calculation(n_clusters[i], score[i], a, b, c))
         best_k = dist_from_line.index(max(dist_from_line))+1
         return best_k
     
