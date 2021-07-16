@@ -23,7 +23,7 @@ class Experiment(object):
         target = torch.cat([data["labels"] for data in sampler_loader])
         samples_weight = np.array([self.class_weights[t] for t in target])
         samples_weight = torch.from_numpy(samples_weight)
-        samples_weigth = samples_weight.double()
+        samples_weight = samples_weight.double()
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         target = torch.from_numpy(target).long()
         train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
