@@ -53,7 +53,7 @@ class Experiment(object):
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
                 difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
                 flag = differences[-1] == difference if len(differences)>2 else False
-                if len(differences)>2 and (differences[-1] - difference) < 100:
+                if len(differences)>2 and abs(differences[-1] - difference) < 10:
                     print(f"Elbow at {k-1}")
                     break
                 differences.append(difference)
@@ -85,7 +85,8 @@ class Experiment(object):
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - sum(splits)
-            splits.append(diff)
+            if diff > 0:
+                splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
             X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
@@ -97,5 +98,5 @@ class Experiment(object):
             splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
             train_split_dist = self.distribution(splits[0], 16)
             self.classifier.criterion.weight = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
-            return splits[:-1]
+            return splits[:-1] if diff > 0 else splits
         return dataSetFolder
