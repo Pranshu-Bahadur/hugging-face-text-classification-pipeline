@@ -21,6 +21,7 @@ class NLPClassifier(object):
         self.bs = config["batch_size"]
         self.save_interval = config["save_interval"]
         self.save_directory = config["save_directory"]
+        self.drop = config["drop"]
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"], use_fast=True)
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
@@ -93,7 +94,7 @@ class NLPClassifier(object):
             #logits = self.model(**x).logits
             outputs = self.model(**x)
             loss, logits = outputs.loss.mean(), outputs.logits #TODO Not using model loss due to weighted loss computation.
-            logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
+            logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits #TODO yeah i know...
             #loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())

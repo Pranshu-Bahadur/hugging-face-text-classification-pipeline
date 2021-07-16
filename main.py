@@ -25,6 +25,7 @@ def _model_config(args):
         "library": args.library,
         "save_directory": args.save_directory,   
         "multi": True if args.multi else False,
+        "drop": int(args.drop) if args.drop else 0,
     }
     return config
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_directory", "-s")
     parser.add_argument("--save_interval", help="# of epochs to save checkpoints at.")
     parser.add_argument("--multi", help="Set this model to parallel mode", action="store_true")
+    parser.add_argument("--drop")
 
 
     args = parser.parse_args()
