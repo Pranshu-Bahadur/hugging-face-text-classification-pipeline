@@ -8,24 +8,35 @@ from torch import nn as nn
 from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
 import random
+from torch.utils.data import WeightedRandomSampler
 
 class Experiment(object):
     def __init__(self, config):
         self.classifier = NLPClassifier(config)
+        self.class_weights = np.array([])
 
     def _run(self):
         splits = self._preprocessing(True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits]
+        print("Computing Weighted Random Sampler")
+        sampler_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4)
+        target = torch.cat([data["labels"] for data in sampler_loader])
+        samples_weight = np.array([self.class_weights[t] for t in target])
+        samples_weight = torch.from_numpy(samples_weight)
+        samples_weigth = samples_weight.double()
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        target = torch.from_numpy(target).long()
+        train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
+        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
             self.classifier.curr_epoch +=1
             print(f"----Running epoch {self.classifier.curr_epoch}----\n")
             print(f"Training step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[0])}\n")
-            metrics_train = self.classifier.run_epoch_step(loaders[0], "train")
+            metrics_train = self.classifier.run_epoch_step(train_loader, "train")
             print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
             with torch.no_grad():
-                metrics_validation = self.classifier.run_epoch_step(loaders[1], "validation")
+                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
             print(f"----Results at {self.classifier.curr_epoch}----\n")
             print(f"\nFor train split:\n{metrics_train}\n")
             print(f"\nFor validation split:\n{metrics_validation}\n")
@@ -33,7 +44,7 @@ class Experiment(object):
                 self.classifier._save(self.classifier.save_directory, "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print(f"\nTesting model trained for {self.classifier.curr_epoch}:\n# of samples = {len(splits[2])}\n")
         with torch.no_grad():
-            metrics_test = self.classifier.run_epoch_step(loaders[2], "test")
+            metrics_test = self.classifier.run_epoch_step(loaders[1], "test")
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
@@ -71,7 +82,7 @@ class Experiment(object):
             imb_weights.append(weights)
         imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
         #imb_weights.reverse()
-        return torch.FloatTensor(imb_weights)
+        return np.array(imb_weights)#torch.FloatTensor(imb_weights)
 
 
     def _preprocessing(self, train):
@@ -94,6 +105,6 @@ class Experiment(object):
             print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//2} cluster(s) according to mode.\n\n")
             splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
             train_split_dist = self.distribution(splits[0], 16)
-            self.classifier.criterion.weight = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
+            self.class_weights = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
             return splits[:-1] if diff > 0 else splits
         return dataSetFolder

@@ -82,18 +82,19 @@ class NLPClassifier(object):
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
-        if mode == "train":
-            self._k_means_approximation_one_step(loader)
+        #if mode == "train":
+            #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
             x = {k:v.cuda() for k,v in list(data.items())}
-            if self.score != float("-inf") and mode == "train":
-                x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            y = x.pop("labels")#x["labels"]
+            #if self.score != float("-inf") and mode == "train":
+            #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
+            y = x["labels"]#x.pop("labels")#
             total += y.size(0)
-            logits = self.model(**x).logits
-            #loss, logits = outputs.loss.mean(), outputs.logits TODO Not using model loss due to weighted loss computation.
+            #logits = self.model(**x).logits
+            outputs = self.model(**x)
+            loss, logits = outputs.loss.mean(), outputs.logits #TODO Not using model loss due to weighted loss computation.
             logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
-            loss = self.criterion(logits.view(logits.size(0), -1), y)
+            #loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
@@ -170,7 +171,7 @@ class NLPClassifier(object):
         return J
     
     def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
-        batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())}for data in loader]
+        batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())} for data in loader]
         Y = torch.tensor([]).cuda()
         J = torch.tensor([]).cuda()
         iterations = 0
