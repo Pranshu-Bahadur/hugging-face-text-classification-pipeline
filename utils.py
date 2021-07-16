@@ -48,13 +48,13 @@ class SpreadSheetNLPCustomDataset(Dataset):
         max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
         
-        lst = [self.dataset]
+        '''lst = [self.dataset]
         for class_index, group in self.dataset.groupby('type'):
             lst.append(group.sample(max_size - len(group), replace=True))
         self.dataset = pd.concat(lst)
         self.distribution = dict(self.dataset.type.value_counts())
         print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
-        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
+        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")'''
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
