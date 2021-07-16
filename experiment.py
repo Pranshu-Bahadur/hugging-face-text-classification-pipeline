@@ -44,13 +44,13 @@ class Experiment(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             print(cluster_ids)
-            curr_inertia = sum([torch.sum((X[cluster_ids==i].cpu() - centers[i].cpu())**2, dim=0) for i in range(k)])
+            curr_inertia = torch.sum(sum([torch.sum((X[cluster_ids==i].cpu() - centers[i].cpu())**2, dim=0) for i in range(k)]), dim=-1)
             print(curr_inertia)
             if k!=2:
                 highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertia_key = list(m_dict.keys())[-1]
-            m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-            difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
+                m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
+                difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
             if k!=2 and differences[-1] == difference:
                 print("Elbow?")
                 break
