@@ -71,7 +71,7 @@ class Experiment(object):
 
     def _preprocessing(self, train):
         dataSetFolder = self.classifier.dataset
-        train_split_dist = self.distribution(self.splits[0])
+        #train_split_dist = self.distribution(self.splits[0])
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
@@ -87,5 +87,6 @@ class Experiment(object):
             diff = len(dataSetFolder) - sum(splits)
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
+            train_split_dist = self.distribution(splits[0])
             return splits
         return dataSetFolder
