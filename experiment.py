@@ -90,9 +90,9 @@ class Experiment(object):
             X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
             best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
             print(best_k, cluster_ids_x, cluster_centers)
-            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), 2)
+            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), best_k//2)
             indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-            print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top 2 cluster(s) according to mode.\n\n")
+            print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//2} cluster(s) according to mode.\n\n")
             splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
             train_split_dist = self.distribution(splits[0], 16)
             self.classifier.criterion.weight = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
