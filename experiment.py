@@ -46,6 +46,7 @@ class Experiment(object):
             print(X[(cluster_ids==0).nonzero()].size(), centers.size())
             curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])
             print(curr_inertia)
+            self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
             if k!=2:
                 highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertia_key = list(m_dict.keys())[-1]
@@ -57,7 +58,7 @@ class Experiment(object):
                     break
                 differences.append(difference)
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
-        result = m_dict[list(m_dict.keys())[-2]]
+        result = m_dict[list(m_dict.keys())[-1]]
         return result["k"], result["cluster_ids"], result["centers"]
 
     def distribution(self, split, num_classes):
