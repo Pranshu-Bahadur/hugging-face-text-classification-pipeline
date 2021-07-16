@@ -42,11 +42,12 @@ class Experiment(object):
         m_dict = {}
         for k in range(2, n+1):
             cluster_ids, centers = kmeans(X=X, num_clusters = k, device=torch.device('cuda:0'))
-            curr_inertia = torch.sum(torch.cat([pairwise_distance(X[cluster_ids==i], centers[i]) for i in range(k)]), dim=-1).cpu().item()
-            highest_inertia_key = max(list(m_dict.keys()))
-            prev_inertia_key = list(m_dict.keys())[-1]
+            if k!=2:
+                curr_inertia = torch.sum(torch.cat([pairwise_distance(X[cluster_ids==i], centers[i]) for i in range(k)]), dim=-1).cpu().item()
+                highest_inertia_key = max(list(m_dict.keys()))
+                prev_inertia_key = list(m_dict.keys())[-1]
             m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-            if k!=2 and (m(highest_inertia_key, m_dict[highest_inertia_key]["k"]) < m(prev_inertia_key, m_dict[prev_inertia_key]["k"])):
+            if (m(highest_inertia_key, m_dict[highest_inertia_key]["k"]) < m(prev_inertia_key, m_dict[prev_inertia_key]["k"])):
                 break
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
         result = m_dict[list(m_dict.keys())[-1]]
