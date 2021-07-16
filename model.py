@@ -85,9 +85,9 @@ class NLPClassifier(object):
         if mode == "train":
             self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
+            x = {k:v.cuda() for k,v in list(data.items())}
             if self.score != float("-inf") and mode == "train":
                 x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-            x = {k:v.cuda() for k,v in list(data.items())}
             y = x.pop("labels")#x["labels"]
             total += y.size(0)
             logits = self.model(**x).logits
