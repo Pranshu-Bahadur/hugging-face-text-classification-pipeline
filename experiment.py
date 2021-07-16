@@ -43,8 +43,22 @@ class Experiment(object):
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
+    def distribution(self, splits):
+        train_Y = torch.cat([v["labels"] for v in splits])
+        train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in splits._labels]
+        return train_split_dist
+
     def _preprocessing(self, train):
-        dataSetFolder = self.classifier.dataset               
+        dataSetFolder = self.classifier.dataset
+        if train:
+            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
+            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
+            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
+            diff = len(dataSetFolder) - sum(splits)
+            splits.append(diff)
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
+            return splits
+        train_split_dist = self.distribution(self.splits[0])
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
@@ -70,12 +84,4 @@ class Experiment(object):
         _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
         print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 7 cluster(s) according to mode.\n\n")
-        if train:
-            trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
-            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
-            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
-            diff = len(dataSetFolder) - sum(splits)
-            splits.append(diff)
-            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
-            return splits
         return dataSetFolder

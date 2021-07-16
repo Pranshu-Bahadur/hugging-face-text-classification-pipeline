@@ -86,11 +86,12 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x["labels"]
             total += y.size(0)
-            #x.pop("labels")
-            outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits
+            x.pop("labels")
+            #outputs = self.model(**x)
+            logits = self.model(**x).logits
+            #loss, logits = outputs.loss.mean(), outputs.logits
             logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
-            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
