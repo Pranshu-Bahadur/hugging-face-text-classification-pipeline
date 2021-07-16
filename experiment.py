@@ -36,15 +36,13 @@ class Experiment(object):
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
+    def distribution(self, splits):
+        train_Y = torch.cat([v["labels"] for v in splits])
+        train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in splits._labels]
+        return train_split_dist
+
     def _preprocessing(self, train):
-        dataSetFolder = self.classifier.dataset               
-        print("\n\nRunning K-means for outlier detection...\n\n")
-        X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
-        X = X.view(X.size(0), -1)
-        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
-        _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
-        indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 7 cluster(s) according to mode.\n\n")
+        dataSetFolder = self.classifier.dataset  
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
@@ -53,4 +51,26 @@ class Experiment(object):
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             return splits
+        train_split_dist = self.distribution(self.splits[0])
+
+        print("\n\nRunning K-means for outlier detection...\n\n")
+        X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
+        X = X.view(X.size(0), -1)
+        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=8, device=torch.device('cuda:0'))
+        _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
+        indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+        print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 7 cluster(s) according to mode.\n\n")
         return dataSetFolder
+    
+    def weight_calc(self, dataset):
+        #dataset = self.classifier.dataset
+        imb_weights = []
+        for group in dataset.dataset.groupby('type'):
+            #beta  = 0.5 #assuming for now
+            effective_num = 1.0 - np.power(beta, len(group))
+            weights = (1.0 - beta) / effective_num
+            imb_weights.append(weights)
+        imb_weights = [weights/sum(imb_weights) * 16 for weights in imb_weights]
+        return torch.FloatTensor(imb_weights)
+
+    

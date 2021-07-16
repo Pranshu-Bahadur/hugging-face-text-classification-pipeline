@@ -43,19 +43,16 @@ class SpreadSheetNLPCustomDataset(Dataset):
         print(f'Dataset imbalanced distribution :\n{dict(self.distribution)}')
         max_size = self.distribution.max()        
         #https://stackoverflow.com/questions/48373088/duplicating-training-examples-to-handle-class-imbalance-in-a-pandas-data-frame
-        Y = self.dataset["type"]
-        X = self.dataset.drop(["type"], axis=1)
-        smt = SMOTE(random_state=0)
-        X_train_SMOTE, y_train_SMOTE = smt.fit_resample(X, Y)
-        print(X_train_SMOTE, y_train_SMOTE)
         
-        lst = [self.dataset]
+        
+        
+        '''lst = [self.dataset] #OVERSAMPLING - LEADS TO OVERFITTING
         for class_index, group in self.dataset.groupby('type'):
             lst.append(group.sample(max_size - len(group), replace=True))
         self.dataset = pd.concat(lst)
-        self.distribution = dict(self.dataset.type.value_counts())
-        print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
-        print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
+        self.distribution = dict(self.dataset.type.value_counts())'''
+        #print(f'Dataset balanced distribution after oversampling:\n{self.distribution}')
+        #print(f"Total samples after balancing:\n\n {len(self.dataset)}\n\n\n")
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
@@ -66,6 +63,14 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
         self._labels = list(self.dataset['type'].values)
+
+        """Y = self.dataset["type"]
+        X = self.dataset.drop(["type"], axis=1)
+        smt = SMOTE(random_state=0)
+        X_train_SMOTE, y_train_SMOTE = smt.fit_resample(X, Y)
+        self.dataset = pd.merge(X_train_SMOTE, y_train_SMOTE)
+        print("SMOTE CHECK")
+        print(X_train_SMOTE, y_train_SMOTE)"""
 
     def __getitem__(self, idx):
         x = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
