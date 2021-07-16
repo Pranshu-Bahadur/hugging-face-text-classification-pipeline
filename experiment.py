@@ -42,6 +42,7 @@ class Experiment(object):
         m_dict = {}
         differences = []
         for k in range(2, n+1):
+            print(torch.min(cluster_ids))
             cluster_ids, centers = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             curr_inertia = sum([torch.sum((X[cluster_ids==i].cpu() - centers[i].cpu())**2, dim=-1) for i in range(k)])
             print(curr_inertia)
