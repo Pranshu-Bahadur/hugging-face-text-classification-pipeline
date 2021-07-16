@@ -44,8 +44,9 @@ class Experiment(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             print(cluster_ids)
-            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero().view(-1)], centers[i]) for i in range(k)])
+            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero().view(-1)], centers[i].view(-1)).view(-1) for i in range(k)])
             print(curr_inertia)
+            flag = False
             if k!=2:
                 highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertia_key = list(m_dict.keys())[-1]
