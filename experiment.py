@@ -44,7 +44,7 @@ class Experiment(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             print(cluster_ids)
-            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero()], centers[i]) for i in range(k)])
+            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero().view(-1)], centers[i]) for i in range(k)])
             print(curr_inertia)
             if k!=2:
                 highest_inertia_key = max(list(m_dict.keys()))
@@ -89,7 +89,7 @@ class Experiment(object):
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
             X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
-            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, 20)
+            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
             print(best_k, cluster_ids_x, cluster_centers)
             _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), 2)
             indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
