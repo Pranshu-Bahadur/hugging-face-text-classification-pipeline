@@ -84,13 +84,12 @@ class NLPClassifier(object):
         self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
         for i,data in enumerate(loader):
             x = {k:v.cuda() for k,v in list(data.items())}
-            y = x["labels"]
+            y = x.pop("labels")#x["labels"]
             total += y.size(0)
-            #x.pop("labels")
-            outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = self.model(**x).logits
+            #loss, logits = outputs.loss.mean(), outputs.logits TODO Not using model loss due to weighted loss computation.
             logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
-            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
