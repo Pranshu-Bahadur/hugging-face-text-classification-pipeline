@@ -5,80 +5,60 @@ import copy
 import torch
 from torch import nn as nn
 from torch.utils.tensorboard import SummaryWriter
-from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification#, AutoTokenizerFast
-from sklearn.metrics import f1_score
+from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, PretrainedConfig#, AutoTokenizerFast
 import numpy as np
-import timm
+from fairscale.optim.grad_scaler import ShardedGradScaler
+from utils import SpreadSheetNLPCustomDataset
+import transformers
+#from apex import amp
 
 class NLPClassifier(object):
     def __init__(self, config : dict):
         self.library = config["library"]
         self.nc = config["num_classes"]
-        self.model, self.tokenizer = self._create_model(config["library"], config["model_name"], config["num_classes"])
+        self.curr_epoch = config["curr_epoch"]
+        self.final_epoch = config["epochs"]
+        self.bs = config["batch_size"]
+        self.save_interval = config["save_interval"]
+        self.save_directory = config["save_directory"]
+        self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"], use_fast=True)
+        self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
+        self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
+        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config)##.from_config(config=self.model_config)#.
+        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = self._create_scheduler(config["scheduler_name"], self.optimizer)
+            self.scheduler = transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)
             self.criterion = self._create_criterion(config["criterion_name"])
-        
-        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
-        #print(self.model)
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
-        self.curr_epoch = config["curr_epoch"]
-        self.name = "{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"])
-        self.bs = config["batch_size"]
+        self.name = "{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"], config["optimizer_name"], "CosineAnnealing", config["criterion_name"])
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
-        self.final_epoch = config["epochs"]
         self.best_cluster_center_score = float("-inf")
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
+        self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
 
-        
-    def _create_model(self, library, model_name, num_classes):
+
+
+
+    def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            model.num_labels = num_classes
-            """
-            class ModelWrapper(nn.Module):
-                def __init__(self, model, num_classes):
-                    super().__init__()
-                    self.classifier = nn.Linear(in_features=model.pooler.dense.in_features, out_features=num_classes, bias=True)
-                def forward(self,x):
-                    x = self.model(x)
-                    return self.classifier(x)
-            """
-            #model = ModelWrapper(model, num_classes)
-            #model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes, bias=True)
-            """
-            if "roberta" in model_name:
-                model.classifier.out_proj = 
-            elif not "long" in model_name: #TODO convert fine-tuned weights
-                
-            else:
-                model.classifier.out_proj = nn.Linear(in_features=model.classifier.out_proj.in_features, out_features=num_classes, bias=True)
-            """
-            model.classifier = nn.Linear(in_features=model.classifier.in_features, out_features=num_classes)
-            model.num_classes = num_classes
-            return model, AutoTokenizer.from_pretrained(model_name)
-        else:
-            return timm.create_model(model_name, pretrained=True, num_classes=num_classes), AutoTokenizer.from_pretrained(model_name)
+            config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
+            config.id2label = {k:i for i,k in enumerate(labels_dict)}
+            config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
+            return config
 
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
-                      "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999)),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5),
+                      "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999), eps=1e-8),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8, amsgrad=True),
         }
         return optim_dict[name]
-    
-    def _create_scheduler(self, name, optimizer):
-        scheduler_dict = {
-            "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, step_size=2.4, gamma=0.97),
-            "CosineAnnealing": torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 600, 1)
-        }
-        return scheduler_dict[name]
 
+    #TODO Add SOP loss
     def _create_criterion(self, name):
         loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
@@ -94,87 +74,40 @@ class NLPClassifier(object):
     def _save(self, directory, name):
         print("Saving trained {}...".format(name))
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
-
-    def _run_epoch(self, loaders):
-        f1_train, acc_train, loss_train = self._train(loaders[0])
-        f1_val, acc_val, loss_val = self._validate(loaders[1])
-        self.curr_epoch += 1
-        return f1_train, f1_val, acc_train, acc_val, loss_train, loss_val
+    
     
     #TODO Abstract _train & _validate functions
-    def _train(self, loader):
-        self.model.train()
-        running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #TODO self._k_means_approximation_one_step(loader) DO NOT REMOVE
-        #self._k_means_approximation_one_step(loader)
-        #self.criterion.weight=torch.tensor([0 for _ in range(self.nc)]).cuda()
-        #indices, k = self.clusters_idx, self.cluster_idx
-        for data in loader:
-            total += data["labels"].size(0)
-            if self.library == "timm":
-                shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                if self.score != float("-inf"):
-                    x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                    x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                    data["input_ids"] = x.view(x.size(0),3, 128, 128)
-                outputs = self.model(data["input_ids"])
-                loss = self.criterion(outputs, data["labels"])
-            else:
-                shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                if self.score != float("-inf"):
-                    data["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
-                outputs = self.model(input_ids=data["input_ids"], attention_mask=data["attention_mask"]).logits#, attention_mask=data["attention_mask"]
-                #self.criterion.weight = torch.tensor([self.criterion.weight[i]+(data["labels"][data["labels"]==i].size(0)/self.bs) for i in range(16)]).cuda()
-                loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-            #print(outputs.size())
-            self.optimizer.zero_grad()
-            loss.backward()
-            running_loss += loss.cpu().item()
-            self.optimizer.step()
-            self.scheduler.step()
-            y_ = torch.argmax(outputs, dim=-1)
-            correct += (y_.cpu()==data["labels"].cpu()).sum().item()
-            f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
-            iterations += 1
-            torch.cuda.empty_cache()
-            print(iterations, float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations))
-        return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/total)
-
-
-    def _validate(self, loader):
-        self.model.eval()
-        running_loss, correct, iterations, total, f1 = 0, 0, 0, 0, 0
-        #indices, k = self.clusters_idx, self.cluster_idx
-        #self._k_means_approximation_one_step(loader)
-        with torch.no_grad():                
-            for data in loader:
-                if self.library == "timm":
-                    shuffle_seed = torch.randperm(data["attention_mask"].size(0))
-                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    if self.score != float("-inf"):
-                        x = data["input_ids"].view(data["input_ids"].size(0),3, -1)
-                        x[:,:,self.clusters_idx!=self.cluster_idx] = 0
-                        data["input_ids"] = x.view(x.size(0),3, 128, 128)
-                    outputs = self.model(data["input_ids"])
-                    loss = self.criterion(outputs, data["labels"])
-                else:
-                    shuffle_seed = torch.randperm(data["input_ids"].size(0))
-                    data = {k: v[shuffle_seed].cuda() for k, v in data.items()}
-                    if self.score != float("-inf"):
-                        data["attention_mask"][:,self.clusters_idx] = 0
-                    outputs = self.model(input_ids=data["input_ids"],attention_mask=data["attention_mask"]).logits# 
-                    loss = self.criterion(outputs.view(data["labels"].size(0), -1), data["labels"])
-                running_loss += loss.cpu().item()
-                y_ = torch.argmax(outputs, dim=1)
-                correct += (y_.cpu()==data["labels"].cpu()).sum().item()
-                f1 += f1_score(data["labels"].cpu(), y_.cpu(), average='micro')
-                total += data["labels"].size(0)
-                iterations += 1
-                torch.cuda.empty_cache()
-        return float(f1/float(iterations))*100, float(correct/float(total))*100, float(running_loss/iterations)
-    
+    def run_epoch_step(self, loader, mode):
+        total = 0
+        metrics = ["accuracy","loss"]
+        metrics = {f"{mode}-{metric}": [] for metric in metrics}
+        self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
+        for i,data in enumerate(loader):
+            x = {k:v.cuda() for k,v in list(data.items())}
+            y = x["labels"]
+            total += y.size(0)
+            #x.pop("labels")
+            outputs = self.model(**x)
+            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
+            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            metrics[f"{mode}-loss"].append(loss.cpu().item())
+            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+            if mode == "train": #TODO fix grad acc
+                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                self.optimizer.step()
+                self.scheduler.step()
+                self.model.zero_grad()
+                gradient_accumulation_steps = int(len(loader)*0.1)
+                if (i+1)%gradient_accumulation_steps==0:
+                    print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
+        metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
+        for k,v in list(metrics.items()):
+            self.writer.add_scalar(k,v,self.curr_epoch)
+        return metrics
+    """
+        Un-Implemented code (EPENAS/NAS-WOT) from this point....
+    """
     #TODO Make sure this is using kmeans++
     def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
@@ -197,18 +130,6 @@ class NLPClassifier(object):
     
     ##Given inputs X (dict of tensors of 1 batch) return jacobian matrix on given function.
     def _jacobian(self, f, x, clusters_idx, cluster_idx):
-        #f = copy.deepcopy(f)
-        #f.zero_grad()
-        if self.library == "timm":
-            x = x["input_ids"].view(x["input_ids"].size(0),3, -1)
-            x[:,:,clusters_idx!=cluster_idx] = 0
-            x = x.view(x.size(0), x.size(1), 128,128)
-            x.requires_grad = True
-            preds = f(x)
-            preds.backward(torch.ones_like(preds).cuda())
-            J = x.grad
-            #print(J.size())
-            return J
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 0
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
@@ -218,7 +139,6 @@ class NLPClassifier(object):
         J = x["attention_mask"].grad
         x["attention_mask"].requires_grad = False
         x["attention_mask"][:,clusters_idx!=cluster_idx] = 1
-        #print(J.size())
         return J
     
     def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
