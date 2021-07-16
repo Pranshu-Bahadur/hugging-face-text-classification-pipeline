@@ -25,7 +25,7 @@ class Experiment(object):
         num_clusters = range(1,20)
 
         for i in num_clusters:
-            kmean = kmeans(n_clusters = i, init = 'k-means++', 
+            kmean = kmeans(num_clusters = i, init = 'k-means++', 
                     max_iter = 300, n_init = 10, random_state = 0)
             kmean.fit(X)
             score.append(kmean.inertia_)
