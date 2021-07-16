@@ -25,7 +25,7 @@ class Experiment(object):
         n_clusters = range(1,20)
 
         for i in n_clusters:
-            kmean = kmeans(X=Xnum_clusters = i, device=torch.device('cuda:0'))
+            kmean = kmeans(X=X, num_clusters = i, device=torch.device('cuda:0'))
             kmean.fit(X)
             score.append(kmean.inertia_)
 
