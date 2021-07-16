@@ -27,7 +27,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         word_lengths = self.dataset['posts'].str.split()
         word_lengths = word_lengths.map(len)
         print("Exploding posts and types for large posts...\n")
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512) if word_lengths[i] >= 512 else row['posts']) for i, row in self.dataset.iterrows()]).reset_index())
+        df = self.dataset[word_lengths<512]
+        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 512]).reset_index()).append(df)
         self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset['total'] = self.dataset['posts'].str.split()
         self.dataset['total'] = self.dataset['total'].map(len)
