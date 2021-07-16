@@ -56,7 +56,7 @@ class Experiment(object):
                 if flag:
                     print("Elbow?")
                     break
-            differences.append(difference)
+                differences.append(difference)
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
         result = m_dict[list(m_dict.keys())[-1]]
         return result["k"], result["cluster_ids"], result["centers"]
