@@ -51,11 +51,13 @@ class Experiment(object):
                 prev_inertia_key = list(m_dict.keys())[-1]
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
                 difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
-            if k!=2 and differences[-1] == difference:
+                flag = differences[-1] == difference
+            if k!=2 and flag:
                 print("Elbow?")
                 break
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
-            differences.append(difference)
+            if flag:
+                differences.append(difference)
         result = m_dict[list(m_dict.keys())[-1]]
         return result["k"], result["cluster_ids"], result["centers"]
 
