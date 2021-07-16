@@ -40,16 +40,20 @@ class Experiment(object):
     def finding_k(self, X, n):
         X = X.view(X.size(0), -1)
         m_dict = {}
+        differences = []
         for k in range(2, n+1):
             cluster_ids, centers = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
-            curr_inertia = torch.sum(torch.cat([pairwise_distance(X[cluster_ids==i], centers[i]) for i in range(k)]), dim=-1).cpu().item()
+            curr_inertia = torch.sum(torch.cat([(X[cluster_ids==i] - centers[i])**2 for i in range(k)]), dim=-1).cpu().item()
             if k!=2:
                 highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertia_key = list(m_dict.keys())[-1]
             m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-            if k!=2 and (m(highest_inertia_key, m_dict[highest_inertia_key]["k"]) < m(prev_inertia_key, m_dict[prev_inertia_key]["k"])):
+            difference = (int(m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - int(m(prev_inertia_key, m_dict[prev_inertia_key]["k"])))
+            if k!=2 and differences[-1] == difference:
+                print("Elbow?")
                 break
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
+            differences.append(difference)
         result = m_dict[list(m_dict.keys())[-1]]
         return result["k"], result["cluster_ids"], result["centers"]
 
@@ -80,7 +84,7 @@ class Experiment(object):
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
-            X = torch.cat([x["token_type_ids"] for x in k_means_loader]).cuda()
+            X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
             best_k, cluster_ids_x, cluster_centers = self.finding_k(X, 20)
             print(best_k, cluster_ids_x, cluster_centers)
             _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), 2)
