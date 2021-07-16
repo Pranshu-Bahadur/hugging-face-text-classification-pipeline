@@ -42,7 +42,7 @@ class Experiment(object):
         m_dict = {}
         differences = []
         for k in range(2, n+1):
-            centers, cluster_ids  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
+            cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             print(cluster_ids)
             print(curr_inertia)
 
