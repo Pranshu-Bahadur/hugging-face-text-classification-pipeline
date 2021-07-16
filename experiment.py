@@ -37,22 +37,19 @@ class Experiment(object):
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
+    #TODO I give up on using elbow for global minimum...I'm happy with local. That's what the method is for...
     def finding_k(self, X, n):
         X = X.view(X.size(0), -1)
         m_dict = {}
         differences = [0]
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
-            print(X[(cluster_ids==0).nonzero()].size(), centers.size())
             curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
-            print(curr_inertia)
             self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
             if k!=2:
-                highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertias = list(m_dict.keys())
-                m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1) #int(abs((((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))))
-                self.classifier.writer.add_scalar("Gap",difference, k)
+                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
+                #self.classifier.writer.add_scalar("Gap",difference, k)
                 if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
                     print(f"Elbow at {k-1}")
                     break
@@ -62,7 +59,7 @@ class Experiment(object):
         return result["k"], result["cluster_ids"], result["centers"]
 
     def distribution(self, split, num_classes):
-        loader = Loader(split, self.classifier.bs, shuffle=True, num_workers=4)
+        loader = Loader(split, self.classifier.bs, shuffle=False, num_workers=4)
         train_Y = torch.cat([data["labels"] for data in loader])
         train_split_dist = [(train_Y==i).sum().cpu().item() for i in range(num_classes)]
         return train_split_dist
@@ -73,7 +70,8 @@ class Experiment(object):
             effective_num = 1.0 - np.power(beta, num_samples)
             weights = (1.0 - beta) / effective_num
             imb_weights.append(weights)
-        imb_weights = [weights/sum(imb_weights) * 16 for weights in imb_weights]
+        imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
+        imb_weights.reverse()
         return torch.FloatTensor(imb_weights)
 
 
