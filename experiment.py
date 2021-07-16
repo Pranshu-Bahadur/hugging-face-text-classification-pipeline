@@ -49,7 +49,6 @@ class Experiment(object):
             if k!=2:
                 prev_inertias = list(m_dict.keys())
                 difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
-                #self.classifier.writer.add_scalar("Gap",difference, k)
                 if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
                     print(f"Elbow at {k-1}")
                     break

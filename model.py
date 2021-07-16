@@ -1,6 +1,6 @@
 from math import log
 from torch.autograd.functional import jacobian
-from kmeans_pytorch import kmeans
+from kmeans_pytorch import kmeans, pairwise_distance
 import copy
 import torch
 from torch import nn as nn
@@ -113,14 +113,37 @@ class NLPClassifier(object):
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
     """
-    #TODO Make sure this is using kmeans++
-    def _features_selection(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
+    #TODO Make sure this is using kmeans++ DEPRECEATED
+    def _features_selection_(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster, _ = selection_heuristic(cluster_ids_x)
         #print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
+    
+    def _features_selection(self, loader, n, selection_heuristic=lambda x: torch.mode(x)):
+        X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
+        X = X.view(X.size(0), -1)
+        m_dict = {}
+        differences = [0]
+        for k in range(2, n+1):
+            cluster_ids, centers  = kmeans(X=X.T, num_clusters = k, device=torch.device('cuda'))
+            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
+            self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
+            if k!=2:
+                prev_inertias = list(m_dict.keys())
+                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
+                if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
+                    print(f"Elbow at {k-1}")
+                    break
+                differences.append(difference)
+            m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
+        result = m_dict[list(m_dict.keys())[-1]]
+        k, cluster_ids_x, cluster_centers = result["k"], result["cluster_ids"], result["centers"]
+        best_cluster = selection_heuristic(cluster_ids_x)
+        return best_cluster, cluster_centers[best_cluster], cluster_ids_x
+
     
     #From EPE-Nas (Note: Only for cases where num_classes < 100)
     #Given a Jacobian and target tensor calc epe-nase score.
@@ -166,8 +189,7 @@ class NLPClassifier(object):
 
     #@TODO Run intialization when model is created first.
     def _k_means_approximation_one_step(self, loader):
-        best_cluster, best_cluster_center, clusters_idx = self._features_selection(2, loader)
-        print(best_cluster, torch.mean(best_cluster_center.view(-1)), clusters_idx)
+        best_cluster, best_cluster_center, clusters_idx = self._features_selection(loader, 256)
         if torch.mean(best_cluster_center.view(-1)) > self.best_cluster_center_score:
             score = self._epe_nas_score(loader,clusters_idx, best_cluster)
             if score > self.score:
