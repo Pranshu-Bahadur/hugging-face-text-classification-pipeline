@@ -25,7 +25,6 @@ class Experiment(object):
         samples_weight = torch.from_numpy(samples_weight)
         samples_weight = samples_weight.double()
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-        target = torch.from_numpy(target).long()
         train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
         loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
