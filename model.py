@@ -87,7 +87,7 @@ class NLPClassifier(object):
         for i,data in enumerate(loader):
             x = {k:v.cuda() for k,v in list(data.items())}
             if self.score != float("-inf") and mode == "train":
-                x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
+                x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             y = x.pop("labels")#x["labels"]
             total += y.size(0)
             logits = self.model(**x).logits
@@ -122,6 +122,7 @@ class NLPClassifier(object):
         #print(best_cluster, cluster_centers[best_cluster], cluster_ids_x)
         return best_cluster, cluster_centers[best_cluster], cluster_ids_x
     
+    #TODO add topk here as well.
     def _features_selection(self, loader, n, selection_heuristic=lambda x: torch.mode(x)):
         X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
         X = X.view(X.size(0), -1)
