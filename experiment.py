@@ -44,7 +44,7 @@ class Experiment(object):
         differences = [0]
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
-            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
+            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X.T[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
             self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
             if k!=2:
                 prev_inertias = list(m_dict.keys())

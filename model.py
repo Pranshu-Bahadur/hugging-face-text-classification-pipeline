@@ -129,7 +129,7 @@ class NLPClassifier(object):
         differences = [0]
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X.T, num_clusters = k, device=torch.device('cuda'))
-            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
+            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X.T[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
             if k!=2:
                 prev_inertias = list(m_dict.keys())
                 difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
