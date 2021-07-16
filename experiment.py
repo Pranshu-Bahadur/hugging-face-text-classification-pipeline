@@ -77,10 +77,13 @@ class Experiment(object):
     def weight_calc(self, distribution, beta):
         imb_weights = []
         for num_samples in distribution:
+            """
             effective_num = 1.0 - np.power(beta, num_samples)
             weights = (1.0 - beta) / effective_num
             imb_weights.append(weights)
         imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
+            """
+            imb_weights.append(1. /num_samples)
         #imb_weights.reverse()
         return np.array(imb_weights)#torch.FloatTensor(imb_weights)
 
@@ -105,6 +108,6 @@ class Experiment(object):
             print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//2} cluster(s) according to mode.\n\n")
             splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
             train_split_dist = self.distribution(splits[0], 16)
-            self.class_weights = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
+            self.class_weights = self.weight_calc(train_split_dist, 0.9) #TODO find proper betas value.
             return splits[:-1] if diff > 0 else splits
         return dataSetFolder
