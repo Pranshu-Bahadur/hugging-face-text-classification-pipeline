@@ -44,7 +44,7 @@ class Experiment(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             #print(X[(cluster_ids==0).nonzero()].size(), centers.size())
-            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero()].view((cluster_ids==i).nonzero().size(0), -1), centers[i].view(-1)).view(-1) for i in range(k)])
+            curr_inertia = sum([(1/(2*i+1))*pairwise_distance(X[(cluster_ids==i).nonzero()].view((cluster_ids==i).nonzero().size(0), -1), centers[i]) for i in range(k)])
             print(curr_inertia)
             flag = False
             if k!=2:
