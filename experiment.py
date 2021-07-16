@@ -37,7 +37,7 @@ class Experiment(object):
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
-    def finding_k(self, X, n, threshold):
+    def finding_k(self, X, n):
         X = X.view(X.size(0), -1)
         m_dict = {}
         for k in range(1, n+1):
@@ -56,7 +56,6 @@ class Experiment(object):
         train_Y = torch.cat([v["labels"] for v in split])
         train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in num_classes]
         return train_split_dist
-
    
     def weight_calc(self, distribution, beta):
         imb_weights = []
@@ -80,13 +79,13 @@ class Experiment(object):
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
             X = torch.cat([x["token_type_ids"] for x in k_means_loader]).cuda()
-            train_split_dist = self.distribution(splits[0])
-            best_k, cluster_ids_x, cluster_centers = self.finding_k(X)
+            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, 20)
+            print(best_k, cluster_ids_x, cluster_centers)
             _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), 2)
             indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
             print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top 2 cluster(s) according to mode.\n\n")
             splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
-            train_split_dist = self.distribution(splits[0])
+            train_split_dist = self.distribution(splits[0], 16)
             self.classifier.criterion.weight = self.weight_calc(train_split_dist, 0.9).cuda() #TODO find proper betas value.
             return splits[:-1]
         return dataSetFolder
