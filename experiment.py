@@ -53,7 +53,7 @@ class Experiment(object):
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
                 difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
                 self.classifier.writer.add_scalar("Gap",difference, k)
-                if len(differences)>2 and abs(differences[-1] - difference) < 10:
+                if len(differences)>2 and abs(differences[-1] - difference) < abs(max(differences) - difference):
                     print(f"Elbow at {k-1}")
                     break
                 differences.append(difference)
