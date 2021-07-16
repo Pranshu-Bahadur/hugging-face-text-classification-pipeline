@@ -54,7 +54,8 @@ class Experiment(object):
         return result["k"], result["cluster_ids"], result["centers"]
 
     def distribution(self, split, num_classes):
-        train_Y = torch.cat([v["labels"] for v in split])
+        leader = Loader(split, self.classifier.bs, shuffle=True, num_workers=4)
+        train_Y = torch.cat([data["labels"] for data in loader])
         train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in num_classes]
         return train_split_dist
    
