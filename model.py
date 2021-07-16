@@ -130,12 +130,11 @@ class NLPClassifier(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X.T, num_clusters = k, device=torch.device('cuda'))
             curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
-            self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
             if k!=2:
                 prev_inertias = list(m_dict.keys())
                 difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
                 if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
-                    print(f"Elbow at {k-1}")
+                    print(f"{self.curr_epoch} Elbow at {k-1}")
                     break
                 differences.append(difference)
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}

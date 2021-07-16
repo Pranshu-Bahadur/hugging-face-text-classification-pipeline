@@ -70,7 +70,7 @@ class Experiment(object):
             weights = (1.0 - beta) / effective_num
             imb_weights.append(weights)
         imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
-        imb_weights.reverse()
+        #imb_weights.reverse()
         return torch.FloatTensor(imb_weights)
 
 
