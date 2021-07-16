@@ -25,7 +25,7 @@ def _model_config(args):
         "library": args.library,
         "save_directory": args.save_directory,   
         "multi": True if args.multi else False,
-        "drop": int(args.drop) if args.drop else 0,
+        "drop": float(args.drop) if args.drop else 0,
     }
     return config
 
