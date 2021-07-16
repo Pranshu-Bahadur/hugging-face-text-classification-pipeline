@@ -54,7 +54,7 @@ class NLPClassifier(object):
     def _create_optimizer(self, name, model_params, lr):
         optim_dict = {"SGD":torch.optim.SGD(model_params.parameters(), lr, weight_decay=1e-5, momentum=0.9, nesterov=True),
                       "ADAM": torch.optim.Adam(model_params.parameters(), lr, betas=(0.9, 0.999), eps=1e-8),
-                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8, amsgrad=True),
+                      "ADAMW": torch.optim.AdamW(model_params.parameters(), lr,betas=(0.9, 0.999), weight_decay=1e-5, eps=1e-8),
         }
         return optim_dict[name]
 
@@ -82,7 +82,11 @@ class NLPClassifier(object):
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
-        for i,data in enumerate(loader):
+        if mode == "train":
+            self._k_means_approximation_one_step(loader)
+        for i,data in enumerate(loader)and mode == "train":
+            if self.score != float("-inf"):
+                x["attention_mask"][:,self.clusters_idx!=self.cluster_idx] = 0
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x.pop("labels")#x["labels"]
             total += y.size(0)
@@ -100,6 +104,8 @@ class NLPClassifier(object):
                 gradient_accumulation_steps = int(len(loader)*0.1)
                 if (i+1)%gradient_accumulation_steps==0:
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
+            del x, y
+            torch.cuda.empty_cache()
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
