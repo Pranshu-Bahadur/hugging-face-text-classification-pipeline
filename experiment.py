@@ -23,6 +23,7 @@ class Experiment(object):
     def finding_k(self, X):
         score = []
         n_clusters = range(1,20)
+        X = X.view(X.size(0), -1)
 
         for i in n_clusters:
             kmean = kmeans(X=X, num_clusters = i, device=torch.device('cuda:0'))
