@@ -56,7 +56,7 @@ class Experiment(object):
     def distribution(self, split, num_classes):
         loader = Loader(split, self.classifier.bs, shuffle=True, num_workers=4)
         train_Y = torch.cat([data["labels"] for data in loader])
-        train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in num_classes]
+        train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in range(num_classes)]
         return train_split_dist
    
     def weight_calc(self, distribution, beta):
