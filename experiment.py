@@ -51,9 +51,9 @@ class Experiment(object):
                 highest_inertia_key = max(list(m_dict.keys()))
                 prev_inertias = list(m_dict.keys())
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias+1)) #int(abs((((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))))
+                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1) #int(abs((((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))))
                 self.classifier.writer.add_scalar("Gap",difference, k)
-                if len(differences)>2 and differences[-1] >= difference: #abs(max(differences) - difference)
+                if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
                     print(f"Elbow at {k-1}")
                     break
                 differences.append(difference)
