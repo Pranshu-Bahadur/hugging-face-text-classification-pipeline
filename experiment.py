@@ -46,7 +46,7 @@ class Experiment(object):
             highest_inertia_key = max(list(m_dict.keys()))
             prev_inertia_key = list(m_dict.keys())[-1]
             m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
-            if k!=1 and (m(highest_inertia_key, m_dict[highest_inertia_key]["k"]) < m(prev_inertia_key, m_dict[prev_inertia_key]["k"])):
+            if k!=2 and (m(highest_inertia_key, m_dict[highest_inertia_key]["k"]) < m(prev_inertia_key, m_dict[prev_inertia_key]["k"])):
                 break
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
         result = m_dict[list(m_dict.keys())[-1]]
