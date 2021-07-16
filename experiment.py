@@ -40,7 +40,7 @@ class Experiment(object):
     def finding_k(self, X, n):
         X = X.view(X.size(0), -1)
         m_dict = {}
-        differences = []
+        differences = [0]
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             print(X[(cluster_ids==0).nonzero()].size(), centers.size())
@@ -53,12 +53,11 @@ class Experiment(object):
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
                 difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
                 flag = differences[-1] == difference
-            if k!=2 and flag:
-                print("Elbow?")
-                break
+                if flag:
+                    print("Elbow?")
+                    break
+            differences.append(difference)
             m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
-            if flag:
-                differences.append(difference)
         result = m_dict[list(m_dict.keys())[-1]]
         return result["k"], result["cluster_ids"], result["centers"]
 
