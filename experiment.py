@@ -52,7 +52,7 @@ class Experiment(object):
                 prev_inertia_key = list(m_dict.keys())[-1]
                 m = lambda y1,x1: (curr_inertia - y1)/(k - x1)
                 difference = int(((m(highest_inertia_key, m_dict[highest_inertia_key]["k"])) - (m(prev_inertia_key, m_dict[prev_inertia_key]["k"]))))
-                flag = differences[-1] == difference
+                flag = differences[-1] == difference if len(differences)>2 else False
                 if flag:
                     print("Elbow?")
                     break
