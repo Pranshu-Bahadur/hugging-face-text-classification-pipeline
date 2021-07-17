@@ -86,7 +86,8 @@ class NLPClassifier(object):
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
-            x = {k:v.cuda() for k,v in list(data.items())}
+            shuffle_seed = torch.randperm(data["labels"].size(0))
+            x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             y = x.pop("labels")#x["labels"]##
