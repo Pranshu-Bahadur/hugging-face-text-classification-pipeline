@@ -36,6 +36,19 @@ class Experiment(object):
         inp_dict[inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
         return inp_dict
 
+    def weight_calc(self, distribution, beta):
+        imb_weights = []
+        for num_samples in distribution:
+            """
+            effective_num = 1.0 - np.power(beta, num_samples)
+            weights = (1.0 - beta) / effective_num
+            imb_weights.append(weights)
+        imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
+            """
+            imb_weights.append(1. /num_samples)
+        #imb_weights.reverse()
+        return np.array(imb_weights)#torch.FloatTensor(imb_weights)
+
     def finding_k(self, X, n):
             X = self.smoothing(X)
             m_dict = {}
@@ -75,9 +88,10 @@ class Experiment(object):
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
-    def distribution(self, splits):
-        train_Y = torch.cat([v["labels"] for v in splits])
-        train_split_dist = [(train_Y==i).nonzero().cpu().item() for i in splits._labels]
+    def distribution(self, split, num_classes):
+        loader = Loader(split, self.classifier.bs, shuffle=False, num_workers=4)
+        train_Y = torch.cat([data["labels"] for data in loader])
+        train_split_dist = [(train_Y==i).sum().cpu().item() for i in range(num_classes)]
         return train_split_dist
 
     def _preprocessing(self, train):
@@ -98,7 +112,7 @@ class Experiment(object):
             diff = len(dataSetFolder) - sum(splits)
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
-            train_split_dist = self.distribution(splits[0])
+            train_split_dist = self.distribution(splits[0], 16)
             self.class_weights = self.weight_calc(train_split_dist, 0.9)
             return splits[:-1] if diff > 0 else splits
         return dataSetFolder
