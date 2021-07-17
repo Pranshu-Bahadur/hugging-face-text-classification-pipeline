@@ -105,8 +105,8 @@ class NLPClassifier(object):
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
-                loss.backward()
-                #self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                #loss.backward()
+                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
                 self.scheduler.step()
                 self.model.zero_grad()
