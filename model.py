@@ -29,7 +29,7 @@ class NLPClassifier(object):
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)
+            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)#transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
