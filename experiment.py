@@ -1,4 +1,4 @@
-from kmeans_pytorch import kmeans
+from kmeans_pytorch import kmeans, pairwise_distance
 import numpy as np
 from model import NLPClassifier
 import torchvision
@@ -16,30 +16,41 @@ class Experiment(object):
     def __init__(self, config):
         self.classifier = NLPClassifier(config)
 
-    def distance_calculation(self, x1, y1, a, b, c):
-        distance = abs((a*x1 + b*y1 + c))/(math.sqrt(a*a + b*b))
-        return distance
-
-    def finding_k(self, X):
-        score = []
-        n_clusters = range(1,20)
+    def smoothing(self, X):
         X = X.view(X.size(0), -1)
+        return X
 
-        for i in n_clusters:
-            kmean = kmeans(X=X, num_clusters = i, device=torch.device('cuda:0'))
-            kmean.fit(X)
-            score.append(kmean.inertia_)
+    def inertia(self, cluster_ids, centers, X, k):
+        return sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
 
-        a = score[0] - score[19]
-        b = n_clusters[0] - n_clusters[19]
-        c1 = n_clusters[0] * score[19]
-        c2 = n_clusters[19] * score[0]
-        c = c1 - c2
-        dist_from_line = []
-        for i in range(20):
-            dist_from_line.append(self.distance_calculation(n_clusters[i], score[i], a, b, c))
-        best_k = dist_from_line.index(max(dist_from_line))+1
-        return best_k
+    def corner_case(self, k, m_dict, differences, curr_inertia):
+        if k!=2:
+            prev_inertias = list(m_dict.keys())
+            difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
+            if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
+                print(f"Elbow at {k-1}")
+                return True
+            differences.append(difference)
+
+    def update_dict(self, inp_dict, inertia, k, cluster_ids, centers):
+        inp_dict[inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
+        return inp_dict
+
+    def finding_k(self, X, n):
+            X = self.smoothing(X)
+            m_dict = {}
+            differences = [0]
+            inertia_list = []
+            for k in range(2, n+1):
+                cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
+                curr_inertia = self.inertia(cluster_ids, centers, X, k)
+                inertia_list.append(curr_inertia)
+                self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
+                if(self.corner_case(k, m_dict, differences, curr_inertia)):
+                    break
+                m_dict = self.update_dict(m_dict, k=k, centers=centers, cluster_ids=cluster_ids, inertia=curr_inertia)
+            result = m_dict[list(m_dict.keys())[-1]]
+            return result["k"], result["cluster_ids"], result["centers"]
     
     def _run(self):
         splits = self._preprocessing(True)
@@ -75,7 +86,7 @@ class Experiment(object):
         print("\n\nRunning K-means for outlier detection...\n\n")
         X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
         X = X.view(X.size(0), -1)
-        best_k = self.finding_k(X)
+        best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
         cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=best_k, device=torch.device('cuda:0'))
         _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
         indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
@@ -88,5 +99,6 @@ class Experiment(object):
             splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
             train_split_dist = self.distribution(splits[0])
-            return splits
+            self.class_weights = self.weight_calc(train_split_dist, 0.9)
+            return splits[:-1] if diff > 0 else splits
         return dataSetFolder
