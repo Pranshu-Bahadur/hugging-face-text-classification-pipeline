@@ -87,7 +87,7 @@ class NLPClassifier(object):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
-        self.model.train() if mode =="train" else self.model.eval()
+        self.model.train()# if mode =="train" else self.model.eval()
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
