@@ -7,6 +7,7 @@ import torch
 from torch import device, nn as nn
 from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
+from torch.utils.data import WeightedRandomSampler
 import random
 import matplotlib.pyplot as plt
 import math
