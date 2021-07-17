@@ -105,23 +105,24 @@ class Experiment(object):
 
     def _preprocessing(self, train):
         dataSetFolder = self.classifier.dataset
-        #train_split_dist = self.distribution(self.splits[0])
         print("\n\nRunning K-means for outlier detection...\n\n")
-        X = torch.tensor(torch.tensor(dataSetFolder.encodings["input_ids"])).cuda()
-        X = X.view(X.size(0), -1)
-        best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
-        cluster_ids_x, cluster_centers = kmeans(X=X, num_clusters=best_k, device=torch.device('cuda:0'))
-        _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(8)]), 7)
-        indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-        print(f"\n\nResult of k-means: {len(indices)} of {X.size(0)} samples remain, taken from top 7 cluster(s) according to mode.\n\n")
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
             testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
             splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
             diff = len(dataSetFolder) - sum(splits)
-            splits.append(diff)
+            if diff > 0:
+                splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
+            k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
+            X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
+            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
+            print(best_k, cluster_ids_x, cluster_centers)
+            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), best_k//2)
+            indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+            print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//2} cluster(s) according to mode.\n\n")
+            splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
             train_split_dist = self.distribution(splits[0], 16)
-            self.class_weights = self.weight_calc(train_split_dist, 0.9)
+            self.class_weights = self.weight_calc(train_split_dist, 0.9) #TODO find proper betas value.
             return splits[:-1] if diff > 0 else splits
         return dataSetFolder
