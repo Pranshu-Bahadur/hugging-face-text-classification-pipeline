@@ -89,13 +89,13 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            y = x["labels"]#x.pop("labels")#
+            y = x.pop("labels")#x["labels"]##
             total += y.size(0)
-            #logits = self.model(**x).logits
-            outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits #TODO Not using model loss due to weighted loss computation.
+            logits = self.model(**x).logits
+            #outputs = self.model(**x)
+            #loss, logits = outputs.loss.mean(), outputs.logits #TODO Not using model loss due to weighted loss computation.
             logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits #TODO yeah i know...
-            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
