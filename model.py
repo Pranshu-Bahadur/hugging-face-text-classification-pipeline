@@ -10,6 +10,7 @@ import numpy as np
 from fairscale.optim.grad_scaler import ShardedGradScaler
 from utils import SpreadSheetNLPCustomDataset
 import transformers
+import uuid
 #from apex import amp
 
 class NLPClassifier(object):
@@ -22,19 +23,25 @@ class NLPClassifier(object):
         self.save_interval = config["save_interval"]
         self.save_directory = config["save_directory"]
         self.drop = config["drop"]
+        self.log_step = config["log_step"]
         self.tokenizer = AutoTokenizer.from_pretrained(config["model_name"], use_fast=True)
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
-        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config)##.from_config(config=self.model_config)#.
+        self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config)
         self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)#transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)
+            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
             self.criterion = self._create_criterion(config["criterion_name"])
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
-        self.name = "{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"], config["batch_size"], config["learning_rate"], config["optimizer_name"], "CosineAnnealing", config["criterion_name"])
+        self.name = "{}-{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"],
+         config["batch_size"], config["learning_rate"],
+         config["optimizer_name"],
+         "StepLR",
+         config["criterion_name"],
+         uuid.uuid4())
         self.writer = SummaryWriter(log_dir="logs/{}".format(self.name))
         self.writer.flush()
         self.best_cluster_center_score = float("-inf")
@@ -59,9 +66,8 @@ class NLPClassifier(object):
         }
         return optim_dict[name]
 
-    #TODO Add SOP loss
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),#weight=torch.tensor([0 for _ in range(self.nc)])).cuda(),
+        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),
                      "MML": nn.MultiMarginLoss().cuda(),
                      "MSE": nn.MSELoss().cuda(),
                      "BCE": nn.BCELoss().cuda()
@@ -77,12 +83,11 @@ class NLPClassifier(object):
         torch.save(self.model.state_dict(), "{}/./{}.pth".format(directory, name))
     
     
-    #TODO Abstract _train & _validate functions
     def run_epoch_step(self, loader, mode):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
-        self.model.train() if mode =="train" else self.model.eval() #TODO add with torch.no_grad()
+        self.model.train() if mode =="train" else self.model.eval()
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
@@ -94,18 +99,19 @@ class NLPClassifier(object):
             total += y.size(0)
             logits = self.model(**x).logits
             #outputs = self.model(**x)
-            #loss, logits = outputs.loss.mean(), outputs.logits #TODO Not using model loss due to weighted loss computation.
-            logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits #TODO yeah i know...
+            #loss, logits = outputs.loss.mean(), outputs.logits
+            logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
-                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                loss.backward()
+                #self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
                 self.scheduler.step()
                 self.model.zero_grad()
-                gradient_accumulation_steps = int(len(loader)*0.1)
-                if (i+1)%gradient_accumulation_steps==0:
+                self.log_step = int(len(loader)*0.1)
+                if (i+1)%self.log_step==0:
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
             del x, y
             torch.cuda.empty_cache()
