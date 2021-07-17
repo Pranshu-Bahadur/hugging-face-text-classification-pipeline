@@ -68,23 +68,32 @@ class Experiment(object):
     def _run(self):
         splits = self._preprocessing(True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits]
+        print("Computing Weighted Random Sampler")
+        sampler_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4)
+        target = torch.cat([data["labels"] for data in sampler_loader])
+        samples_weight = np.array([self.class_weights[t] for t in target])
+        samples_weight = torch.from_numpy(samples_weight)
+        samples_weight = samples_weight.double()
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
+        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
             self.classifier.curr_epoch +=1
             print(f"----Running epoch {self.classifier.curr_epoch}----\n")
             print(f"Training step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[0])}\n")
-            metrics_train = self.classifier.run_epoch_step(loaders[0], "train")
+            metrics_train = self.classifier.run_epoch_step(train_loader, "train")
             print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
             with torch.no_grad():
-                metrics_validation = self.classifier.run_epoch_step(loaders[1], "validation")
+                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
             print(f"----Results at {self.classifier.curr_epoch}----\n")
             print(f"\nFor train split:\n{metrics_train}\n")
             print(f"\nFor validation split:\n{metrics_validation}\n")
             if self.classifier.curr_epoch%self.classifier.save_interval==0:
                 self.classifier._save(self.classifier.save_directory, "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print(f"\nTesting model trained for {self.classifier.curr_epoch}:\n# of samples = {len(splits[2])}\n")
-        metrics_test = self.classifier.run_epoch_step(loaders[2], "test")
+        with torch.no_grad():
+            metrics_test = self.classifier.run_epoch_step(loaders[1], "test")
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
