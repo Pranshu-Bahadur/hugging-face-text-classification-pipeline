@@ -31,8 +31,8 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 512]).reset_index())
         self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         self.dataset = self.dataset.append(df)
-        self.dataset['total'] = self.dataset['posts'].str.split()
-        self.dataset['total'] = self.dataset['total'].map(len)
+        self.dataset['total'] = self.dataset['posts'].str.split().map(len)
+        # self.dataset['total'] = self.dataset['total'].map(len)
         self.dataset = self.dataset[self.dataset['total']>=30]
         #self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
