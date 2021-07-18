@@ -34,6 +34,7 @@ if __name__ == "__main__":
     torch.multiprocessing.set_sharing_strategy('file_descriptor')
     np.seterr(divide='ignore', invalid='ignore')
     torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", "-m", help="Pick a model name")
     parser.add_argument("--dataset_directory", "-d", help="Set dataset directory path")
