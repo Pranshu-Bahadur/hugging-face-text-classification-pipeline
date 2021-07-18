@@ -31,7 +31,7 @@ def _model_config(args):
     return config
 
 if __name__ == "__main__":
-    torch.multiprocessing.set_sharing_strategy('file_system')
+    torch.multiprocessing.set_sharing_strategy('file_descriptor')
     np.seterr(divide='ignore', invalid='ignore')
     torch.backends.cudnn.enabled = True
     parser = argparse.ArgumentParser()
