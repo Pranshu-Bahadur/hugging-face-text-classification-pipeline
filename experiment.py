@@ -1,84 +1,112 @@
-from sklearn.cluster import KMeans
+from kmeans_pytorch import kmeans, pairwise_distance
 import numpy as np
 from model import NLPClassifier
 import torchvision
 from torchvision import transforms as transforms
 import torch
+from torch import nn as nn
 from torch.utils.data import DataLoader as Loader
 from utils import SpreadSheetNLPCustomDataset
+import random
+from torch.utils.data import WeightedRandomSampler
 
 class Experiment(object):
-    def __init__(self, config: dict):
+    def __init__(self, config):
         self.classifier = NLPClassifier(config)
+        self.class_weights = np.array([])
 
-    def _run(self, dataset, config: dict):
-        split, ds = self._preprocessing(dataset, True)
+    def _run(self):
+        splits = self._preprocessing(True)
         init_epoch = self.classifier.curr_epoch
-        loaders = [Loader(data, self.classifier.bs, shuffle=True, num_workers=4) for data in split]
-        score, k, indices = self._features_selection(Loader(ds, self.classifier.bs, num_workers=4))
-        print("features selected, optimal model score = ", score)
-        while (self.classifier.curr_epoch < init_epoch + config["epochs"]):
-            f1_train, f1_val, acc_train, acc_val, loss_train, loss_val = self.classifier._run_epoch(loaders, indices, k)
-            print("Epoch: {} | f1 Train: {} | f1 Val  {} | Training Accuracy: {} | Validation Accuracy: {} | Training Loss: {} | Validation Loss: {} | ".format(self.classifier.curr_epoch, f1_train, f1_val, acc_train, acc_val, loss_train, loss_val))
-            self.classifier.writer.add_scalar("Training Accuracy", acc_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Validation Accuracy",acc_val, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Training Loss",loss_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("Validation Loss",loss_val, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("f1 Train",f1_train, self.classifier.curr_epoch)
-            self.classifier.writer.add_scalar("f1 Val",f1_val, self.classifier.curr_epoch)
-            if self.classifier.curr_epoch%config["save_interval"]==0:
-                self.classifier._save(config["save_directory"], "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
-        print("Testing:...")
-        print(self.classifier._validate(loaders[2], indices, k))
-        print("\nRun Complete.")
+        print("Computing Weighted Random Sampler")
+        sampler_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4)
+        target = torch.cat([data["labels"] for data in sampler_loader])
+        samples_weight = np.array([self.class_weights[t] for t in target])
+        samples_weight = torch.from_numpy(samples_weight)
+        samples_weight = samples_weight.double()
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
+        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
+        print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
+        while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
+            self.classifier.curr_epoch +=1
+            print(f"----Running epoch {self.classifier.curr_epoch}----\n")
+            print(f"Training step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[0])}\n")
+            metrics_train = self.classifier.run_epoch_step(train_loader, "train")
+            print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
+            with torch.no_grad():
+                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
+            print(f"----Results at {self.classifier.curr_epoch}----\n")
+            print(f"\nFor train split:\n{metrics_train}\n")
+            print(f"\nFor validation split:\n{metrics_validation}\n")
+            if self.classifier.curr_epoch%self.classifier.save_interval==0:
+                self.classifier._save(self.classifier.save_directory, "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
+        print(f"\nTesting model trained for {self.classifier.curr_epoch}:\n# of samples = {len(splits[2])}\n")
+        with torch.no_grad():
+            metrics_test = self.classifier.run_epoch_step(loaders[1], "test")
+        print(f"\nFinal Results:\n{metrics_test}\n")
+        print("\nRun Complete.\n\n")
 
-    def _preprocessing(self, directory, train):
-        dataSetFolder = SpreadSheetNLPCustomDataset(directory, self.classifier.tokenizer)
-        #@TODO add features selection here
+    #TODO I give up on using elbow for global minimum...I'm happy with local. That's what the method is for...
+    def finding_k(self, X, n):
+        X = X.view(X.size(0), -1)
+        m_dict = {}
+        differences = [0]
+        for k in range(2, n+1):
+            cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
+            curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
+            self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
+            if k!=2:
+                prev_inertias = list(m_dict.keys())
+                difference = int(sum(prev_inertias)/len(prev_inertias)) - int((sum(prev_inertias) - curr_inertia)/len(prev_inertias)+1)
+                if len(differences)>2 and differences[-1] < difference: #abs(max(differences) - difference)
+                    print(f"Elbow at {k-1}")
+                    break
+                differences.append(difference)
+            m_dict[curr_inertia] = {"k": k, "cluster_ids": cluster_ids, "centers": centers}
+        result = m_dict[list(m_dict.keys())[-1]]
+        return result["k"], result["cluster_ids"], result["centers"]
+
+    def distribution(self, split, num_classes):
+        loader = Loader(split, self.classifier.bs, shuffle=False, num_workers=4)
+        train_Y = torch.cat([data["labels"] for data in loader])
+        train_split_dist = [(train_Y==i).sum().cpu().item() for i in range(num_classes)]
+        return train_split_dist
+   
+    def weight_calc(self, distribution, beta):
+        imb_weights = []
+        for num_samples in distribution:
+            """
+            effective_num = 1.0 - np.power(beta, num_samples)
+            weights = (1.0 - beta) / effective_num
+            imb_weights.append(weights)
+        imb_weights = [weights/sum(imb_weights) * self.classifier.nc for weights in imb_weights]
+            """
+            imb_weights.append(1. /num_samples)
+        #imb_weights.reverse()
+        return np.array(imb_weights)#torch.FloatTensor(imb_weights)
+
+
+    def _preprocessing(self, train):
+        dataSetFolder = self.classifier.dataset
+        print("\n\nRunning K-means for outlier detection...\n\n")
         if train:
             trainingValidationDatasetSize = int(0.6 * len(dataSetFolder))
-            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2           
-            splits = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])
-            dataSetFolder = torch.utils.data.random_split(dataSetFolder, [trainingValidationDatasetSize, testDatasetSize, testDatasetSize])[0]
-            #split_names = ['train', 'validation', 'test']
-            #classes = list(dataSetFolder.labels.items())
-            #self.classifier.writer.add_text("Classes:",f'{classes}')
-            #distributions = {split_names[i]: {k: len(list(filter(lambda x: x["labels"]==v, splits[i]))) for k,v in classes} for i in range(len(splits))}
-            #self.classifier.writer.add_text("Run distribution:",f'{distributions}')
-            return splits, dataSetFolder
+            testDatasetSize = int(len(dataSetFolder) - trainingValidationDatasetSize) // 2
+            splits = [trainingValidationDatasetSize, testDatasetSize, testDatasetSize]
+            diff = len(dataSetFolder) - sum(splits)
+            if diff > 0:
+                splits.append(diff)
+            splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
+            k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
+            X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
+            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
+            print(best_k, cluster_ids_x, cluster_centers)
+            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), best_k//2)
+            indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+            print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//2} cluster(s) according to mode.\n\n")
+            splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
+            train_split_dist = self.distribution(splits[0], 16)
+            self.class_weights = self.weight_calc(train_split_dist, 0.9) #TODO find proper betas value.
+            return splits[:-1] if diff > 0 else splits
         return dataSetFolder
-    #@TODO...improve this...
-    def _features_selection(self, loader):
-        X = next(iter(loader))["input_ids"].cpu().numpy() #np.concatenate(tuple([data["input_ids"].cpu().numpy() for data in loader]), axis=0)
-        K = 2
-        score = float("-inf")
-        i = -1
-        t_score = [1e-4]
-        Z = torch.tensor(X.T)
-        iterations = 0
-        while max(t_score) != score:
-            iterations += 1
-            X = next(iter(loader))["input_ids"].cpu().numpy()
-            Z = torch.tensor(X.T)
-            if max(t_score) < score:
-                print(f"Updating...at {iterations}, done for {K} clusters, with score = {score}")
-                K += K
-                t_score.append(score)
-            kmeans = KMeans(K, init="k-means++")
-            indices = torch.tensor(kmeans.fit_predict(Z))
-            clusters = {i: Z[indices==i] for i in range(K)}
-            big_c = max(list(map(lambda c: len(c),list(clusters.values()))))
-            clusters = list(filter(lambda k: len(clusters[k])==big_c,))
-            l = list(map(lambda idx: (idx, self.classifier._score(loader, indices, idx)), clusters))
-            s = max(list(map(lambda l_: l_[1],l)))
-            if float('nan') in list(map(lambda l_: l_[1],l)) or s == float('nan') or s == 0:
-                K += K
-                continue
-            score = s
-            l = list(filter(lambda a_: a_[1] == score, l))
-            try:
-                i = l[0][0]
-            except:
-                K += K
-                continue
-        return score, i, indices

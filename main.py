@@ -1,3 +1,4 @@
+import numpy as np
 import torchvision
 import torch
 import argparse
@@ -12,7 +13,7 @@ def _model_config(args):
         "model_name": args.model_name,
         "optimizer_name": args.optimizer,
         "criterion_name": args.loss,
-        "scheduler_name": args.scheduler,
+        "dataset_directory":args.dataset_directory,
         "batch_size": int(args.batch_size),
         "learning_rate": float(args.learning_rate),
         "checkpoint": args.checkpoint if args.checkpoint else "",
@@ -22,12 +23,16 @@ def _model_config(args):
         "train": True if args.train else False,
         "save_interval": int(args.save_interval),
         "library": args.library,
-        "save_directory": args.save_directory,        
+        "save_directory": args.save_directory,   
+        "multi": True if args.multi else False,
+        "drop": float(args.drop) if args.drop else 0,
+        "log_step": int(args.log_step) if args.log_step else 1,
     }
     return config
 
 if __name__ == "__main__":
     torch.multiprocessing.set_sharing_strategy('file_system')
+    np.seterr(divide='ignore', invalid='ignore')
     torch.backends.cudnn.enabled = True
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", "-m", help="Pick a model name")
@@ -39,15 +44,18 @@ if __name__ == "__main__":
     parser.add_argument("--curr_epoch", "-e", help="Set number of epochs already trained")
     parser.add_argument("--epochs", "-f", help="Train for these many more epochs")
     parser.add_argument("--optimizer", help="Choose an optimizer")
-    parser.add_argument("--scheduler", help="Choose a scheduler")
     parser.add_argument("--loss", help="Choose a loss criterion")
     parser.add_argument("--train", help="Set this model to train mode", action="store_true")
     parser.add_argument("--library")
     parser.add_argument("--save_directory", "-s")
-    parser.add_argument("--save_interval")
+    parser.add_argument("--save_interval", help="# of epochs to save checkpoints at.")
+    parser.add_argument("--multi", help="Set this model to parallel mode", action="store_true")
+    parser.add_argument("--drop")
+    parser.add_argument("--log_step")
+
 
     args = parser.parse_args()
     config = _model_config(args)
     experiment = Experiment(config)
     if args.train:
-        experiment._run(args.dataset_directory, config)
+        experiment._run()
