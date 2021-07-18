@@ -100,7 +100,7 @@ class NLPClassifier(object):
             logits = self.model(**x).logits
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
-            logits = torch.nn.functional.dropout2d(logits, training= mode=="train")
+            logits = torch.nn.functional.dropout2d(logits) if mode=="train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
