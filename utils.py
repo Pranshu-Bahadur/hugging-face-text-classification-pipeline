@@ -16,14 +16,14 @@ class SpreadSheetNLPCustomDataset(Dataset):
         cols_n = self.dataset.columns.tolist()
         cols_n.reverse()
         types = list(np.vectorize(lambda x: x.lower())(self.dataset["type"].unique()))
-        # self.dataset['posts'] = self.dataset['posts'].str.lower()
-        # self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
-        # #self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
-        # self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
-        # #self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
-        # #self.dataset = self.dataset[self.dataset['total_words']>256]
-        # #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
-        # #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        self.dataset['posts'] = self.dataset['posts'].str.lower()
+        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'[|||]', '')
+        #self.dataset['posts'] = self.dataset['posts'].str.replace(r'|\b'.join(types), '')
+        self.dataset['posts'] = self.dataset['posts'].str.replace(r'\bhttp.*[a-zA-Z0-9]\b', '')
+        #self.dataset = self.dataset[self.dataset['posts'].map(len)>32]
+        #self.dataset = self.dataset[self.dataset['total_words']>256]
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
+        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
         # word_lengths = self.dataset['posts'].str.split()
         # word_lengths = word_lengths.map(len)
         # print("Exploding posts and types for large posts...\n")
