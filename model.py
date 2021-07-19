@@ -93,7 +93,7 @@ class NLPClassifier(object):
         for i,data in enumerate(loader):
             print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
-            shuffle_seed = torch.randperm(len(data["labels"]))
+            shuffle_seed = torch.randperm(len(data))
             #print('*'*3+'shuffle seed'+'*'*3+'\n')
             print(shuffle_seed)
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
