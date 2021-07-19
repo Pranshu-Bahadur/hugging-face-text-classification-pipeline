@@ -29,7 +29,7 @@ class NLPClassifier(object):
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config, force_download=True)
-        #self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
+        self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
         self.model.load_state_dict(self.model.state_dict())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
