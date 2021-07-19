@@ -87,10 +87,11 @@ class NLPClassifier(object):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
-        self.model.train() if mode =="train" else self.model.eval()
+        self.model.train() if mode =="train" else self.model.eval() # why did we comment model.eval()
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
+            print('*'*3+'data size'+'*'*3+'\n')
             shuffle_seed = torch.randperm(data["labels"].size(0))
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
