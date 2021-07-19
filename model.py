@@ -94,6 +94,7 @@ class NLPClassifier(object):
         for i,data in enumerate(loader):
             #print(data)
             inputs = data
+            inputs.to('cuda')
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
@@ -107,8 +108,6 @@ class NLPClassifier(object):
             x = {k:v for k,v in list(inputs.items())}
             y = x['labels']
             x.pop('labels')
-            x.cuda()
-            y.cuda()
             total += y.size(0)
             outputs = self.model(x)
             print(outputs)
