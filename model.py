@@ -95,7 +95,7 @@ class NLPClassifier(object):
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            #y = x.pop("labels")#x["labels"]##
+            y = x["labels"]#x.pop("labels")###
             total += y.size(0)
             #logits = self.model(**x).logits
             outputs = self.model(**x)
