@@ -92,25 +92,28 @@ class NLPClassifier(object):
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
-            print(data)
+            #print(data)
             inputs,labels = data['input_ids'],data['labels']
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
-            #shuffle_seed = torch.randperm(len(data))
+            #shuffle_seed = torch.randperm(data.size(0))
             #print('*'*3+'shuffle seed'+'*'*3+'\n')
             #print(shuffle_seed)
             #x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             #y = x.pop("labels")#x["labels"]##
-            total += len(labels)
+            x = {k:v.cuda() for k,v in list(data.items())}
+            y = x['labels']
+            x.pop('labels')
+            total += y.size(0)
             outputs = self.model(inputs)
-            loss = self.criterion(outputs,labels)
+            #loss = self.criterion(outputs,labels)
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
-            # logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
-            #loss = self.criterion(logits.view(logits.size(0), -1), y)
+            logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(loss, dim=-1).cpu()==labels.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
