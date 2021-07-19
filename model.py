@@ -95,6 +95,7 @@ class NLPClassifier(object):
             print(str(data['labels'].size(0))+'\n')
             shuffle_seed = torch.randperm(data["labels"].size(0))
             print('*'*3+'shuffle seed'+'*'*3+'\n')
+            print(shuffle_seed)
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
