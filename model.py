@@ -95,11 +95,11 @@ class NLPClassifier(object):
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            y = x.pop("labels")#x["labels"]##
+            #y = x.pop("labels")#x["labels"]##
             total += y.size(0)
-            logits = self.model(**x).logits
-            #outputs = self.model(**x)
-            #loss, logits = outputs.loss.mean(), outputs.logits
+            #logits = self.model(**x).logits
+            outputs = self.model(**x)
+            loss, logits = outputs.loss.mean(), outputs.logits
             logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
