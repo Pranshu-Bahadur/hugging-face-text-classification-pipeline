@@ -92,7 +92,7 @@ class NLPClassifier(object):
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
             print(data)
-            inputs,labels = data
+            inputs,labels = data['input_ids'],data['labels']
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
