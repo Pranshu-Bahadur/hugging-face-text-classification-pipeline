@@ -30,7 +30,7 @@ class NLPClassifier(object):
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config, force_download=True)
         self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
-        self.model.aux_logits=False
+        self.model.load_state_dict(self.model.state_dict())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
@@ -115,7 +115,7 @@ class NLPClassifier(object):
             #loss, logits = outputs.loss.mean(), outputs.logits
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
             preds = F.softmax(outputs)
-            print(y)
+            print(preds)
             loss = self.criterion(preds, y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(loss, dim=-1).cpu()==y.cpu()).sum().item())
