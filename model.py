@@ -91,33 +91,36 @@ class NLPClassifier(object):
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
-            print('*'*3+'data size'+'*'*3+'\n')
+            inputs,labels = data
+            self.optimizer.zero_grad()
+            #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
-            shuffle_seed = torch.randperm(len(data))
+            #shuffle_seed = torch.randperm(len(data))
             #print('*'*3+'shuffle seed'+'*'*3+'\n')
-            print(shuffle_seed)
-            x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
+            #print(shuffle_seed)
+            #x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            y = x.pop("labels")#x["labels"]##
-            total += y.size(0)
-            logits = self.model(**x).logits
+            #y = x.pop("labels")#x["labels"]##
+            total += len(labels)
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs,labels)
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
             # logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
-            loss = self.criterion(logits.view(logits.size(0), -1), y)
+            #loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
-            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+            metrics[f"{mode}-accuracy"].append((torch.argmax(loss, dim=-1).cpu()==labels.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
-                # loss.backward(retain_graph=True)
-                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                loss.backward()
+                #self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
                 self.scheduler.step()
                 self.model.zero_grad()
                 #self.log_step = int(len(loader)*0.1)
                 if (i+1)%self.log_step==0:
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
-            del x, y
+            #del x, y
             torch.cuda.empty_cache()
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
         for k,v in list(metrics.items()):
