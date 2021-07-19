@@ -25,8 +25,8 @@ class Experiment(object):
         samples_weight = torch.from_numpy(samples_weight)
         samples_weight = samples_weight.double()
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-        loaders = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler) # dont need to shuffle cuz we're using sampler
-        train_loader = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
+        train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler) # dont need to shuffle cuz we're using sampler
+        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
             self.classifier.curr_epoch +=1
@@ -35,7 +35,7 @@ class Experiment(object):
             metrics_train = self.classifier.run_epoch_step(train_loader, "train")
             print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
             with torch.no_grad():
-                metrics_validation = self.classifier.run_epoch_step(loaders, "validation")
+                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
             print(f"----Results at {self.classifier.curr_epoch}----\n")
             print(f"\nFor train split:\n{metrics_train}\n")
             print(f"\nFor validation split:\n{metrics_validation}\n")
