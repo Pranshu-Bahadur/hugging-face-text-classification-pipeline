@@ -4,6 +4,7 @@ from kmeans_pytorch import kmeans, pairwise_distance
 import copy
 import torch
 from torch import nn as nn
+import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoModel, AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, PretrainedConfig#, AutoTokenizerFast
 import numpy as np
@@ -113,7 +114,7 @@ class NLPClassifier(object):
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
-            preds = torch.nn.Softmax(outputs)
+            preds = F.Softmax(outputs)
             loss = self.criterion(preds, y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(loss, dim=-1).cpu()==y.cpu()).sum().item())
