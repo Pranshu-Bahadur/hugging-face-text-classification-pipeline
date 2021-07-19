@@ -116,7 +116,7 @@ class NLPClassifier(object):
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
             preds = F.softmax(outputs)
             loss = self.criterion(preds, y)
-            print(loss)
+            #print(loss)
             preds = torch.argmax(preds,dim=1)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append(((torch.sum(preds.data == y.data))/len(preds)).data*100)
