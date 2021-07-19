@@ -24,16 +24,16 @@ class SpreadSheetNLPCustomDataset(Dataset):
         #self.dataset = self.dataset[self.dataset['total_words']>256]
         #self.dataset = pd.DataFrame(pd.concat([Series(row['type'],row['posts'].split('|||')) for _, row in self.dataset.iterrows()]).reset_index())
         #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
-        word_lengths = self.dataset['posts'].str.split()
-        word_lengths = word_lengths.map(len)
-        print("Exploding posts and types for large posts...\n")
-        df = self.dataset[word_lengths<512]
-        self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 512]).reset_index())
-        self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
-        self.dataset = self.dataset.append(df)
-        self.dataset['total'] = self.dataset['posts'].str.split()
-        self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>=30]
+        #word_lengths = self.dataset['posts'].str.split()
+        #word_lengths = word_lengths.map(len)
+        #print("Exploding posts and types for large posts...\n")
+        #df = self.dataset[word_lengths<512]
+        #self.dataset = pd.DataFrame(pd.concat([Series(row['type'], chunkstring(row['posts'], 512)) for i, row in self.dataset.iterrows() if word_lengths[i] >= 512]).reset_index())
+        #self.dataset = self.dataset.rename(columns={k: cols_n[i] for i,k in enumerate(list(self.dataset.columns))})
+        #self.dataset = self.dataset.append(df)
+        #self.dataset['total'] = self.dataset['posts'].str.split()
+        #self.dataset['total'] = self.dataset['total'].map(len)
+        #self.dataset = self.dataset[self.dataset['total']>=30]
         #self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
