@@ -94,7 +94,6 @@ class NLPClassifier(object):
         for i,data in enumerate(loader):
             #print(data)
             inputs = data
-            inputs.to('cuda')
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
@@ -105,7 +104,7 @@ class NLPClassifier(object):
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             #y = x.pop("labels")#x["labels"]##
-            x = {k:v for k,v in list(inputs.items())}
+            x = {k:v.cuda() for k,v in list(inputs.items())}
             y = x['labels']
             x.pop('labels')
             total += y.size(0)
