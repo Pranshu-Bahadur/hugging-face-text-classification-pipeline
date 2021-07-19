@@ -54,7 +54,7 @@ class NLPClassifier(object):
 
     def _create_model_config(self, library, model_name, num_classes, labels_dict):
         if library == "hugging-face":
-            config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
+            config = AutoConfig.from_pretrained(model_name, num_labels=num_classes, force_download=True)
             config.id2label = {k:i for i,k in enumerate(labels_dict)}
             config.label2id = {str(i):k for i,k in enumerate(labels_dict)}
             return config
