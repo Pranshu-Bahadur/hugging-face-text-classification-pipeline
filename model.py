@@ -104,11 +104,12 @@ class NLPClassifier(object):
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             #y = x.pop("labels")#x["labels"]##
-            x = {k:v.cuda() for k,v in list(inputs.items())}
-            y = x['labels']
+            x = {k:v for k,v in list(inputs.items())}.to('cuda')
+            y = x['labels'].to('cuda')
             x.pop('labels')
             total += y.size(0)
-            outputs = self.model(x).logits
+            outputs = self.model(x)
+            print(outputs)
             #loss = self.criterion(outputs,labels)
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
