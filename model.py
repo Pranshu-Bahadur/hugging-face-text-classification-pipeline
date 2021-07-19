@@ -28,7 +28,7 @@ class NLPClassifier(object):
         self.dataset = SpreadSheetNLPCustomDataset(config['dataset_directory'], self.tokenizer)
         self.model_config = self._create_model_config(config["library"], config["model_name"], config["num_classes"], self.dataset.labels)
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config)
-        self.model = nn.DataParallel(self.model).cuda() if config["multi"] else self.model.cuda()    # figure out how to use distributed data parallel
+        self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
@@ -67,10 +67,10 @@ class NLPClassifier(object):
         return optim_dict[name]
 
     def _create_criterion(self, name):
-        loss_dict = {"CCE": nn.CrossEntropyLoss().cuda(),
-                     "MML": nn.MultiMarginLoss().cuda(),
-                     "MSE": nn.MSELoss().cuda(),
-                     "BCE": nn.BCELoss().cuda()
+        loss_dict = {"CCE": nn.CrossEntropyLoss().to('cuda'),
+                     "MML": nn.MultiMarginLoss().to('cuda'),
+                     "MSE": nn.MSELoss().to('cuda'),
+                     "BCE": nn.BCELoss().to('cuda')
                      }
         return loss_dict[name]
 
@@ -127,7 +127,7 @@ class NLPClassifier(object):
     """
     #TODO Make sure this is using kmeans++ DEPRECEATED
     def _features_selection_(self, K, loader, selection_heuristic=lambda x: torch.mode(x)):
-        X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
+        X = torch.cat([data["input_ids"] for data in loader][:-1]).to('cuda')
         X = X.view(X.size(0), -1)
         cluster_ids_x, cluster_centers = kmeans(X=X.T, num_clusters=2, device=torch.device('cuda:0'))
         best_cluster, _ = selection_heuristic(cluster_ids_x)
@@ -136,7 +136,7 @@ class NLPClassifier(object):
     
     #TODO add topk here as well.
     def _features_selection(self, loader, n, selection_heuristic=lambda x: torch.mode(x)):
-        X = torch.cat([data["input_ids"] for data in loader][:-1]).cuda()
+        X = torch.cat([data["input_ids"] for data in loader][:-1]).to('cuda')
         X = X.view(X.size(0), -1)
         m_dict = {}
         differences = [0]
@@ -174,7 +174,7 @@ class NLPClassifier(object):
         x["attention_mask"].requires_grad = True
         y = x.pop("labels")
         preds = f(**x).logits
-        preds.backward(torch.ones_like(preds).cuda())
+        preds.backward(torch.ones_like(preds).to('cuda'))
         x["labels"] = y
         J = x["attention_mask"].grad
         x["attention_mask"].requires_grad = False
@@ -182,9 +182,9 @@ class NLPClassifier(object):
         return J
     
     def _epe_nas_score(self, loader, clusters_idx, cluster_idx):
-        batches = [{k: v.float().cuda() if k == "attention_mask" else v.cuda() for k,v in list(data.items())} for data in loader]
-        Y = torch.tensor([]).cuda()
-        J = torch.tensor([]).cuda()
+        batches = [{k: v.float().to('cuda') if k == "attention_mask" else v.to('cuda') for k,v in list(data.items())} for data in loader]
+        Y = torch.tensor([]).to('cuda')
+        J = torch.tensor([]).to('cuda')
         iterations = 0
         score = 0
         for batch in batches:
