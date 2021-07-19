@@ -108,7 +108,7 @@ class NLPClassifier(object):
             y = x['labels']
             x.pop('labels')
             total += y.size(0)
-            outputs = self.model(inputs)
+            outputs = self.model(inputs).logits
             #loss = self.criterion(outputs,labels)
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
