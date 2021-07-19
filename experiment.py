@@ -35,7 +35,7 @@ class Experiment(object):
             metrics_train = self.classifier.run_epoch_step(train_loader, "train")
             print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
             with torch.no_grad():
-                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
+                metrics_validation = self.classifier.run_epoch_step(loaders, "validation")
             print(f"----Results at {self.classifier.curr_epoch}----\n")
             print(f"\nFor train split:\n{metrics_train}\n")
             print(f"\nFor validation split:\n{metrics_validation}\n")
