@@ -33,7 +33,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         self.dataset = self.dataset.append(df)
         self.dataset['total'] = self.dataset['posts'].str.split().map(len)
         # self.dataset['total'] = self.dataset['total'].map(len)
-        self.dataset = self.dataset[self.dataset['total']>=30]
+        #self.dataset = self.dataset[self.dataset['total']>=30]                  #commented this
         #self.dataset = self.dataset[self.dataset['total']<=40]
         print(self.dataset.head())
         print(f"filter success {len(self.dataset)}")
