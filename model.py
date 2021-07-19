@@ -119,7 +119,7 @@ class NLPClassifier(object):
             print(loss)
             preds = torch.argmax(preds,dim=1)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
-            metrics[f"{mode}-accuracy"].append((torch.sum(preds.data == y.data))/len(preds))
+            metrics[f"{mode}-accuracy"].append(((torch.sum(preds.data == y.data))/len(preds)).data*100)
             if mode == "train": #TODO fix grad acc
                 loss.backward()
                 #self.scaler.scale(loss).backward() #TODO WTF does this even do?!
