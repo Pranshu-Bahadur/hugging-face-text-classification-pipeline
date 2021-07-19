@@ -92,7 +92,7 @@ class NLPClassifier(object):
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
             print('*'*3+'data size'+'*'*3+'\n')
-            print(data['labels'].size(0)+'\n')
+            print(str(data['labels'].size(0))+'\n')
             shuffle_seed = torch.randperm(data["labels"].size(0))
             print('*'*3+'shuffle seed'+'*'*3+'\n')
             x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
