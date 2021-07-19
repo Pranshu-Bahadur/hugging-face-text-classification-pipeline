@@ -91,6 +91,7 @@ class NLPClassifier(object):
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
+            print(data)
             inputs,labels = data
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
