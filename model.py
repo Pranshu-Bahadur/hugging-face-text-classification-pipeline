@@ -109,7 +109,7 @@ class NLPClassifier(object):
             #y = x.pop("labels")#x["labels"]##
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x['labels']
-            x.pop('labels')
+            #x.pop('labels')
             #print("Labels")
             #print(y)
             total += y.size(0)
@@ -141,7 +141,7 @@ class NLPClassifier(object):
                 #self.log_step = int(len(loader)*0.1)
                 if (i+1)%self.log_step==0:
                     print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
-            #del x, y
+            del x, y
             torch.cuda.empty_cache()
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
         for k,v in list(metrics.items()):
