@@ -31,6 +31,8 @@ class NLPClassifier(object):
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config, force_download=True)
         self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
         self.model.load_state_dict(self.model.state_dict())
+        print("State dict")
+        print(self.model.state_dict())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
