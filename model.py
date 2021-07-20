@@ -146,7 +146,7 @@ class NLPClassifier(object):
             del x, y
             torch.cuda.empty_cache()
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
-        curr_acc = sum(list(metrics.items())[0][1])/total
+        curr_acc = sum(list(list(metrics.items())[0][1]))/total
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
         if self.best_acc < curr_acc:
