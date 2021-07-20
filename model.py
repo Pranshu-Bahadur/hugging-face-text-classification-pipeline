@@ -114,17 +114,22 @@ class NLPClassifier(object):
             #print("Labels")
             #print(y)
             total += y.size(0)
-            outputs = self.model(**x).logits
+            #outputs = self.model(**x).logits
             #loss = self.criterion(outputs,labels)
             #outputs = self.model(**x)
             #loss, logits = outputs.loss.mean(), outputs.logits
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
-            preds = F.softmax(outputs)
+            #preds = F.softmax(outputs)
+            #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
+            outputs = self.model(**x)
+            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
+            loss = self.criterion(logits.view(logits.size(0), -1), y)
             #print("Predicted")
             #print(preds)
-            loss = self.criterion(preds, y)
+            #loss = self.criterion(preds, y)
             #print(loss)
-            preds = torch.argmax(preds,dim=1)
+            #preds = torch.argmax(preds,dim=1)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
