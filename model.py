@@ -122,6 +122,7 @@ class NLPClassifier(object):
             #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             outputs = self.model(**x)
             logits = outputs.logits
+            print(logits.size())
             logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             #print("Predicted")
