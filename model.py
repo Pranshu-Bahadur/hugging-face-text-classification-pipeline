@@ -93,7 +93,7 @@ class NLPClassifier(object):
             logits = torch.nn.functional.dropout2d(logits, 0.2) if mode == "train" else logits #TODO yeah i know...
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             metrics[f"{mode}-loss"].append(loss.cpu().item())
-            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item()*100/y.size(0))
             if mode == "train": #TODO fix grad acc
                 self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
