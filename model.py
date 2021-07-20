@@ -53,6 +53,7 @@ class NLPClassifier(object):
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
+        self.best_acc = 0
 
 
 
@@ -145,8 +146,14 @@ class NLPClassifier(object):
             del x, y
             torch.cuda.empty_cache()
         metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
+        acc_list = list(metrics.items())[0][1]
+        curr_acc = sum(acc_list)/len(acc_list)
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
+        if self.best_acc < curr_acc:
+            self.best_acc = curr_acc
+            best_weights = copy.deepcopy(self.model.state_dict())
+            self.model.load_state_dict(best_weights)
         return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
