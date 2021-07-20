@@ -33,6 +33,7 @@ class NLPClassifier(object):
         self.model.load_state_dict(self.model.state_dict())
         # print("State dict")
         # print(self.model.state_dict())
+        print(self.model.parameters())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
