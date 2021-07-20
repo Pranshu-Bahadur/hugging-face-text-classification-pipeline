@@ -36,7 +36,7 @@ class NLPClassifier(object):
         print(self.model.parameters())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
+            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.1)     # gamma factor --> 0.1
             self.criterion = self._create_criterion(config["criterion_name"])
         self.long = "long" in config["model_name"]
         if config["checkpoint"] != "":
