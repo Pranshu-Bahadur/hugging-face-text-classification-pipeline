@@ -38,7 +38,7 @@ class NLPClassifier(object):
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.1)     # gamma factor --> 0.1
             self.criterion = self._create_criterion(config["criterion_name"])
-        self.long = "long" in config["model_name"]
+        self.long = "long" in config["model_name"]                  # whats the point of long
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
         self.name = "{}-{}-{}-{}-{}-{}-{}".format(config["model_name"].split("/")[1] if "/" in config["model_name"] else config["model_name"],
@@ -111,6 +111,8 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(inputs.items())}
             y = x['labels']
             x.pop('labels')
+            print("Labels")
+            print(y)
             total += y.size(0)
             outputs = self.model(**x).logits
             #loss = self.criterion(outputs,labels)
@@ -118,6 +120,8 @@ class NLPClassifier(object):
             #loss, logits = outputs.loss.mean(), outputs.logits
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
             preds = F.softmax(outputs)
+            print("Predicted")
+            print(preds)
             loss = self.criterion(preds, y)
             #print(loss)
             preds = torch.argmax(preds,dim=1)
