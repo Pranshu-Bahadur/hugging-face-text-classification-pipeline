@@ -122,7 +122,7 @@ class NLPClassifier(object):
             #preds = F.softmax(outputs)
             #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             outputs = self.model(**x)
-            loss, logits = outputs.loss.mean(), outputs.logits
+            logits = outputs.logits
             logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
             #print("Predicted")
