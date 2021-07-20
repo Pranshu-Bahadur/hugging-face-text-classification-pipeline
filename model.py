@@ -130,6 +130,7 @@ class NLPClassifier(object):
             #loss = self.criterion(preds, y)
             #print(loss)
             #preds = torch.argmax(preds,dim=1)
+            print((torch.argmax(logits, dim=-1))
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
