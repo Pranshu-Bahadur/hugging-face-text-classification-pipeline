@@ -31,8 +31,8 @@ class NLPClassifier(object):
         self.model = AutoModelForSequenceClassification.from_pretrained(config["model_name"], config=self.model_config, force_download=True)
         self.model = nn.DataParallel(self.model).to('cuda') if config["multi"] else self.model.to('cuda')    # figure out how to use distributed data parallel
         self.model.load_state_dict(self.model.state_dict())
-        print("State dict")
-        print(self.model.state_dict())
+        # print("State dict")
+        # print(self.model.state_dict())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)
@@ -91,7 +91,7 @@ class NLPClassifier(object):
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
-        self.model.train() if mode =="train" else self.model.eval() # why did we comment model.eval()
+        self.model.train() # if mode =="train" else self.model.eval() # why did we comment model.eval()
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
@@ -123,8 +123,8 @@ class NLPClassifier(object):
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append(((torch.sum(preds.data == y.data))/len(preds)).data*100)
             if mode == "train": #TODO fix grad acc
-                loss.backward()
-                #self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                # loss.backward()
+                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
                 self.scheduler.step()
                 self.model.zero_grad()
