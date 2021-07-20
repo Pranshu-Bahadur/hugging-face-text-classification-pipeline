@@ -111,8 +111,8 @@ class NLPClassifier(object):
             x = {k:v.cuda() for k,v in list(inputs.items())}
             y = x['labels']
             x.pop('labels')
-            print("Labels")
-            print(y)
+            #print("Labels")
+            #print(y)
             total += y.size(0)
             outputs = self.model(**x).logits
             #loss = self.criterion(outputs,labels)
@@ -120,8 +120,8 @@ class NLPClassifier(object):
             #loss, logits = outputs.loss.mean(), outputs.logits
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
             preds = F.softmax(outputs)
-            print("Predicted")
-            print(preds)
+            #print("Predicted")
+            #print(preds)
             loss = self.criterion(preds, y)
             #print(loss)
             preds = torch.argmax(preds,dim=1)
