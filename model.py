@@ -33,7 +33,7 @@ class NLPClassifier(object):
         self.model.load_state_dict(self.model.state_dict())
         # print("State dict")
         # print(self.model.state_dict())
-        print(self.model.parameters())
+        # print(self.model.parameters())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
             self.scheduler = self.scheduler = transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch) # torch.optim.lr_scheduler.StepLR(self.optimizer, 2.4, 0.97)     # gamma factor --> 0.1
@@ -53,7 +53,6 @@ class NLPClassifier(object):
         self.score = float("-inf")
         print("Generated model: {}".format(self.name))
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
-
 
 
 
@@ -97,7 +96,7 @@ class NLPClassifier(object):
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
             #print(data)
-            inputs = data
+            #inputs = data
             self.optimizer.zero_grad()
             #print('*'*3+'data size'+'*'*3+'\n')
             #print(str(data['labels'].size(0))+'\n')
@@ -108,9 +107,10 @@ class NLPClassifier(object):
             #if self.score != float("-inf") and mode == "train":
             #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
             #y = x.pop("labels")#x["labels"]##
-            x = {k:v.cuda() for k,v in list(inputs.items())}
+            x = {k:v.cuda() for k,v in list(data.items())}
             y = x['labels']
             x.pop('labels')
+            inp = x['input_ids']
             #print("Labels")
             #print(y)
             total += y.size(0)
@@ -121,7 +121,7 @@ class NLPClassifier(object):
             #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
             #preds = F.softmax(outputs)
             #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
-            outputs = self.model(**x)
+            outputs = self.model(inp)
             logits = outputs.logits
             logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             loss = self.criterion(logits.view(logits.size(0), -1), y)
