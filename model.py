@@ -123,8 +123,8 @@ class NLPClassifier(object):
             outputs = self.model(**x)
             logits = outputs.logits
             print(logits.size())
-            logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
-            loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????
+            logits = torch.nn.functional.dropout2d(logits, 0.65) if mode == "train" else logits
+            loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
             #print("Predicted")
             #print(preds)
             #loss = self.criterion(preds, y)
