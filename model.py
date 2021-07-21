@@ -125,7 +125,7 @@ class NLPClassifier(object):
             #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             outputs = self.model(**x)
             logits = outputs.logits
-            print(logits.size())
+            print(torch.argmax(logits, dim=-1))
             logits = torch.nn.functional.dropout2d(logits, 0.15) if mode == "train" else logits       # dropout prob at 0.15
             loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
             #print("Predicted")
