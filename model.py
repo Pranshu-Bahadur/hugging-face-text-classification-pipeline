@@ -36,8 +36,8 @@ class NLPClassifier(object):
         # print(self.model.parameters())
         if config["train"]:
             self.optimizer = self._create_optimizer(config["optimizer_name"], self.model, config["learning_rate"])
-            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 1, 0.1) #transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)     # gamma factor --> 0.1
-            self.criterion = self._create_criterion(config["criterion_name"])       # step size 1, gamma factor 0.1
+            self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 2, 0.98) #transformers.get_cosine_with_hard_restarts_schedule_with_warmup(self.optimizer, 500, self.final_epoch-self.curr_epoch)     # gamma factor --> 0.1
+            self.criterion = self._create_criterion(config["criterion_name"])       # step size 2, gamma factor 0.98
         self.long = "long" in config["model_name"]                  # whats the point of long
         if config["checkpoint"] != "":
             self._load(config["checkpoint"])
@@ -93,9 +93,8 @@ class NLPClassifier(object):
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() # if mode =="train" else self.model.eval() # why did we comment model.eval()
-        print("Before decaying: "+str(self.scheduler.get_lr()))
-        self.scheduler.step()               # decaying weight once per epoch is not enough?
-        print("After decaying: "+str(self.scheduler.get_lr()))
+        #print("Before decaying: "+str(self.scheduler.get_lr()))
+        #print("After decaying: "+str(self.scheduler.get_lr()))
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
         for i,data in enumerate(loader):
@@ -157,6 +156,7 @@ class NLPClassifier(object):
             self.best_acc = curr_acc
             best_weights = copy.deepcopy(self.model.state_dict())
             self.model.load_state_dict(best_weights)
+        self.scheduler.step()               # decaying weight once per epoch is not enough?
         return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
