@@ -26,8 +26,8 @@ class Experiment(object):
         samples_weight = samples_weight.double()
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         #train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
-        train_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
-        loaders = [Loader(split, self.classifier.bs, shuffle=True, num_workers=4) for split in splits[1:]]
+        train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4)
+        loaders = [Loader(split, self.classifier.bs, shuffle=False, num_workers=4) for split in splits[1:]]
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
             self.classifier.curr_epoch +=1
@@ -99,15 +99,16 @@ class Experiment(object):
             if diff > 0:
                 splits.append(diff)
             splits = torch.utils.data.dataset.random_split(dataSetFolder, splits)
-            k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
-            X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
-            best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
-            print(best_k, cluster_ids_x, cluster_centers)
-            _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), best_k//4)
-            indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
-            print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//4} cluster(s) according to mode.\n\n")
-            splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
-            train_split_dist = self.distribution(splits[0], 16)
-            self.class_weights = self.weight_calc(train_split_dist, 0.9) #TODO find proper betas value.
-            return splits[:-1] if diff > 0 else splits
+            # k_means_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
+            # X = torch.cat([x["input_ids"] for x in k_means_loader]).cuda()
+            # best_k, cluster_ids_x, cluster_centers = self.finding_k(X, X.size(1))
+            # print(best_k, cluster_ids_x, cluster_centers)
+            # _, indices = torch.topk(torch.tensor([(cluster_ids_x==i).nonzero().size(0) for i in range(best_k)]), best_k//4)
+            # indices = torch.cat([(cluster_ids_x==i).nonzero() for i in indices], dim=0).view(-1).tolist()
+            # print(f"\n\nResult of k-means on {best_k} clusters: {len(indices)} of {X.size(0)} samples remain, taken from top {best_k//4} cluster(s) according to mode.\n\n")
+            # splits[0] = torch.utils.data.dataset.Subset(splits[0],indices)
+            # train_split_dist = self.distribution(splits[0], 16)
+            # self.class_weights = self.weight_calc(train_split_dist, 0.9) #TODO find proper betas value.
+            # return splits[:-1] if diff > 0 else splits
+            return splits
         return dataSetFolder
