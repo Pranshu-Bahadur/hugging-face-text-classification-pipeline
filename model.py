@@ -94,7 +94,7 @@ class NLPClassifier(object):
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
         self.model.train() # if mode =="train" else self.model.eval() # why did we comment model.eval()
         print("Before decaying: "+str(self.scheduler.get_lr()))
-        self.scheduler.step()
+        self.scheduler.step()               # decaying weight once per epoch is not enough?
         print("After decaying: "+str(self.scheduler.get_lr()))
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
@@ -141,7 +141,7 @@ class NLPClassifier(object):
                 # loss.backward()
                 self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
-                #self.scheduler.step()
+                #self.scheduler.step()          # decay weight every time in a mini batch?
                 self.model.zero_grad()
                 #self.log_step = int(len(loader)*0.1)
                 if (i+1)%self.log_step==0:
