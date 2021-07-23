@@ -13,7 +13,7 @@ from torch.utils.data import WeightedRandomSampler
 class Experiment(object):
     def __init__(self, config):
         self.classifier = NLPClassifier(config)
-        self.class_weights = np.array([0,]*self.classifier.bs))
+        self.class_weights = np.array([0,]*self.classifier.bs)
 
     def _run(self):
         splits = self._preprocessing(True)
