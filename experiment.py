@@ -23,6 +23,7 @@ class Experiment(object):
         target = torch.cat([data["labels"] for data in sampler_loader])
         print(len(target))
         self.class_weights = np.array([]*len(target))
+        print(len(self.class_weights))
         samples_weight = np.array([self.class_weights[t] for t in target])
         samples_weight = torch.from_numpy(samples_weight)
         samples_weight = samples_weight.double()
