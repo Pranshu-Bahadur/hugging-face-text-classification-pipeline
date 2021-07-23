@@ -117,7 +117,7 @@ class NLPClassifier(object):
             #y = x.pop("labels")#x["labels"]##
             x = {k:v.cuda() for k,v in list(data.items())}
             y = x['labels']
-            x.pop('labels')
+            #x.pop('labels')
             #print("Labels")
             #print(y)
             total += y.size(0)
