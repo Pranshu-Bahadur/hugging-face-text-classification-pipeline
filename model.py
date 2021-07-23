@@ -157,7 +157,8 @@ class NLPClassifier(object):
         curr_acc = list(metrics.items())[0][1]
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
-        self.best_acc, self.best_weights = curr_acc, copy.deepcopy(self.model.state_dict()) if curr_acc > self.best_acc else self.best_acc, self.best_weights
+        if curr_acc > self.best_acc:
+            self.best_acc, self.best_weights = curr_acc, copy.deepcopy(self.model.state_dict())
         if self.best_acc < curr_acc and mode == "train" and (self.epochs_ran)%2 == 0:       # what if i just do it while training
             self.best_acc = curr_acc
             self.model.load_state_dict(self.best_weights)
