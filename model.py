@@ -54,7 +54,7 @@ class NLPClassifier(object):
         print("Generated model: {}".format(self.name))
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
         self.best_acc = 0
-        #self.epochs_ran = 0
+        self.epochs_ran = 0
 
 
 
@@ -90,8 +90,8 @@ class NLPClassifier(object):
     
     
     def run_epoch_step(self, loader, mode):
-        # print("number of epochs ran: ", str(self.epochs_ran))
-        # self.epochs_ran += 1
+        print("number of epochs ran: ", str(self.epochs_ran))
+        self.epochs_ran += 1
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
@@ -128,7 +128,7 @@ class NLPClassifier(object):
             #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
             outputs = self.model(**x)
             logits = outputs.logits
-            print(torch.argmax(logits, dim=-1))
+            #print(torch.argmax(logits, dim=-1))
             logits = torch.nn.functional.dropout2d(logits, 0.15) if mode == "train" else logits       # dropout prob at 0.15
             loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
             #print("Predicted")
@@ -136,7 +136,7 @@ class NLPClassifier(object):
             #loss = self.criterion(preds, y)
             #print(loss)
             #preds = torch.argmax(preds,dim=1)
-            print(torch.argmax(logits, dim=-1))
+            #print(torch.argmax(logits, dim=-1))
             metrics[f"{mode}-loss"].append(loss.cpu().item())
             metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
             if mode == "train": #TODO fix grad acc
@@ -155,7 +155,7 @@ class NLPClassifier(object):
         curr_acc = list(metrics.items())[0][1]
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
-        if self.best_acc < curr_acc :#and mode == "train" and (self.epochs_ran)%3 == 0:
+        if self.best_acc < curr_acc and mode == "train" and (self.epochs_ran)%3 == 0:
             self.best_acc = curr_acc            # what if i just do it while training
             best_weights = copy.deepcopy(self.model.state_dict())
             self.model.load_state_dict(best_weights)
