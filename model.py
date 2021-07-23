@@ -54,6 +54,7 @@ class NLPClassifier(object):
         print("Generated model: {}".format(self.name))
         self.scaler = ShardedGradScaler() #if self.sharded_dpp else torch.cuda.amp.GradScaler(
         self.best_acc = 0
+        self.epochs_ran = 0
 
 
 
@@ -89,6 +90,8 @@ class NLPClassifier(object):
     
     
     def run_epoch_step(self, loader, mode):
+        print("number of epochs ran: ", str(self.epochs_ran))
+        self.epochs_ran += 1
         total = 0
         metrics = ["accuracy","loss"]
         metrics = {f"{mode}-{metric}": [] for metric in metrics}
@@ -140,7 +143,7 @@ class NLPClassifier(object):
                 # loss.backward()
                 self.scaler.scale(loss).backward() #TODO WTF does this even do?!
                 self.optimizer.step()
-                #self.scheduler.step()          # decay weight every time in a mini batch?
+                self.scheduler.step()          # decay weight every time in a mini batch?
                 self.model.zero_grad()
                 #self.log_step = int(len(loader)*0.1)
                 if (i+1)%self.log_step==0:
@@ -152,11 +155,11 @@ class NLPClassifier(object):
         curr_acc = list(metrics.items())[0][1]
         for k,v in list(metrics.items()):
             self.writer.add_scalar(k,v,self.curr_epoch)
-        if self.best_acc < curr_acc:
-            self.best_acc = curr_acc
+        if self.best_acc < curr_acc and mode == "train" and (self.epochs_ran)%3 == 0:
+            self.best_acc = curr_acc            # what if i just do it while training
             best_weights = copy.deepcopy(self.model.state_dict())
             self.model.load_state_dict(best_weights)
-        self.scheduler.step()               # decaying weight once per epoch is not enough?
+        #self.scheduler.step()               # decaying weight once per epoch is not enough? i was just experimenting lol
         return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
