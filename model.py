@@ -110,7 +110,7 @@ class NLPClassifier(object):
         # Running 4 fold 
         k_fold = 4
         
-        subsets = splitter(dataset,[2.5,2.5,2.5,2.5])           # generalize it later!
+        subsets = splitter(dataset,[len(dataset)/k_fold]*k_fold)           # generalize it later!
 
 
         self.model.train() # if mode =="train" else self.model.eval() # why did we comment model.eval()
