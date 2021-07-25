@@ -12,6 +12,8 @@ from fairscale.optim.grad_scaler import ShardedGradScaler
 from utils import SpreadSheetNLPCustomDataset
 import transformers
 import uuid
+import torch.utils.data.random_split as splitter
+import torch.utils.data.dataloader as Loader
 #from apex import amp
 
 class NLPClassifier(object):
@@ -90,80 +92,115 @@ class NLPClassifier(object):
         torch.save(self.model.state_dict(), "{}/{}.pth".format(directory, name))
     
     
-    def run_epoch_step(self, loader, mode):
+    #def run_epoch_step(self, loader, mode):
+    def run_epoch_step(self, dataset, mode):
         print("number of epochs ran: ", str(self.epochs_ran))
         if mode == "train":
             self.epochs_ran += 1
         total = 0
-        metrics = ["accuracy","loss"]
-        metrics = {f"{mode}-{metric}": [] for metric in metrics}
+        train_metrics = ["accuracy","loss"]
+        train_metrics = {f"{metric}": [] for metric in train_metrics}
+
+        test_metrics = ["accuracy","loss"]
+        test_metrics = {f"{metric}": [] for metric in test_metrics}
+
+        validation_metrics = ["accuracy","loss"]
+        validation_metrics = {f"{metric}": [] for metric in validation_metrics}        # going with brute force for now
+
+        # Running 4 fold 
+        k_fold = 4
+        
+        subsets = splitter(dataset,[10/k_fold]*k_fold)
+
+
         self.model.train() # if mode =="train" else self.model.eval() # why did we comment model.eval()
         #print("Before decaying: "+str(self.scheduler.get_lr()))
         #print("After decaying: "+str(self.scheduler.get_lr()))
         #if mode == "train":
             #self._k_means_approximation_one_step(loader)
-        for i,data in enumerate(loader):
-            #print(data)
-            #inputs = data
-            #self.optimizer.zero_grad()
-            #print('*'*3+'data size'+'*'*3+'\n')
-            #print(str(data['labels'].size(0))+'\n')
-            #shuffle_seed = torch.randperm(data.size(0))
-            #print('*'*3+'shuffle seed'+'*'*3+'\n')
-            #print(shuffle_seed)
-            #x = {k:v[shuffle_seed].cuda() for k,v in list(data.items())}
-            #if self.score != float("-inf") and mode == "train":
-            #    x["attention_mask"][:,self.clusters_idx==self.cluster_idx] = 0
-            #y = x.pop("labels")#x["labels"]##
-            x = {k:v.cuda() for k,v in list(data.items())}
-            y = x['labels']
-            #x.pop('labels')
-            #print("Labels")
-            #print(y)
-            total += y.size(0)
-            #outputs = self.model(**x).logits
-            #loss = self.criterion(outputs,labels)
-            #outputs = self.model(**x)
-            #loss, logits = outputs.loss.mean(), outputs.logits
-            #logits = torch.nn.functional.dropout2d(outputs, self.drop) if mode == "train" else outputs
-            #preds = F.softmax(outputs)
-            #logits = torch.nn.functional.dropout2d(logits, self.drop) if mode == "train" else logits
-            outputs = self.model(**x)
-            logits = outputs.logits
-            #print(torch.argmax(logits, dim=-1))
-            logits = torch.nn.functional.dropout2d(logits, 0.15) if mode == "train" else logits       # dropout prob at 0.15
-            loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
-            #print("Predicted")
-            #print(preds)
-            #loss = self.criterion(preds, y)
-            #print(loss)
-            #preds = torch.argmax(preds,dim=1)
-            #print(torch.argmax(logits, dim=-1))
-            metrics[f"{mode}-loss"].append(loss.cpu().item())
-            metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
-            if mode == "train": #TODO fix grad acc
-                # loss.backward()
-                self.scaler.scale(loss).backward() #TODO WTF does this even do?!
-                self.optimizer.step()
-                self.scheduler.step()          # decay weight every time in a mini batch?
-                self.model.zero_grad()
-                #self.log_step = int(len(loader)*0.1)
-                if (i+1)%self.log_step==0:
-                    print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}) #TODO naive logic used...
-            del x, y
-            torch.cuda.empty_cache()
-        metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
-        print(metrics)
-        curr_acc = list(metrics.items())[0][1]
-        for k,v in list(metrics.items()):
-            self.writer.add_scalar(k,v,self.curr_epoch)
-        if curr_acc > self.best_acc:
-            self.best_acc, self.best_weights = curr_acc, copy.deepcopy(self.model.state_dict())
-        if self.best_acc < curr_acc and mode == "train" and (self.epochs_ran)%2 == 0:       # what if i just do it while training
-            self.best_acc = curr_acc
-            self.model.load_state_dict(self.best_weights)
-        #self.scheduler.step()               # decaying weight once per epoch is not enough? i was just experimenting lol
-        return metrics
+        if mode == "train":
+            for k in range(k_fold):
+                train_set=[]
+                for j in subsets[:k]:           # using for loops now for time being, change it later!!
+                    train_set.extend(j)
+                for j in subsets[k+1:]:
+                    train_set.extend(j)
+                train_loader = Loader(train_set, self.bs, shuffle=True, num_workers=4)
+                validation_set = subsets[k]
+                validation_loader = Loader(validation_set, self.bs, shuffle=False, num_workers=4)           # might have to change to true
+                for i,data in enumerate(train_loader):
+                    x = {key:v.cuda() for key,v in list(data.items())}
+                    y = x['labels']
+                    total += y.size(0)
+                    outputs = self.model(**x)
+                    logits = outputs.logits
+                    logits = torch.nn.functional.dropout2d(logits, 0.15) if mode == "train" else logits       # dropout prob at 0.15
+                    loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
+                    train_metrics["loss"].append(loss.cpu().item())
+                    train_metrics["accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+                    if mode == "train": #TODO fix grad acc
+                        # loss.backward()
+                        self.scaler.scale(loss).backward() #TODO WTF does this even do?!
+                        self.optimizer.step()
+                        self.scheduler.step()          # decay weight every time in a mini batch?
+                        self.model.zero_grad()
+                        #self.log_step = int(len(loader)*0.1)
+                        #if (i+1)%self.log_step==0:
+                            #print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(train_metrics.items())}) #TODO naive logic used...
+                    del x, y
+                    torch.cuda.empty_cache()
+                # permutation training accuracy
+                train_metrics = {k:sum(v)/len(train_loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(train_metrics.items())}
+                for i,data in enumerate(validation_loader):
+                    mode = "validation"
+
+                    x = {key:v.cuda() for key,v in list(data.items())}
+                    y = x['labels']
+                    total += y.size(0)
+                    outputs = self.model(**x)
+                    logits = outputs.logits
+                    loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
+                    validation_metrics["loss"].append(loss.cpu().item())
+                    validation_metrics["accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+                    del x, y
+                    torch.cuda.empty_cache()
+                validation_metrics = {k:sum(v)/len(validation_loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(validation_metrics.items())}
+            train_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(train_metrics.items())}    # calculating for an epoch
+            validation_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(validation_metrics.items())}
+            print("train metrics:",str(train_metrics))
+            print("Validation metrics:",str(validation_metrics))
+            return (train_metrics,validation_metrics)
+        if mode == "test":
+            for i,data in enumerate(dataset):           # function is called with loaded test data
+                    x = {key:v.cuda() for key,v in list(data.items())}
+                    y = x['labels']
+                    total += y.size(0)
+                    outputs = self.model(**x)
+                    logits = outputs.logits
+                    loss = self.criterion(logits.view(logits.size(0), -1), y)             # use of reshaping the logits????   gives error in 100's 
+                    test_metrics[f"{mode}-loss"].append(loss.cpu().item())
+                    test_metrics[f"{mode}-accuracy"].append((torch.argmax(logits, dim=-1).cpu()==y.cpu()).sum().item())
+                    del x, y
+                    torch.cuda.empty_cache()
+            test_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(test_metrics.items())}
+            print(test_metrics)
+            return test_metrics
+        #metrics = {k:sum(v)/len(loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(metrics.items())}
+        # train_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(train_metrics.items())}
+        # validation_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(validation_metrics.items())}
+        # test_metrics = {k:sum(v)/k_fold if "loss" in k else (sum(v)/k_fold)*100 for k,v in list(test_metrics.items())}
+        # print(train_metrics)
+        # print(validation_metrics)
+        # curr_acc = list(metrics.items())[0][1]
+        # for k,v in list(metrics.items()):
+        #     self.writer.add_scalar(k,v,self.curr_epoch)
+        # if curr_acc > self.best_acc:
+        #     self.best_acc, self.best_weights = curr_acc, copy.deepcopy(self.model.state_dict())
+        # if self.best_acc < curr_acc and mode == "train" and (self.epochs_ran)%2 == 0:       # what if i just do it while training
+        #     self.best_acc = curr_acc
+        #     self.model.load_state_dict(self.best_weights)
+        # #self.scheduler.step()               # decaying weight once per epoch is not enough? i was just experimenting lol
+        # return metrics
     """
         Un-Implemented code (EPENAS/NAS-WOT) from this point....
     """

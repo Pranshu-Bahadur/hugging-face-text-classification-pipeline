@@ -26,17 +26,20 @@ class Experiment(object):
         # samples_weight = samples_weight.double()
         # sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         # train_loader = Loader(splits[0], self.classifier.bs, shuffle=False, num_workers=4, sampler=sampler)
-        train_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
-        loaders = [Loader(split, self.classifier.bs, shuffle=False, num_workers=4) for split in splits[1:]]
+        #train_loader = Loader(splits[0], self.classifier.bs, shuffle=True, num_workers=4)
+        #loaders = [Loader(split, self.classifier.bs, shuffle=False, num_workers=4) for split in splits[1:]]
+        test_loader = Loader(splits[-1], self.classifier.bs, shuffle=False, num_workers=4)        #for testing
+        train_set = torch.utils.data.ConcatDataset([splits[0],splits[1]])
+        #train_loader = Loader(train_set, self.classifier.bs, shuffle=False, num_workers=4)
         print("Dataset has been preprocessed and randomly split.\nRunning training loop...\n")
         while (self.classifier.curr_epoch < init_epoch + self.classifier.final_epoch):
             self.classifier.curr_epoch +=1
             print(f"----Running epoch {self.classifier.curr_epoch}----\n")
             print(f"Training step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[0])}\n")
-            metrics_train = self.classifier.run_epoch_step(train_loader, "train")
-            print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
-            with torch.no_grad():
-                metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
+            metrics_train, metrics_validation = self.classifier.run_epoch_step(train_set, "train")
+            # print(f"\nValidation step @ {self.classifier.curr_epoch}:\n# of samples = {len(splits[1])}\n")
+            # with torch.no_grad():
+            #     metrics_validation = self.classifier.run_epoch_step(loaders[0], "validation")
             print(f"----Results at {self.classifier.curr_epoch}----\n")
             print(f"\nFor train split:\n{metrics_train}\n")
             print(f"\nFor validation split:\n{metrics_validation}\n")
@@ -44,7 +47,7 @@ class Experiment(object):
                 self.classifier._save(self.classifier.save_directory, "{}-{}".format(self.classifier.name, self.classifier.curr_epoch))
         print(f"\nTesting model trained for {self.classifier.curr_epoch}:\n# of samples = {len(splits[2])}\n")
         with torch.no_grad():
-            metrics_test = self.classifier.run_epoch_step(loaders[1], "test")
+            metrics_test = self.classifier.run_epoch_step(test_loader, "test")
         print(f"\nFinal Results:\n{metrics_test}\n")
         print("\nRun Complete.\n\n")
 
@@ -56,6 +59,7 @@ class Experiment(object):
         for k in range(2, n+1):
             cluster_ids, centers  = kmeans(X=X, num_clusters = k, device=torch.device('cuda'))
             curr_inertia = sum([torch.sum((1/(2*i+1))*pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
+            #curr_inertia = sum([torch.sum(pairwise_distance(X[cluster_ids==i], centers[i]), 0).cpu().item() for i in range(k)])/1e+5
             self.classifier.writer.add_scalar("Inertia",curr_inertia, k)
             if k!=2:
                 prev_inertias = list(m_dict.keys())
