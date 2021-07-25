@@ -145,16 +145,16 @@ class NLPClassifier(object):
                         self.optimizer.step()
                         self.scheduler.step()          # decay weight every time in a mini batch?
                         self.model.zero_grad()
-                        #self.log_step = int(len(loader)*0.1)
-                        #if (i+1)%self.log_step==0:
-                            #print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(train_metrics.items())}) #TODO naive logic used...
+                        self.log_step = int(len(train_loader)*0.1)
+                        if (i+1)%self.log_step==0:
+                            print(f"Metrics at {i+1} iterations:\n",{k:sum(v)/(i+1) if "loss" in k else (sum(v)/total)*100 for k,v in list(train_metrics.items())}) #TODO naive logic used...
                     del x, y
                     torch.cuda.empty_cache()
                 # permutation training accuracy
                 train_metrics = {k:sum(v)/len(train_loader) if "loss" in k else (sum(v)/total)*100 for k,v in list(train_metrics.items())}
                 for i,data in enumerate(validation_loader):
                     mode = "validation"
-
+                    torch.cuda.empty_cache()
                     x = {key:v.cuda() for key,v in list(data.items())}
                     y = x['labels']
                     total += y.size(0)
