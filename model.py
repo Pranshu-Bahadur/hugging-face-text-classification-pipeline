@@ -13,7 +13,7 @@ from utils import SpreadSheetNLPCustomDataset
 import transformers
 import uuid
 from torch.utils.data import random_split as splitter
-import torch.utils.data import Dataloader as Loader
+from torch.utils.data import Dataloader as Loader
 #from apex import amp
 
 class NLPClassifier(object):
