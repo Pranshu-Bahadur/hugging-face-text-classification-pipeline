@@ -60,7 +60,7 @@ class SpreadSheetNLPCustomDataset(Dataset):
         
         print(f"Tokenizing dataset...")
         #TODO add a Debug mode.
-        self.encodings = tokenizer(list(self.dataset['posts'].values), padding=True, truncation=True)
+        self.encodings = tokenizer(list(self.dataset['posts'].values), padding="max_length", truncation=True, max_length=128)
         print(f"Tokenizing complete.\n\n")
         self.labels = {k: v for v, k in enumerate(self.distribution.keys())}
         self.dataset['type'] = self.dataset['type'].apply(lambda x: self.labels[x])
