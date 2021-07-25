@@ -12,7 +12,7 @@ from fairscale.optim.grad_scaler import ShardedGradScaler
 from utils import SpreadSheetNLPCustomDataset
 import transformers
 import uuid
-import torch.utils.data.random_split as splitter
+from torch.utils.data import random_split as splitter
 import torch.utils.data.dataloader as Loader
 #from apex import amp
 
