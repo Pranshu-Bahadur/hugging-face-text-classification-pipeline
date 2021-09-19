@@ -1,4 +1,4 @@
-# NLP MBTI Personality Classification using an approximation algorithm for features selection.
+# NLP Classification using an approximation algorithm for features selection.
 
 ## Dependencies:
 
